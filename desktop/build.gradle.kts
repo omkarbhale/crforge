@@ -89,6 +89,22 @@ tasks.register<JavaExec>("uiSmoke") {
     )
 }
 
+// Writes the committed traces of what the visualizer draws anew (VisualizerTrace,
+// VisualizerGoldenTest): for a change that means to alter what is drawn, or a data version bump.
+tasks.register<JavaExec>("visualizerGolden") {
+    group = "verification"
+    description = "Writes the visualizer's golden draw traces to src/test/resources/golden."
+    dependsOn(tasks.testClasses, ":tables:gameTables")
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("org.crforge.desktop.VisualizerTrace")
+    systemProperty(
+        "crforge.gameTables",
+        "${rootProject.extra["crforge.builtTablesRoot"]}/${rootProject.extra["crforge.dataVersion"]}",
+    )
+    systemProperty("crforge.exampleReplay", rootProject.file("examples/replays/ladder.json").absolutePath)
+    args(file("src/test/resources").absolutePath)
+}
+
 // An exported model to play a whole battle against in the desktop tests
 // (-Pcrforge.modelFile=<file.onnx>, ModelOpponentTest); a trained model is never part of this
 // repository, so the test is skipped without one.

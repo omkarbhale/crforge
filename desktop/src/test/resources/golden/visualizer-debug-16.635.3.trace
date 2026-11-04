@@ -1,0 +1,194 @@
+setup tick=0 calls=222 draws=0 gl=84b556b8362efc5d
+1 tick=0 calls=2054 draws=113 gl=429f67a8e062ec28
+2 tick=0 calls=2057 draws=113 gl=408580a1251ae79e
+3 tick=1 calls=2057 draws=113 gl=5b57640a8074ea38
+4 tick=1 calls=2057 draws=113 gl=15e77d0b6b0b93ac after=SPACE
+5 tick=1 calls=2057 draws=113 gl=15e77d0b6b0b93ac
+6 tick=2 calls=2057 draws=113 gl=52e71c094ccb0540 after=.
+7 tick=3 calls=2057 draws=113 gl=5223015f79a66c34 after=Step_[.]
+8 tick=3 calls=2070 draws=114 gl=1e3dbada142878f2 after=Tile_grid
+9 tick=3 calls=2070 draws=114 gl=1e3dbada142878f2
+10 tick=3 calls=2057 draws=113 gl=5223015f79a66c34 after=Tile_grid
+11 tick=3 calls=2183 draws=120 gl=d8aec77ebbdb127f after=Data_details
+12 tick=3 calls=2183 draws=120 gl=d8aec77ebbdb127f
+13 tick=3 calls=2057 draws=113 gl=5223015f79a66c34 after=Data_details
+14 tick=90 calls=2057 draws=113 gl=c50b09896e3a1d20 after=. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+15 tick=90 calls=2057 draws=113 gl=c50b09896e3a1d20
+16 tick=90 calls=2095 draws=116 gl=c89eda198db5e03a after=1 hover
+17 tick=90 calls=2095 draws=116 gl=c89eda198db5e03a
+18 tick=90 calls=2070 draws=114 gl=41b577a827ff596b after=M
+19 tick=90 calls=2095 draws=116 gl=c89eda198db5e03a after=M
+20 tick=90 calls=2070 draws=114 gl=2034ac02693a3495 after=click
+21 tick=90 calls=2070 draws=114 gl=2034ac02693a3495
+22 tick=90 calls=2107 draws=117 gl=6f2a6697dddd0e46 after=5 hover
+23 tick=90 calls=2107 draws=117 gl=6f2a6697dddd0e46
+24 tick=90 calls=2070 draws=114 gl=ca3cdb8a4b1aadd8 after=click
+25 tick=90 calls=2070 draws=114 gl=ca3cdb8a4b1aadd8
+26 tick=90 calls=2070 draws=114 gl=dda998570f24876d after=SPACE +
+27 tick=91 calls=2070 draws=114 gl=7b59e7951a6edd4b
+28 tick=92 calls=2070 draws=114 gl=c8b21f2919a2d1c4
+29 tick=92 calls=2070 draws=114 gl=c8b21f2919a2d1c4
+30 tick=93 calls=2070 draws=114 gl=3960e55ae455ce7e
+31 tick=94 calls=2070 draws=114 gl=8793ba7ed2bd4057
+32 tick=94 calls=2070 draws=114 gl=8793ba7ed2bd4057
+33 tick=95 calls=2070 draws=114 gl=749bfa85e4cb0dd4
+34 tick=96 calls=2070 draws=114 gl=dd61089dae96bdc5
+35 tick=96 calls=2070 draws=114 gl=dd61089dae96bdc5
+36 tick=97 calls=2070 draws=114 gl=bd5206eb7f25221d
+37 tick=98 calls=2070 draws=114 gl=f8df8f28d9543c84
+38 tick=98 calls=2070 draws=114 gl=f8df8f28d9543c84
+39 tick=99 calls=2070 draws=114 gl=23be05eae48bf928
+40 tick=100 calls=2070 draws=114 gl=84c561a184b59ba1
+41 tick=100 calls=2070 draws=114 gl=84c561a184b59ba1
+42 tick=101 calls=2070 draws=114 gl=6978e792470189ea
+43 tick=102 calls=2070 draws=114 gl=32e2af22f0a30e1d
+44 tick=102 calls=2070 draws=114 gl=32e2af22f0a30e1d
+45 tick=103 calls=2070 draws=114 gl=a3c959d4edb13e0b
+46 tick=104 calls=2070 draws=114 gl=5383e325f6c5eb26
+47 tick=104 calls=2070 draws=114 gl=5383e325f6c5eb26
+48 tick=105 calls=2070 draws=114 gl=43c0f96556c791c4
+49 tick=106 calls=2070 draws=114 gl=e75b2317d42dcb22
+50 tick=106 calls=2070 draws=114 gl=e75b2317d42dcb22
+51 tick=107 calls=2070 draws=114 gl=b2f1edd33fde440f
+52 tick=108 calls=2070 draws=114 gl=da2c27da5253548e
+53 tick=108 calls=2070 draws=114 gl=da2c27da5253548e
+54 tick=109 calls=2070 draws=114 gl=24dbe27964fe1dd0
+55 tick=110 calls=2070 draws=114 gl=653e3c66019effe8
+56 tick=110 calls=2070 draws=114 gl=653e3c66019effe8
+57 tick=111 calls=2215 draws=124 gl=7a60ce8fd2511831
+58 tick=112 calls=2215 draws=124 gl=a6a23426908c2dbd
+59 tick=112 calls=2215 draws=124 gl=a6a23426908c2dbd
+60 tick=113 calls=2215 draws=124 gl=5f75ae56814c5274
+61 tick=114 calls=2215 draws=124 gl=14a350fef670046f
+62 tick=114 calls=2215 draws=124 gl=14a350fef670046f
+63 tick=115 calls=2215 draws=124 gl=890ec33f4011681c
+64 tick=116 calls=2215 draws=124 gl=db808506a3d7f2ac
+65 tick=116 calls=2215 draws=124 gl=db808506a3d7f2ac
+66 tick=117 calls=2230 draws=125 gl=0ba6bd82db9e3783
+67 tick=118 calls=2230 draws=125 gl=8f78767c0d93c8e0
+68 tick=118 calls=2230 draws=125 gl=11fe4a8765c7b0a6
+69 tick=119 calls=2230 draws=125 gl=7b61bf121af950ef
+70 tick=120 calls=2230 draws=125 gl=603ff2aa37345517
+71 tick=120 calls=2230 draws=125 gl=1d3bdb2759a67a15
+72 tick=121 calls=2230 draws=125 gl=80913249115201ce
+73 tick=122 calls=2230 draws=125 gl=027f717a9547ed45
+74 tick=122 calls=2230 draws=125 gl=48902090d6f785fa
+75 tick=123 calls=2230 draws=125 gl=95117dea956cf129
+76 tick=124 calls=2230 draws=125 gl=16b12e7fc261a8ce
+77 tick=124 calls=2230 draws=125 gl=d5288827039308de
+78 tick=125 calls=2230 draws=125 gl=2692c708157f40b5
+79 tick=126 calls=2230 draws=125 gl=9fe23e4c76b0c248
+80 tick=126 calls=2230 draws=125 gl=d88aaa7b1eb5ffc4
+81 tick=127 calls=2230 draws=125 gl=e8c5e3c405fe1c37
+82 tick=128 calls=2230 draws=125 gl=d58ac56cdc672f0a
+83 tick=128 calls=2230 draws=125 gl=01a9b81993c17de9
+84 tick=129 calls=2230 draws=125 gl=9044c593634a5dd1
+85 tick=130 calls=2230 draws=125 gl=9eee221bdba74a6e
+86 tick=130 calls=2230 draws=125 gl=82da8552bb3ce59b
+87 tick=131 calls=2230 draws=125 gl=6b8cd0f701229f14
+88 tick=132 calls=2230 draws=125 gl=f235a7772403cdd0
+89 tick=132 calls=2230 draws=125 gl=3d599f86a23e5aed
+90 tick=133 calls=2230 draws=125 gl=500f577b2302b013
+91 tick=134 calls=2230 draws=125 gl=f3309a72d2d58904
+92 tick=134 calls=2230 draws=125 gl=a0ce8c595736762f
+93 tick=135 calls=2230 draws=125 gl=66bd930332420c0b
+94 tick=136 calls=2230 draws=125 gl=c577f63a8be066de
+95 tick=136 calls=2203 draws=123 gl=5af60b4cfcd68579
+96 tick=137 calls=2203 draws=123 gl=dd2e2dea9635d267
+97 tick=138 calls=2203 draws=123 gl=f41b9dc798042488
+98 tick=138 calls=2203 draws=123 gl=f41b9dc798042488
+99 tick=139 calls=2203 draws=123 gl=6b91ab9536dfc0e1
+100 tick=140 calls=2203 draws=123 gl=f13c463a9ebe6716
+101 tick=140 calls=2203 draws=123 gl=f13c463a9ebe6716
+102 tick=141 calls=2203 draws=123 gl=6fd7c5c4f7112d97
+103 tick=142 calls=2203 draws=123 gl=7791efbad83b2216
+104 tick=142 calls=2203 draws=123 gl=7791efbad83b2216
+105 tick=143 calls=2130 draws=119 gl=824c5a5254abc8eb
+106 tick=144 calls=2130 draws=119 gl=6be646b5e8542d03
+107 tick=144 calls=2130 draws=119 gl=6be646b5e8542d03
+108 tick=145 calls=2130 draws=119 gl=95edcf1c351c9a5d
+109 tick=146 calls=2130 draws=119 gl=636041bdee8413c3
+110 tick=146 calls=2130 draws=119 gl=636041bdee8413c3
+111 tick=147 calls=2130 draws=119 gl=7e9f9bf122845b7f
+112 tick=148 calls=2130 draws=119 gl=1c6376a9f400b8d1
+113 tick=148 calls=2130 draws=119 gl=1c6376a9f400b8d1
+114 tick=149 calls=2130 draws=119 gl=e328163ba4b5d77d
+115 tick=150 calls=2130 draws=119 gl=e0487ba5ef256bd3
+116 tick=150 calls=2130 draws=119 gl=e0487ba5ef256bd3
+117 tick=151 calls=2130 draws=119 gl=948639b7ee83b5f8
+118 tick=152 calls=2130 draws=119 gl=9712f2aee719bbfa
+119 tick=152 calls=2130 draws=119 gl=9712f2aee719bbfa
+120 tick=153 calls=2130 draws=119 gl=0359d464ef54e6d7
+121 tick=154 calls=2130 draws=119 gl=769eaaa388d72d30
+122 tick=154 calls=2130 draws=119 gl=769eaaa388d72d30
+123 tick=155 calls=2130 draws=119 gl=cfaeae05ad0f9b8a
+124 tick=156 calls=2130 draws=119 gl=521e5019746125af
+125 tick=156 calls=2130 draws=119 gl=521e5019746125af
+126 tick=157 calls=2130 draws=119 gl=b909ae43c1703f7d
+127 tick=158 calls=2130 draws=119 gl=ba2a892e7bd7a728
+128 tick=158 calls=2130 draws=119 gl=ba2a892e7bd7a728
+129 tick=159 calls=2130 draws=119 gl=16172c9fe5dad9dc
+130 tick=160 calls=2130 draws=119 gl=4840dabe781422cd
+131 tick=160 calls=2130 draws=119 gl=4840dabe781422cd
+132 tick=161 calls=2130 draws=119 gl=72fb64a889969d2d
+133 tick=162 calls=2130 draws=119 gl=31f74ed6fe9e9629
+134 tick=162 calls=2130 draws=119 gl=31f74ed6fe9e9629
+135 tick=163 calls=2130 draws=119 gl=08bb6673c3a28e3a
+136 tick=164 calls=2130 draws=119 gl=4632cfa45da465d1
+137 tick=164 calls=2130 draws=119 gl=4632cfa45da465d1
+138 tick=165 calls=2130 draws=119 gl=668b9efc355d38e5
+139 tick=166 calls=2130 draws=119 gl=81f08383360b50d4
+140 tick=166 calls=2130 draws=119 gl=81f08383360b50d4
+141 tick=167 calls=2130 draws=119 gl=a078f790239c06c9
+142 tick=168 calls=2130 draws=119 gl=0b81048f29b9be53
+143 tick=168 calls=2130 draws=119 gl=0b81048f29b9be53
+144 tick=169 calls=2130 draws=119 gl=b1eb721ffef34791
+145 tick=170 calls=2130 draws=119 gl=20a7d6cb31b5d0b1
+146 tick=170 calls=2130 draws=119 gl=727ea710181a2b9b after=hover
+147 tick=171 calls=2143 draws=120 gl=304e6e515d53b779 after=P
+148 tick=172 calls=2143 draws=120 gl=f6dc6baec5bb8232
+149 tick=172 calls=2143 draws=120 gl=f6dc6baec5bb8232
+150 tick=173 calls=2130 draws=119 gl=d946dbe276c5ffaf after=P
+151 tick=174 calls=2143 draws=120 gl=73b93421cb9f0ac1 after=O
+152 tick=174 calls=2143 draws=120 gl=73b93421cb9f0ac1
+153 tick=175 calls=2143 draws=120 gl=598a27e23ebf1116
+154 tick=176 calls=2130 draws=119 gl=5d68da99ff24ebce after=O
+155 tick=176 calls=2154 draws=120 gl=5d29ed775554d66d after=D
+156 tick=177 calls=2154 draws=120 gl=0431c04628ac1e84
+157 tick=178 calls=2154 draws=120 gl=0360e5d833aff986
+158 tick=178 calls=2130 draws=119 gl=fc58e1d9b7abbd0e after=D
+159 tick=179 calls=2130 draws=119 gl=23af354aa2921c7a after=A
+160 tick=180 calls=2130 draws=119 gl=126c86eace693940
+161 tick=180 calls=2130 draws=119 gl=126c86eace693940
+162 tick=181 calls=2130 draws=119 gl=c9ee5a65f1e20e24 after=A
+163 tick=182 calls=2106 draws=118 gl=ebeb26e74bd62c9e after=H
+164 tick=182 calls=2106 draws=118 gl=ebeb26e74bd62c9e
+165 tick=183 calls=2106 draws=118 gl=03000165a4c797a6
+166 tick=184 calls=2130 draws=119 gl=f4c0dd2f43f83200 after=H
+167 tick=184 calls=2179 draws=123 gl=03dea1d2b56d8fc3 after=G
+168 tick=185 calls=2179 draws=123 gl=279b3122a94fbc2c
+169 tick=186 calls=2179 draws=123 gl=6d56153562572f3d
+170 tick=186 calls=2130 draws=119 gl=b0a241869f5ae24f after=G
+171 tick=187 calls=2167 draws=121 gl=2bf9a254467a06f0 after=N
+172 tick=188 calls=2167 draws=121 gl=5c57357af2ba5a86
+173 tick=188 calls=2167 draws=121 gl=5c57357af2ba5a86
+174 tick=189 calls=2130 draws=119 gl=c99bb97e16f7710b after=N
+175 tick=190 calls=2131 draws=119 gl=8176e5a8789a5385 after=I click
+176 tick=190 calls=2131 draws=119 gl=8176e5a8789a5385
+177 tick=191 calls=2131 draws=119 gl=cb0b35bf76e59cf3
+178 tick=192 calls=1386 draws=78 gl=da77a20eec19c5fa after=T
+179 tick=192 calls=1386 draws=78 gl=da77a20eec19c5fa
+180 tick=193 calls=2131 draws=119 gl=bd25b0cd339db3ee after=T F
+181 tick=194 calls=2131 draws=119 gl=6bce352ae7be7456 after=K J
+182 tick=194 calls=2131 draws=119 gl=523b2ffbf7102e3e after=K J Q W
+183 tick=0 gl=machine-path after=- V
+184 tick=0 gl=machine-path
+185 tick=0 calls=2070 draws=114 gl=3a260eaefcd05122 after=R
+186 tick=0 calls=2070 draws=114 gl=3a260eaefcd05122
+187 tick=1 calls=2070 draws=114 gl=a56694532712ecae
+188 tick=1 calls=2070 draws=114 gl=a56694532712ecae
+189 tick=1 calls=2070 draws=114 gl=a56694532712ecae
+190 tick=0 calls=2219 draws=108 gl=0eb475cec6184f40 after=dropped_replay
+191 tick=0 calls=1962 draws=108 gl=f222b18b7b7bedcc
+192 tick=1 calls=1962 draws=108 gl=3b387aa85ffc884f
+dispose tick=1 calls=39 draws=0 gl=a3dbb6ac41f0af51
