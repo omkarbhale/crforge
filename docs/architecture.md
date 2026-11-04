@@ -27,9 +27,9 @@ This page is the index of the docs, the module and package layout, and the debug
 
 ## Module Structure
 
-![The modules of crforge: the core module and its packages, the desktop, env, conformance and tables modules, the Python package and the examples, the Gradle dependencies between them, and the game tables and reference battles they read](assets/modules.svg)
+![The modules of crforge: the core module and its packages, the desktop, env, conformance, tables and presentation-api modules, the Python package and the examples, the Gradle dependencies between them, and the game tables and reference battles they read](assets/modules.svg)
 
-`conformance` and `env` depend on `core` only. `desktop` depends on `core` and on `env`, whose environment builds a model opponent's observation and takes its actions as in training, and on ONNX Runtime, which runs the model (see [Playing against a model](#playing-against-a-model)). Nothing depends on `desktop` or `conformance`. `tables` depends on nothing in the project. The game tables and the reference battles are not in this repository. The build makes the tables on your machine from the game's files (`crforge.assetSource`), and the reference battles live in the game data repository, at the commit `crforge-data.lock` names, one folder per data version (see [Game Tables and Reference Battles](game-tables.md)).
+`conformance` and `env` depend on `core` only. `desktop` depends on `core` and on `env`, whose environment builds a model opponent's observation and takes its actions as in training, and on ONNX Runtime, which runs the model (see [Playing against a model](#playing-against-a-model)), and on `presentation-api`, what a plugin that draws a battle is given (see [Presentation plugins](#presentation-plugins)). Nothing depends on `desktop` or `conformance`. `tables` and `presentation-api` depend on nothing in the project. The game tables and the reference battles are not in this repository. The build makes the tables on your machine from the game's files (`crforge.assetSource`), and the reference battles live in the game data repository, at the commit `crforge-data.lock` names, one folder per data version (see [Game Tables and Reference Battles](game-tables.md)).
 
 `python/` and `examples/` are not Gradle modules: `python/` is the crforge-env package, which runs the env module's jars in the JVM ([README](../python/README.md)), and `examples/` holds a replay the replay viewer opens ([README](../examples/README.md)).
 
@@ -467,6 +467,29 @@ Hovering a tile the drop is moved off outlines in yellow the tile the battle's p
 No tiles are shown for a card the client's try refuses now (not enough elixir, a play still waiting to run).
 
 `A` draws a fading circle for every area hit: a unit's splash and a death's area, each hit of an area effect, and the arrival of a projectile with an area. `D` floats the hit points and shield each character lost since the last frame.
+
+### Presentation plugins
+
+The arena is drawn by a plugin. With none on the classpath, the built-in visualizer draws it: `org.crforge.desktop.presentation.BuiltinPresentation`, which wraps `BattleRenderer`, is what `:desktop:run` always used and is selected with nothing configured. A plugin implements `org.crforge.presentation.PresentationPlugin` from the `presentation-api` module, names itself in `META-INF/services/org.crforge.presentation.PresentationPlugin` and is found by `java.util.ServiceLoader`. `./gradlew :desktop:run -Pcrforge.presentationPlugin=<jar>` puts its jar on the run's classpath. If several are found, the lowest id is used and the log says so.
+
+The API is a thin first slice, with no engine in it, so a renderer in any engine can read the same frames:
+
+- **Read-only by construction.** A plugin receives records of primitives, strings, enums and unmodifiable lists, detached from the battle (`TickFrame`, `EntityFrame`). The module depends on nothing, so no type of the battle core or a graphics engine can reach its surface. A plugin is not given `EntityView.grid`, `BattleWorld` or `WorldObserver`, the live channels the built-in visualizer's overlays and area hits read.
+- **Tick-driven.** `tick` is called for each tick the battle runs, however many run in one display refresh, and `present` carries no time: what is shown follows the ticks. Pausing stops `tick` while `present` goes on.
+- **Lifecycle.** `battleStarted` comes before a battle's first frame: the first battle, a restart, a step back, a data version switch or another replay. A step back plays the battle again to the tick before, and a plugin hears only the tick reached. `close` comes last.
+- **Failures stay the plugin's.** An exception from a plugin is logged, the plugin is closed and the built-in visualizer draws on, with the battle unaffected.
+
+The Javadoc of `org.crforge.presentation` lists what is deferred until a renderer needs it: attack timers and other per-tick fields, value events such as a universal death, match fields, statuses and audio. The workspace (hand panels, toolbar, log) is not drawn by a plugin, and its overlay toggles act on the built-in visualizer only.
+
+With no plugin the host adds nothing to the frame: it attaches no listener to the battle and builds no frame beyond the one the screen builds. Building per-tick frames for a plugin only reads the battle: `TickFramesTest` plays the example replay with and without them to the same end state.
+
+### Golden draw traces
+
+`VisualizerGoldenTest` holds what the visualizer draws to the traces committed in `desktop/src/test/resources/golden`, one per screen and data version. It runs the real application with no display (`HeadlessGdx`): an OpenGL that digests every call with its buffers, including vertices, uniforms and texture pixels, a fixed delta time, and scripted keys, buttons and mouse moves through the window's input (`VisualizerTrace`). Each line holds a frame's tick, call counts and digest, so the first line that differs says which frame and input changed. On another data version's tables the test is skipped.
+
+Two things are left out, as neither is stable from run to run: the 100 milliseconds of wall clock scene2d keeps a clicked button drawn pressed, and the order of a frame's `glDelete*` calls, which follows hash maps keyed by identity. Frames showing the tables folder, after `V`, are recorded as run with no digest, since the folder is this machine's. The digests are of OpenGL calls, not pixels: they say the same is asked of the driver.
+
+A change that means to alter what is drawn, or a data version bump, writes the traces anew with `./gradlew :desktop:visualizerGolden`.
 
 ### Workspace interaction checks
 

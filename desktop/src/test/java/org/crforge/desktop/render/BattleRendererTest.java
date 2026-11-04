@@ -23,8 +23,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * What the battle renderer works out without drawing: the arena's colours from the battle's tile
- * map and a spell's preview circle from its rows. The drawing itself needs a GL context, which the
- * tests do not have; it is checked by running the visualizer.
+ * map and a spell's preview circle from its rows. The drawing itself is held to its committed draw
+ * trace by {@link org.crforge.desktop.VisualizerGoldenTest} and checked by running the visualizer.
  */
 class BattleRendererTest {
 

@@ -31,6 +31,7 @@ import org.crforge.desktop.battle.DataVersions;
 import org.crforge.desktop.battle.LandingTiles;
 import org.crforge.desktop.model.ModelOpponent;
 import org.crforge.desktop.model.ModelView;
+import org.crforge.desktop.presentation.PresentationHost;
 import org.crforge.desktop.render.BattleRenderer;
 import org.crforge.desktop.render.BattleWorkspace;
 import org.crforge.desktop.render.ViewOrientation;
@@ -88,6 +89,7 @@ public class DebugGameScreen implements Screen {
   private final DataVersions versions;
 
   private final BattleRenderer renderer;
+  private final PresentationHost presentation;
   private final OrthographicCamera camera;
   private final BattleWorkspace workspace;
   private InputAdapter controls;
@@ -128,6 +130,7 @@ public class DebugGameScreen implements Screen {
   public DebugGameScreen(DataVersions versions, BattleSession first) {
     this.versions = versions;
     this.renderer = new BattleRenderer();
+    this.presentation = PresentationHost.discover(renderer);
 
     this.camera = new OrthographicCamera();
 
@@ -431,6 +434,7 @@ public class DebugGameScreen implements Screen {
     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
     try {
+      presentation.follow(session);
       // Fixed timestep simulation: a frame covers several steps at high speeds and none at low
       // ones.
       if (!paused && session.getHalted() == null && !session.isOver()) {
@@ -513,7 +517,7 @@ public class DebugGameScreen implements Screen {
                   GameUnits.tileCenter(hoverTileX),
                   GameUnits.tileCenter(hoverTileY))
               : null;
-      renderer.render(
+      presentation.present(
           frame,
           camera,
           new BattleRenderer.Inputs(
@@ -532,7 +536,7 @@ public class DebugGameScreen implements Screen {
               List.of(),
               List.of(versions.statusLine(), F_NOTE),
               view),
-          false);
+          workspace.presentContext());
       newAreaHits.clear();
       workspace.draw(delta);
     } catch (Exception e) {
@@ -630,6 +634,7 @@ public class DebugGameScreen implements Screen {
 
   @Override
   public void dispose() {
+    presentation.close();
     workspace.dispose();
     renderer.dispose();
   }

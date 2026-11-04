@@ -108,7 +108,8 @@ subprojects {
         // own tests build theirs themselves. The reference battles (:conformance:referenceTest)
         // read the data version's tables alone, so that task builds that one version
         // (:tables:dataVersionTables): a CI job running one version's references builds no other.
-        if (project.name != "tables") {
+        // The presentation API's tests read no tables.
+        if (project.name != "tables" && project.name != "presentation-api") {
             val gameTables = "$builtTablesRoot/$dataVersion"
             val readsDataVersionAlone = project.name == "conformance" && name == "referenceTest"
             dependsOn(

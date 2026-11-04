@@ -12,6 +12,9 @@ plugins {
 dependencies {
     implementation(project(":core"))
 
+    // What a presentation plugin is given (org.crforge.desktop.presentation)
+    implementation(project(":presentation-api"))
+
     // The model opponent (--model): the environment builds the model's observation and mask and
     // takes its actions as in training, and ONNX Runtime runs the exported policy
     implementation(project(":env"))
@@ -65,6 +68,11 @@ tasks.named<JavaExec>("run") {
     systemProperty("crforge.tablesRoot", rootProject.extra["crforge.builtTablesRoot"] as String)
     systemProperty("crforge.dataVersion", rootProject.extra["crforge.dataVersion"] as String)
     systemProperty("crforge.lockVersion", rootProject.extra["crforge.lockVersion"] as String)
+    // A presentation plugin's jars for this run (-Pcrforge.presentationPlugin=<jar>[:<jar>...]), found
+    // by ServiceLoader; without any, the built-in visualizer draws.
+    (findProperty("crforge.presentationPlugin") as String?)?.let {
+        classpath += files(it.split(File.pathSeparator))
+    }
 }
 
 // Opt-in graphics integration checks. Requires a display/OpenGL; never part of headless check.
@@ -87,6 +95,22 @@ tasks.register<JavaExec>("uiSmoke") {
         "crforge.gameTables",
         "${rootProject.extra["crforge.builtTablesRoot"]}/${rootProject.extra["crforge.dataVersion"]}",
     )
+}
+
+// Writes the committed traces of what the visualizer draws anew (VisualizerTrace,
+// VisualizerGoldenTest): for a change that means to alter what is drawn, or a data version bump.
+tasks.register<JavaExec>("visualizerGolden") {
+    group = "verification"
+    description = "Writes the visualizer's golden draw traces to src/test/resources/golden."
+    dependsOn(tasks.testClasses, ":tables:gameTables")
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("org.crforge.desktop.VisualizerTrace")
+    systemProperty(
+        "crforge.gameTables",
+        "${rootProject.extra["crforge.builtTablesRoot"]}/${rootProject.extra["crforge.dataVersion"]}",
+    )
+    systemProperty("crforge.exampleReplay", rootProject.file("examples/replays/ladder.json").absolutePath)
+    args(file("src/test/resources").absolutePath)
 }
 
 // An exported model to play a whole battle against in the desktop tests

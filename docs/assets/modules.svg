@@ -68,7 +68,7 @@
 <text x="42" y="687" class="m" font-size="13" fill="#1f2328">battle/  the debug screen</text>
 <text x="42" y="705" class="m" font-size="13" fill="#1f2328">replay/  the replay viewer</text>
 <text x="42" y="723" class="m" font-size="13" fill="#1f2328">model/   a model opponent</text>
-<text x="42" y="741" class="m" font-size="13" fill="#1f2328">render/, screen/</text>
+<text x="42" y="741" class="m" font-size="13" fill="#1f2328">render/ screen/ presentation/</text>
 <rect x="350" y="596" width="260" height="155" rx="8" fill="#fff1e5" stroke="#fb8f44" stroke-width="1.5"/>
 <text x="362" y="623" class="m" font-size="15" font-weight="600" fill="#953800">:env</text>
 <text x="362" y="645" class="s" font-size="13.5" fill="#424a53">The reinforcement learning</text>
@@ -110,7 +110,11 @@
 <text x="42" y="868" class="s" font-size="13.5" fill="#424a53">(not a Gradle module)</text>
 <text x="42" y="892" class="m" font-size="13" fill="#1f2328">replays/ladder.json</text>
 <polyline points="160,801 160,753" fill="none" stroke="#57606a" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#head)"/>
-<text x="170" y="783" class="s" font-size="12" font-style="italic" fill="#57606a">opened by the replay viewer</text>
+<text x="170" y="783" class="s" font-size="12" font-style="italic" fill="#57606a">opened by the viewer</text>
+<rect x="350" y="761" width="260" height="52" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+<text x="362" y="783" class="m" font-size="15" font-weight="600" fill="#424a53">:presentation-api</text>
+<text x="362" y="802" class="s" font-size="13.5" fill="#424a53">What a drawing plugin is given</text>
+<polyline points="290,735 320,735 320,787 348,787" fill="none" stroke="#57606a" stroke-width="1.6" marker-end="url(#head)"/>
 <polyline points="350,831 390,831" fill="none" stroke="#57606a" stroke-width="1.6" marker-end="url(#head)"/>
 <text x="400" y="835" class="s" font-size="12" fill="#424a53">depends on (Gradle project dependency)</text>
 <polyline points="350,853 390,853" fill="none" stroke="#57606a" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#head)"/>

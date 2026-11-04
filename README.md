@@ -149,10 +149,11 @@ The plays are the replay's own: cards cannot be selected or played in the viewer
 | `desktop`     | LibGDX debug visualizer for watching and interacting with matches                           |
 | `conformance` | Checks the battle core against recorded reference battles ([README](conformance/README.md)) |
 | `env`         | The reinforcement learning environment: a vector of battles behind flat buffers ([docs](docs/environment.md)) |
+| `presentation-api` | What a plugin that draws a battle is given: engine-agnostic, read-only frames, tick by tick. With no plugin, the visualizer draws as always ([docs](docs/architecture.md#presentation-plugins)) |
 | `tables`      | The table decoder: builds the game tables of a data version from the game's files           |
 | `python/`     | The `crforge-env` Python package: the environment's vector and wrappers for Python trainers ([README](python/README.md)) |
 
-`core` has no GUI dependencies. `conformance` and `env` depend on `core` only, `desktop` on `core` and `env` (and ONNX Runtime, for a model opponent), and `tables` on nothing in the project. `python/` is not a Gradle module: it runs the `env` module's installed jars in the JVM. The recorded battles live in a separate game data repository, at the commit `crforge-data.lock` names.
+`core` has no GUI dependencies. `conformance` and `env` depend on `core` only, `desktop` on `core`, `env` and `presentation-api` (and ONNX Runtime, for a model opponent), and `tables` and `presentation-api` on nothing in the project. `python/` is not a Gradle module: it runs the `env` module's installed jars in the JVM. The recorded battles live in a separate game data repository, at the commit `crforge-data.lock` names.
 
 ## Docs
 

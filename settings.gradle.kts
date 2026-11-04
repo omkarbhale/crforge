@@ -10,6 +10,7 @@ plugins {
 
 rootProject.name = "crforge"
 
+include("presentation-api")
 include("core")
 include("tables")
 include("desktop")

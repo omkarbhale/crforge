@@ -31,6 +31,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import org.crforge.desktop.battle.BattleFrame;
+import org.crforge.presentation.PresentContext;
 
 /** Scene2D controls surrounding a separately projected arena; never steps or mutates a battle. */
 public final class BattleWorkspace implements Disposable {
@@ -509,6 +510,16 @@ public final class BattleWorkspace implements Disposable {
             Math.max(1, Math.round(arena.getWidth())),
             Math.max(1, Math.round(arena.getHeight())));
     arenaViewport.setScreenBounds(bounds.x(), bounds.y(), bounds.width(), bounds.height());
+  }
+
+  /** The arena's place in the window: where a plugin draws. */
+  public PresentContext presentContext() {
+    return new PresentContext(
+        bounds.x(),
+        bounds.y(),
+        bounds.width(),
+        bounds.height(),
+        view.getOrientation().bottomSide());
   }
 
   public boolean onArena(int screenX, int screenY) {
