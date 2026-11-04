@@ -12,6 +12,9 @@ plugins {
 dependencies {
     implementation(project(":core"))
 
+    // What a presentation plugin is given (org.crforge.desktop.presentation)
+    implementation(project(":presentation-api"))
+
     // The model opponent (--model): the environment builds the model's observation and mask and
     // takes its actions as in training, and ONNX Runtime runs the exported policy
     implementation(project(":env"))
@@ -65,6 +68,11 @@ tasks.named<JavaExec>("run") {
     systemProperty("crforge.tablesRoot", rootProject.extra["crforge.builtTablesRoot"] as String)
     systemProperty("crforge.dataVersion", rootProject.extra["crforge.dataVersion"] as String)
     systemProperty("crforge.lockVersion", rootProject.extra["crforge.lockVersion"] as String)
+    // A presentation plugin's jars for this run (-Pcrforge.presentationPlugin=<jar>[:<jar>...]), found
+    // by ServiceLoader; without any, the built-in visualizer draws.
+    (findProperty("crforge.presentationPlugin") as String?)?.let {
+        classpath += files(it.split(File.pathSeparator))
+    }
 }
 
 // Opt-in graphics integration checks. Requires a display/OpenGL; never part of headless check.

@@ -35,6 +35,12 @@ class VisualizerGoldenTest {
   @BeforeAll
   static void read() {
     tables = GameTables.loadConfigured();
+    assumeTrue(
+        VisualizerGoldenTest.class
+                .getClassLoader()
+                .getResource(VisualizerTrace.resource("debug", tables.version()))
+            != null,
+        "no committed trace for data version " + tables.version());
     folder = Path.of(System.getProperty("crforge.gameTables"));
     example = Path.of(System.getProperty("crforge.exampleReplay"));
   }
@@ -58,11 +64,15 @@ class VisualizerGoldenTest {
         .isEqualTo(VisualizerTrace.replay(tables, folder, example));
   }
 
+  private static InputStream golden(String scenario) {
+    return VisualizerGoldenTest.class
+        .getClassLoader()
+        .getResourceAsStream(VisualizerTrace.resource(scenario, tables.version()));
+  }
+
   private static void assertMatches(String scenario, List<String> actual) throws IOException {
     String resource = VisualizerTrace.resource(scenario, tables.version());
-    try (InputStream golden =
-        VisualizerGoldenTest.class.getClassLoader().getResourceAsStream(resource)) {
-      assumeTrue(golden != null, "no committed trace for data version " + tables.version());
+    try (InputStream golden = golden(scenario)) {
       List<String> expected =
           new String(golden.readAllBytes(), StandardCharsets.UTF_8).lines().toList();
       for (int line = 0; line < Math.min(expected.size(), actual.size()); line++) {

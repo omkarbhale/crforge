@@ -123,6 +123,9 @@ public final class BattleSession {
   /** The model playing one side, or null when the screen plays both. */
   @Getter private final ModelOpponent model;
 
+  /** Told after each step that ran to its end, or null: see {@link #setStepListener}. */
+  private Runnable stepListener;
+
   private BattleSession(Standard1v1Battle battle, List<int[]> deckLevels) {
     this(battle, deckLevels, null);
   }
@@ -280,7 +283,20 @@ public final class BattleSession {
       return false;
     }
     readPlays();
+    if (stepListener != null) {
+      stepListener.run();
+    }
     return true;
+  }
+
+  /**
+   * Who hears of each step that ran to its end, to read the battle between steps. It is outside the
+   * step, so what it throws is not a halt of the battle: a listener contains its own failures.
+   *
+   * @param listener what is told, or null for nothing
+   */
+  public void setStepListener(Runnable listener) {
+    this.stepListener = listener;
   }
 
   /** Tells the player what the model did as a decision opened: a play given, or refused. */

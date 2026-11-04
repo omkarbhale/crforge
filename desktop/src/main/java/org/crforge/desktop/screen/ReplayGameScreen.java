@@ -23,6 +23,7 @@ import org.crforge.desktop.battle.BattleAdapter;
 import org.crforge.desktop.battle.BattleFrame;
 import org.crforge.desktop.battle.BattleSession;
 import org.crforge.desktop.battle.DataVersions;
+import org.crforge.desktop.presentation.PresentationHost;
 import org.crforge.desktop.render.BattleRenderer;
 import org.crforge.desktop.render.BattleWorkspace;
 import org.crforge.desktop.render.ViewOrientation;
@@ -79,6 +80,7 @@ public class ReplayGameScreen implements Screen {
   private int selected = -1;
 
   private final BattleRenderer renderer;
+  private final PresentationHost presentation;
   private final OrthographicCamera camera;
   private final BattleWorkspace workspace;
   private InputAdapter controls;
@@ -134,6 +136,7 @@ public class ReplayGameScreen implements Screen {
     this.versions = versions;
     this.browser = browser;
     this.renderer = new BattleRenderer();
+    this.presentation = PresentationHost.discover(renderer);
 
     this.camera = new OrthographicCamera();
     setupInput();
@@ -349,6 +352,7 @@ public class ReplayGameScreen implements Screen {
         workspace.draw(delta);
         return;
       }
+      presentation.follow(session);
       player.advance(delta);
       newAreaHits.addAll(player.drainAreaHits());
       logStop();
@@ -372,7 +376,7 @@ public class ReplayGameScreen implements Screen {
           player.getReplay().header().endTick());
       workspace.beginArena();
       updateHover(Gdx.input.getX(), Gdx.input.getY());
-      renderer.render(
+      presentation.present(
           frame,
           camera,
           new BattleRenderer.Inputs(
@@ -391,7 +395,7 @@ public class ReplayGameScreen implements Screen {
               status,
               List.of(),
               view),
-          false);
+          workspace.presentContext());
       newAreaHits.clear();
       workspace.draw(delta);
     } catch (Exception e) {
@@ -467,6 +471,7 @@ public class ReplayGameScreen implements Screen {
 
   @Override
   public void dispose() {
+    presentation.close();
     workspace.dispose();
     renderer.dispose();
   }
