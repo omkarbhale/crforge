@@ -1,0 +1,8 @@
+# This is the captain's fork. crforge's GitHub CI cannot run here: the Build job
+# needs voonhous's PRIVATE game-tables repo (secrets.GAME_TABLES_KEY), which a
+# fork does not receive, so it false-fails at :tables:gameTables regardless of
+# our changes. GitHub Actions is disabled on this fork for that reason.
+# no-mistakes validates locally instead (build / unit tests / golden capture,
+# using CDN-sourced tables). Remove no_ci only if the fork is ever granted the
+# game-tables data secret and Actions is re-enabled.
+no_ci: true
