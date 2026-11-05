@@ -814,12 +814,6 @@ public abstract class WorldEntity extends BattleEntity implements ActionOwner, S
 
       @Override
       public void dealDamage(
-          TargetView target, int damage, int hitId, int directionX, int directionY) {
-        dealDamage(target, damage, hitId, directionX, directionY, false);
-      }
-
-      @Override
-      public void dealDamage(
           TargetView target,
           int damage,
           int hitId,
@@ -871,11 +865,6 @@ public abstract class WorldEntity extends BattleEntity implements ActionOwner, S
       @Override
       public void runAttackSelfAction() {
         WorldEntity.this.runAttackSelfAction();
-      }
-
-      @Override
-      public void areaDamage(int x, int y, int radius, int damage, int towerDamage, int hitId) {
-        areaDamage(x, y, radius, damage, towerDamage, hitId, false);
       }
 
       @Override

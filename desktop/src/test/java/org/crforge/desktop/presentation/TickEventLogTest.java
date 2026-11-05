@@ -31,6 +31,7 @@ import org.crforge.presentation.BattleStart;
 import org.crforge.presentation.DeathCause;
 import org.crforge.presentation.DeathFrame;
 import org.crforge.presentation.EntityFrame;
+import org.crforge.presentation.EntityState;
 import org.crforge.presentation.PresentContext;
 import org.crforge.presentation.PresentationPlugin;
 import org.crforge.presentation.StatusFrame;
@@ -41,7 +42,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The deaths, strikes and statuses a plugin's frames tell, from battles played on the tables. */
+/** The deaths, strikes, statuses and clones a plugin's frames tell, from battles on the tables. */
 class TickEventLogTest {
 
   private static final int LEVEL = 11;
@@ -302,26 +303,44 @@ class TickEventLogTest {
         .allMatch(entity -> entity.statuses().isEmpty());
   }
 
+  /**
+   * A plugin can begin on a battle at any tick, as it does on a step back, which rebuilds the
+   * session: its first frame alone has to say which unit is the clone, with no setup seen.
+   */
   @Test
-  @DisplayName("a clone setup keeps its row name; the clone flag is no buff row")
-  void cloneIsNoStatus() {
+  @DisplayName("a clone is flagged on a plugin's first frame, past its setup, and is no buff row")
+  void cloneOnFirstFrame(@TempDir Path services) throws IOException {
     Played played =
-        new Played().play(1, "Knight", 0, 4500, 9000).play(40, "Clone", 0, 4500, 9000).run(200);
-    List<EntityFrame> entities = played.frames.get(played.frames.size() - 1).entities();
-    assertThat(entities.stream().filter(entity -> entity.name().equals("Knight")).count())
-        .as("the clone stands")
-        .isEqualTo(2);
+        new Played().play(1, "Knight", 0, 4500, 9000).play(40, "Clone", 0, 4500, 9000).run(120);
+    assertThat(played.frames.stream().flatMap(frame -> frame.entities().stream()))
+        .as("the clone's setup, before the plugin begins")
+        .anyMatch(entity -> entity.isClone() && entity.state() == EntityState.CLONE_SETUP);
+
+    try (URLClassLoader loader = recordingPlugin(services)) {
+      PresentationHost host = PresentationHost.discover(null, loader);
+      host.follow(played.session);
+      played.run(1);
+      host.close();
+    }
+
+    assertThat(Recording.last.frames).hasSize(2);
+    for (TickFrame frame : Recording.last.frames) {
+      assertThat(frame.entities()).noneMatch(entity -> entity.state() == EntityState.CLONE_SETUP);
+      List<EntityFrame> knights =
+          frame.entities().stream().filter(entity -> entity.name().equals("Knight")).toList();
+      assertThat(knights).as("the Knight and its clone").hasSize(2);
+      assertThat(knights).filteredOn(EntityFrame::isClone).as("the clone alone").hasSize(1);
+      assertThat(frame.entities()).filteredOn(EntityFrame::isClone).hasSize(1);
+      assertThat(knights).allMatch(knight -> knight.statuses().isEmpty());
+    }
     assertThat(
             played.frames.stream()
                 .flatMap(frame -> frame.entities().stream())
                 .flatMap(entity -> entity.statuses().stream())
                 .map(StatusFrame::name))
-        .doesNotContain("Clone setup");
-    assertThat(
-            BattleAdapter.frame(played.session).entities().stream()
-                .anyMatch(view -> view.statuses().stream().anyMatch(s -> s.row() == null)))
-        .as("the view still holds the flag")
-        .isTrue();
+        .as("only buff rows, its setup's among them")
+        .isNotEmpty()
+        .allMatch(tables.table("character_buffs")::has);
   }
 
   @Test
@@ -348,14 +367,9 @@ class TickEventLogTest {
         ReplayFile.read(Path.of(System.getProperty("crforge.exampleReplay")), tables);
     assumeTrue(
         replay.playable(), "the example replay plays only on the tables of its own data version");
-    Path service = services.resolve("META-INF/services/" + PresentationPlugin.class.getName());
-    Files.createDirectories(service.getParent());
-    Files.writeString(service, Recording.class.getName() + "\n");
 
     ReplayPlayer followed = new ReplayPlayer(replay, tables);
-    try (URLClassLoader loader =
-        new URLClassLoader(
-            new URL[] {services.toUri().toURL()}, TickEventLogTest.class.getClassLoader())) {
+    try (URLClassLoader loader = recordingPlugin(services)) {
       PresentationHost host = PresentationHost.discover(null, loader);
       host.follow(followed.getSession());
       while (followed.step()) {
@@ -367,10 +381,12 @@ class TickEventLogTest {
 
     ReplayPlayer plain = new ReplayPlayer(replay, tables);
     assertThat(heard).hasSizeGreaterThan(1000);
-    assertSameBattle(TickFrames.of(BattleAdapter.frame(plain.getSession())), heard.get(0));
+    assertSameBattle(
+        TickFrames.of(BattleAdapter.frame(plain.getSession()), List.of(), List.of()), heard.get(0));
     for (TickFrame frame : heard.subList(1, heard.size())) {
       assertThat(plain.step()).as("the plain battle plays on past %s", frame.tick()).isTrue();
-      assertSameBattle(TickFrames.of(BattleAdapter.frame(plain.getSession())), frame);
+      assertSameBattle(
+          TickFrames.of(BattleAdapter.frame(plain.getSession()), List.of(), List.of()), frame);
     }
     assertThat(plain.step()).as("both end together").isFalse();
 
@@ -388,6 +404,15 @@ class TickEventLogTest {
     assertThat(followed.winner()).isEqualTo(alone.winner());
     assertThat(followed.entities()).as("tick %s", alone.tick()).isEqualTo(alone.entities());
     assertThat(followed.sides()).as("tick %s", alone.tick()).isEqualTo(alone.sides());
+  }
+
+  /** A class loader with {@link Recording}'s service file on it, as a plugin's jar would have. */
+  private static URLClassLoader recordingPlugin(Path services) throws IOException {
+    Path service = services.resolve("META-INF/services/" + PresentationPlugin.class.getName());
+    Files.createDirectories(service.getParent());
+    Files.writeString(service, Recording.class.getName() + "\n");
+    return new URLClassLoader(
+        new URL[] {services.toUri().toURL()}, TickEventLogTest.class.getClassLoader());
   }
 
   /** A plugin that keeps every frame, found by the host through its service file. */

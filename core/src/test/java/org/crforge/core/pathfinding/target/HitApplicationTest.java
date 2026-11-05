@@ -83,11 +83,6 @@ class HitApplicationTest {
     public void dealDamage(
         TargetView hit, int damage, int hitId, int directionX, int directionY, boolean special) {
       specials.add(special);
-      dealDamage(hit, damage, hitId, directionX, directionY);
-    }
-
-    @Override
-    public void dealDamage(TargetView hit, int damage, int hitId, int directionX, int directionY) {
       order.add("damage");
       dealt.add(
           "%s %d %d %d %d"

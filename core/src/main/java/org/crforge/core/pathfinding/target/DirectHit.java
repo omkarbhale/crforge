@@ -55,18 +55,8 @@ public final class DirectHit {
    * @param target what the hit is aimed at, or null when the attacker has already given it up
    * @param damage the plain damage the hit application chose
    * @param missed true when the hit was cancelled and lands on nothing
+   * @param special whether it is a special hit, which only goes on to whoever observes the battle
    * @param queries where the hit id comes from and where the damage goes
-   */
-  public static void resolve(
-      TargetingState t, TargetView target, int damage, boolean missed, HitQueries queries) {
-    resolve(t, target, damage, missed, false, queries);
-  }
-
-  /**
-   * Resolves one hit as {@link #resolve(TargetingState, TargetView, int, boolean, HitQueries)}
-   * does, knowing whether it is a special hit, which only goes on to whoever observes the battle.
-   *
-   * @param special whether it is a special hit
    */
   public static void resolve(
       TargetingState t,

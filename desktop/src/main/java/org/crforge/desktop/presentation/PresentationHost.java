@@ -40,7 +40,7 @@ public final class PresentationHost {
   /** The battle a plugin was last told of, or null. */
   private BattleSession followed;
 
-  /** What that battle's ticks are collecting for a plugin, or null before the first tick. */
+  /** What that battle's ticks are collecting for a plugin, or null while none is told. */
   private TickEventLog events;
 
   private PresentationHost(BuiltinPresentation builtin, PresentationPlugin active) {
@@ -103,6 +103,7 @@ public final class PresentationHost {
     }
     stopFollowing();
     followed = session;
+    events = new TickEventLog();
     contained(
         () -> {
           TileMap map = session.getBattle().getWorld().getTileMap();
@@ -114,7 +115,6 @@ public final class PresentationHost {
       // Attached after the battle's first tell, which reports no tick having run: the log hears
       // from the next step on. It only listens, and the session's own area log already keeps the
       // battle's observer list from being empty.
-      events = new TickEventLog();
       session.getBattle().getWorld().addObserver(events);
       session.setStepListener(() -> contained(() -> tellTick(session)));
     }
@@ -122,10 +122,7 @@ public final class PresentationHost {
 
   private void tellTick(BattleSession session) {
     active.tick(
-        events == null
-            ? TickFrames.of(BattleAdapter.frame(session))
-            : TickFrames.of(
-                BattleAdapter.frame(session), events.drainDeaths(), events.drainStrikes()));
+        TickFrames.of(BattleAdapter.frame(session), events.drainDeaths(), events.drainStrikes()));
   }
 
   /** Lets go of the battle followed: no more ticks, and its log stops collecting. */

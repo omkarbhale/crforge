@@ -38,10 +38,6 @@ final class TickFrames {
     // Utility class
   }
 
-  static TickFrame of(BattleFrame frame) {
-    return of(frame, List.of(), List.of());
-  }
-
   /**
    * A plugin's frame with the tick's events.
    *
@@ -172,7 +168,8 @@ final class TickFrames {
         view.aimX(),
         view.aimY(),
         view.height(),
-        statuses(view));
+        statuses(view),
+        view.hasStatus(UnitStatus.Kind.CLONE));
   }
 
   /** The buffs on an entity; a clone's flag stands in the view's statuses but is no buff row. */

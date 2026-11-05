@@ -6,7 +6,9 @@
 
 package org.crforge.presentation;
 
-/** What ended a character. A morph and a plain removal end none: they are no deaths. */
+/**
+ * What ended a character or crown tower. A morph and a plain removal end none: they are no deaths.
+ */
 public enum DeathCause {
   /** A hit, a spell, a buff or a rule of the match took its hit points. */
   KILLED,

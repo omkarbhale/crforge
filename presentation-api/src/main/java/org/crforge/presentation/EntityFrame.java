@@ -39,7 +39,8 @@ import java.util.List;
  * @param aimX a projectile's aim along the width, 0 otherwise
  * @param aimY a projectile's aim along the length, 0 otherwise
  * @param height a projectile's height above the ground, 0 otherwise
- * @param statuses the buffs on a character now, empty for anything else
+ * @param statuses the buffs on a character or crown tower now, empty for anything else
+ * @param isClone whether a character is a clone, for its whole life; false for anything else
  */
 public record EntityFrame(
     int id,
@@ -66,15 +67,17 @@ public record EntityFrame(
     int aimX,
     int aimY,
     int height,
-    List<StatusFrame> statuses) {
+    List<StatusFrame> statuses,
+    boolean isClone) {
 
   public EntityFrame {
     statuses = List.copyOf(statuses);
   }
 
   /**
-   * A frame with no statuses. Kept on purpose: crforge-render builds against this module live, and
-   * its tests and harness tools construct frames with this signature, so removing it breaks them.
+   * A frame with no statuses, of no clone. Kept on purpose: crforge-render builds against this
+   * module live, and its tests and harness tools construct frames with this signature, so removing
+   * it breaks them.
    */
   public EntityFrame(
       int id,
@@ -126,6 +129,7 @@ public record EntityFrame(
         aimX,
         aimY,
         height,
-        List.of());
+        List.of(),
+        false);
   }
 }

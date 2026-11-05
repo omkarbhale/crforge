@@ -50,9 +50,10 @@ class PresentationApiTest {
 
   /** Those signatures are held for crforge-render, whose tests and tools construct frames. */
   @Test
-  @DisplayName("the constructors from before statuses and events default them to empty")
+  @DisplayName("the constructors from before statuses and events default them to empty, no clone")
   void olderConstructors() {
     assertThat(entity(1).statuses()).isEmpty();
+    assertThat(entity(1).isClone()).isFalse();
     TickFrame frame = frame(List.of(entity(1)), List.of());
     assertThat(frame.deaths()).isEmpty();
     assertThat(frame.strikes()).isEmpty();
@@ -92,7 +93,8 @@ class PresentationApiTest {
             old.aimX(),
             old.aimY(),
             old.height(),
-            statuses);
+            statuses,
+            false);
     TickFrame frame =
         new TickFrame(
             7, 350, false, -1, List.of(), false, 1, List.of(), 0, 0, 0, 0, 0, deaths, strikes);

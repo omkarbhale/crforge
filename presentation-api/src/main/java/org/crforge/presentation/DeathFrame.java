@@ -7,7 +7,8 @@
 package org.crforge.presentation;
 
 /**
- * A character that died in the tick just run, told once. Positions are in game units.
+ * A character or crown tower that died in the tick just run, told once. Positions are in game
+ * units.
  *
  * @param id the entity's id in the battle
  * @param name its row name in the game tables

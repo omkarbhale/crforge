@@ -508,17 +508,7 @@ public final class HitQueue {
    * @param damage hit points the hit deals, before the target's guards and the clamp to zero
    * @param directionX direction of the hit along the arena's width
    * @param directionY direction of the hit along the arena's length
-   */
-  public void dealDirectHit(
-      WorldEntity attacker, TargetView target, int damage, int directionX, int directionY) {
-    dealDirectHit(attacker, target, damage, directionX, directionY, false);
-  }
-
-  /**
-   * Deals a direct hit as {@link #dealDirectHit(WorldEntity, TargetView, int, int, int)} does,
-   * knowing whether it is a special hit, which only the observers are told.
-   *
-   * @param special whether it is a special hit
+   * @param special whether it is a special hit, which only the observers are told
    */
   public void dealDirectHit(
       WorldEntity attacker,
