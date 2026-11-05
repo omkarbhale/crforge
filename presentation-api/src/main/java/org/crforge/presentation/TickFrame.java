@@ -14,7 +14,8 @@ import java.util.List;
  * @param tick how many ticks the battle has run. A tick's own events belong to the tick before this
  *     number: the frame reads the battle after its count moved on
  * @param timeMs the battle's clock in milliseconds
- * @param ended whether the match has ended
+ * @param ended whether the match has ended. The end freezes the match's timeline: the section and
+ *     {@code sectionLeftMs} stop, while {@code timeMs} keeps following the ticks
  * @param winner the side that won, 0 or 1, or -1 for none (yet)
  * @param entities every entity in the battle at this tick; one that left during the tick is absent
  * @param overtime whether the match is in overtime
@@ -24,8 +25,6 @@ import java.util.List;
  * @param section the match's current section, counted from 0; 0 outside a match
  * @param sectionLeftMs the time left in that section in milliseconds, 0 for a section without a
  *     length and outside a match
- * @param frozen whether the match's end has frozen its timeline: the section and {@code
- *     sectionLeftMs} stop, while {@code timeMs} keeps following the ticks
  * @param endTimerMs the match's end timer: 0 until it ends, then rising
  * @param tiebreakMs the tiebreaker's time: 0 until it begins, then rising
  * @param nextCardCooldownMs the length a hand's refill countdown restarts at after filling a slot,
@@ -42,7 +41,6 @@ public record TickFrame(
     List<SideFrame> sides,
     int section,
     int sectionLeftMs,
-    boolean frozen,
     int endTimerMs,
     int tiebreakMs,
     int nextCardCooldownMs) {

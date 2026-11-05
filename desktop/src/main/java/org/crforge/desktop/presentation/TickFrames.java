@@ -54,7 +54,6 @@ final class TickFrames {
         sides,
         frame.section(),
         frame.sectionLeftMs(),
-        frame.frozen(),
         frame.endTimerMs(),
         frame.tiebreakMs(),
         frame.nextCardCooldownMs());

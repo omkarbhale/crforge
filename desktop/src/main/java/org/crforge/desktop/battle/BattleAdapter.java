@@ -111,7 +111,6 @@ public final class BattleAdapter {
     int winner = -1;
     int section = 0;
     int sectionLeft = 0;
-    boolean frozen = false;
     int endTimer = 0;
     int tiebreak = 0;
     int nextCardCooldown = 0;
@@ -128,7 +127,6 @@ public final class BattleAdapter {
       winner = match.getWinner();
       section = timeline.getSection();
       sectionLeft = timeline.sectionLeftMs();
-      frozen = timeline.isFrozen();
       endTimer = match.getEndTimerMs();
       tiebreak = match.getTiebreakMs();
       nextCardCooldown = timeline.getNextCardCooldownMs();
@@ -147,7 +145,6 @@ public final class BattleAdapter {
         session.messages(sideNames),
         section,
         sectionLeft,
-        frozen,
         endTimer,
         tiebreak,
         nextCardCooldown);

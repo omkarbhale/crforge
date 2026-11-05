@@ -109,7 +109,7 @@ class PresentationApiTest {
   }
 
   private static TickFrame frame(List<EntityFrame> entities, List<SideFrame> sides) {
-    return new TickFrame(7, 350, false, -1, entities, false, 1, sides, 0, 0, false, 0, 0, 0);
+    return new TickFrame(7, 350, false, -1, entities, false, 1, sides, 0, 0, 0, 0, 0);
   }
 
   private static EntityFrame entity(int id) {

@@ -21,7 +21,8 @@ import org.crforge.core.battle.unit.ChampionController;
  * @param entities every entity of the holder's live list in its own order, mapped to its kind;
  *     objects that stand nowhere on the arena are left out
  * @param sides side 0 then side 1 in a match; empty outside one
- * @param ended whether the match has ended
+ * @param ended whether the match has ended. The end freezes the match's timeline: the section and
+ *     {@code sectionLeftMs} stop, while {@code timeMs} keeps following the ticks
  * @param winner the winning side, or -1 for a draw, once the match has ended
  * @param over whether the battle has stopped stepping by its own rule
  * @param halted why the session stopped stepping on a refusal, or null
@@ -29,8 +30,6 @@ import org.crforge.core.battle.unit.ChampionController;
  * @param section the match timeline's current section, counted from 0; 0 outside a match
  * @param sectionLeftMs the time left in that section in milliseconds, 0 for a section without a
  *     length and outside a match
- * @param frozen whether the match's end has frozen its timeline: the section and {@code
- *     sectionLeftMs} stop, while {@code timeMs} keeps following the ticks
  * @param endTimerMs the match's end timer: 0 until it ends, then rising
  * @param tiebreakMs the tiebreaker's time: 0 until it begins, then rising
  * @param nextCardCooldownMs the length a hand's refill countdown restarts at after filling a slot,
@@ -50,7 +49,6 @@ public record BattleFrame(
     List<String> messages,
     int section,
     int sectionLeftMs,
-    boolean frozen,
     int endTimerMs,
     int tiebreakMs,
     int nextCardCooldownMs) {

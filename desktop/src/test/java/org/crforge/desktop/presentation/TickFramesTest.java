@@ -120,7 +120,6 @@ class TickFramesTest {
                 List.of(),
                 2,
                 61_000,
-                true,
                 51,
                 100,
                 2_000));
@@ -129,7 +128,6 @@ class TickFramesTest {
     assertThat(frame.elixirRate()).isEqualTo(3);
     assertThat(frame.section()).isEqualTo(2);
     assertThat(frame.sectionLeftMs()).isEqualTo(61_000);
-    assertThat(frame.frozen()).isTrue();
     assertThat(frame.endTimerMs()).isEqualTo(51);
     assertThat(frame.tiebreakMs()).isEqualTo(100);
     assertThat(frame.nextCardCooldownMs()).isEqualTo(2_000);
@@ -241,7 +239,7 @@ class TickFramesTest {
     Timeline timeline = match.getTimeline();
     assertThat(frame.section()).isEqualTo(timeline.getSection());
     assertThat(frame.sectionLeftMs()).isEqualTo(timeline.sectionLeftMs());
-    assertThat(frame.frozen()).isEqualTo(timeline.isFrozen());
+    assertThat(frame.ended()).as("the end freezes the timeline").isEqualTo(timeline.isFrozen());
     assertThat(frame.endTimerMs()).isEqualTo(match.getEndTimerMs());
     assertThat(frame.tiebreakMs()).isEqualTo(match.getTiebreakMs());
     assertThat(frame.nextCardCooldownMs()).isEqualTo(timeline.getNextCardCooldownMs());
