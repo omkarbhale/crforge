@@ -30,8 +30,10 @@ import java.util.List;
  * @param nextCardCooldownMs the length a hand's refill countdown restarts at after filling a slot,
  *     in milliseconds
  * @param deaths what died in the tick just run, in the order it died. One that dies may still stand
- *     in {@code entities} until it leaves: this list, not its absence, tells a death
- * @param strikes the attacks' own hits that landed in the tick just run, in the order they landed
+ *     in {@code entities} until it leaves: this list, not its absence, tells a death. A battle's
+ *     first frame carries none, whatever its tick: the ticks run to reach it are not told
+ * @param strikes the attacks' own hits that landed in the tick just run, in the order they landed.
+ *     A battle's first frame carries none, whatever its tick
  */
 public record TickFrame(
     int tick,

@@ -41,8 +41,8 @@ final class TickFrames {
   /**
    * A plugin's frame with the tick's events.
    *
-   * @param deaths what died in the tick just run
-   * @param strikes the attacks' hits that landed in it
+   * @param deaths what died in the tick just run; none on a battle's first frame
+   * @param strikes the attacks' hits that landed in it; none on a battle's first frame
    */
   static TickFrame of(BattleFrame frame, List<DeathFrame> deaths, List<StrikeFrame> strikes) {
     List<EntityFrame> entities = new ArrayList<>(frame.entities().size());

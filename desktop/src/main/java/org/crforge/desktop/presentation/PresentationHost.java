@@ -112,9 +112,10 @@ public final class PresentationHost {
           tellTick(session);
         });
     if (active != builtin) {
-      // Attached after the battle's first tell, which reports no tick having run: the log hears
-      // from the next step on. It only listens, and the session's own area log already keeps the
-      // battle's observer list from being empty.
+      // Attached after the battle's first tell, which carries no events whatever its tick, since
+      // no log heard the ticks run to reach it: the log hears from the next step on. It only
+      // listens, and the session's own area log already keeps the battle's observer list from
+      // being empty.
       session.getBattle().getWorld().addObserver(events);
       session.setStepListener(() -> contained(() -> tellTick(session)));
     }
