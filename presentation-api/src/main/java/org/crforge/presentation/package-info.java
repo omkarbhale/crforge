@@ -35,8 +35,8 @@
  *
  * <h2>Deferred</h2>
  *
- * <p>This is a thin first slice, enough for one renderer to draw a unit fight. These are exposable
- * without changing the battle, and are added when a renderer needs them:
+ * <p>This is a thin first slice, enough for one renderer to draw a unit fight and a match's HUD.
+ * These are exposable without changing the battle, and are added when a renderer needs them:
  *
  * <ul>
  *   <li>TODO per-tick character fields: attack, load and start delay timers, sequence index, burst
