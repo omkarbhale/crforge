@@ -8,11 +8,15 @@ package org.crforge.desktop.presentation;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.crforge.core.battle.unit.ChampionController;
 import org.crforge.core.pathfinding.GridEntityState;
 import org.crforge.desktop.battle.BattleFrame;
+import org.crforge.desktop.battle.BattleFrame.AbilityView;
 import org.crforge.desktop.battle.BattleFrame.CardView;
 import org.crforge.desktop.battle.BattleFrame.SideView;
 import org.crforge.desktop.battle.EntityView;
+import org.crforge.presentation.AbilityFrame;
+import org.crforge.presentation.AbilityState;
 import org.crforge.presentation.CardFrame;
 import org.crforge.presentation.EntityFrame;
 import org.crforge.presentation.EntityKind;
@@ -47,7 +51,13 @@ final class TickFrames {
         entities,
         frame.overtime(),
         frame.elixirRate(),
-        sides);
+        sides,
+        frame.section(),
+        frame.sectionLeftMs(),
+        frame.frozen(),
+        frame.endTimerMs(),
+        frame.tiebreakMs(),
+        frame.nextCardCooldownMs());
   }
 
   private static SideFrame side(SideView view) {
@@ -55,8 +65,19 @@ final class TickFrames {
     for (CardView card : view.hand()) {
       hand.add(card(card));
     }
+    List<AbilityFrame> abilities = new ArrayList<>(view.abilities().size());
+    for (AbilityView ability : view.abilities()) {
+      abilities.add(ability(ability));
+    }
     return new SideFrame(
-        view.side(), view.elixir(), view.wholeElixir(), view.crowns(), hand, card(view.next()));
+        view.side(),
+        view.elixir(),
+        view.wholeElixir(),
+        view.crowns(),
+        hand,
+        card(view.next()),
+        abilities,
+        view.nextCardCooldownLeftMs());
   }
 
   private static CardFrame card(CardView card) {
@@ -67,7 +88,47 @@ final class TickFrames {
             card.cost(),
             card.level(),
             card.pending(),
-            card.unavailableReason() == null);
+            card.unavailableReason() == null,
+            card.evolutionCount(),
+            card.evolutionNeed(),
+            card.evolved());
+  }
+
+  private static AbilityFrame ability(AbilityView ability) {
+    return ability == null
+        ? AbilityFrame.NONE
+        : new AbilityFrame(
+            ability.champion(),
+            ability.cost(),
+            abilityState(ability.state()),
+            ability.cooldownMs(),
+            ability.charges(),
+            ability.pending(),
+            ability.unavailableReason() == null);
+  }
+
+  /**
+   * The name of a champion slot's button state.
+   *
+   * @param state a state number of {@link ChampionController}; any other, which only an action row
+   *     naming one of the bounding markers can write, has no button to show
+   */
+  static AbilityState abilityState(int state) {
+    return switch (state) {
+      case ChampionController.ABSENT -> AbilityState.ABSENT;
+      case ChampionController.READY -> AbilityState.READY;
+      case ChampionController.DEPLOYING -> AbilityState.DEPLOYING;
+      case ChampionController.LIMITED_AVAILABILITY -> AbilityState.LIMITED_AVAILABILITY;
+      case ChampionController.ALL_CHARGES_CONSUMED -> AbilityState.ALL_CHARGES_CONSUMED;
+      case ChampionController.PENDING -> AbilityState.PENDING;
+      case ChampionController.ON_COOLDOWN -> AbilityState.ON_COOLDOWN;
+      case ChampionController.NOT_ENOUGH_ELIXIR -> AbilityState.NOT_ENOUGH_ELIXIR;
+      case ChampionController.CASTING -> AbilityState.CASTING;
+      case ChampionController.DISABLED -> AbilityState.DISABLED;
+      case ChampionController.TEMPORARILY_UNAVAILABLE -> AbilityState.TEMPORARILY_UNAVAILABLE;
+      case ChampionController.NO_YET_AVAILABLE -> AbilityState.NOT_YET_AVAILABLE;
+      default -> AbilityState.UNKNOWN;
+    };
   }
 
   private static EntityFrame entity(EntityView view) {

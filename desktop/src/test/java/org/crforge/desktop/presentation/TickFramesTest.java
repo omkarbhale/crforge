@@ -17,9 +17,14 @@ import java.util.Arrays;
 import java.util.List;
 import org.crforge.core.battle.BattleEntity;
 import org.crforge.core.battle.data.GameTables;
+import org.crforge.core.battle.match.EvolutionItem;
+import org.crforge.core.battle.match.Hand;
 import org.crforge.core.battle.match.LadderMatch;
+import org.crforge.core.battle.match.MatchSide;
+import org.crforge.core.battle.match.Timeline;
 import org.crforge.core.battle.projectile.ProjectileEntity;
 import org.crforge.core.battle.unit.AreaEffectEntity;
+import org.crforge.core.battle.unit.ChampionController;
 import org.crforge.core.battle.unit.WorldEntity;
 import org.crforge.core.pathfinding.GridEntityState;
 import org.crforge.desktop.battle.BattleAdapter;
@@ -27,6 +32,8 @@ import org.crforge.desktop.battle.BattleFrame;
 import org.crforge.desktop.battle.BattleSession;
 import org.crforge.desktop.replay.ReplayFile;
 import org.crforge.desktop.replay.ReplayPlayer;
+import org.crforge.presentation.AbilityFrame;
+import org.crforge.presentation.AbilityState;
 import org.crforge.presentation.CardFrame;
 import org.crforge.presentation.EntityKind;
 import org.crforge.presentation.EntityState;
@@ -53,16 +60,48 @@ class TickFramesTest {
   }
 
   @Test
-  @DisplayName("a match's overtime, elixir rate and sides are copied, with no card for a null")
+  @DisplayName("every button state of a champion slot has its name; a marker shows none")
+  void everyAbilityState() {
+    List<AbilityState> named = new ArrayList<>();
+    for (int state = ChampionController.UNKNOWN;
+        state <= ChampionController.NO_YET_AVAILABLE;
+        state++) {
+      named.add(TickFrames.abilityState(state));
+    }
+    assertThat(named).containsAll(List.of(AbilityState.values()));
+    assertThat(TickFrames.abilityState(ChampionController.ON_COOLDOWN))
+        .isEqualTo(AbilityState.ON_COOLDOWN);
+    assertThat(TickFrames.abilityState(ChampionController.NO_YET_AVAILABLE))
+        .isEqualTo(AbilityState.NOT_YET_AVAILABLE);
+    assertThat(TickFrames.abilityState(5)).as("ERR_START").isEqualTo(AbilityState.UNKNOWN);
+    assertThat(TickFrames.abilityState(14)).as("ERR_MAX").isEqualTo(AbilityState.UNKNOWN);
+  }
+
+  @Test
+  @DisplayName("a match's clock and sides are copied, with no card or champion for a null")
   void matchFields() {
-    BattleFrame.CardView knight = new BattleFrame.CardView("Knight", 3, 11, false, null);
-    BattleFrame.CardView arrows = new BattleFrame.CardView("Arrows", 3, 9, true, "too expensive");
-    BattleFrame.CardView next = new BattleFrame.CardView("Giant", 5, 11, false, "not in hand");
+    BattleFrame.CardView knight =
+        new BattleFrame.CardView("Knight", 3, 11, false, null, 1, 2, false);
+    BattleFrame.CardView arrows =
+        new BattleFrame.CardView("Arrows", 3, 9, true, "too expensive", 2, 2, true);
+    BattleFrame.CardView next =
+        new BattleFrame.CardView("Giant", 5, 11, false, "not in hand", 0, 0, false);
+    BattleFrame.AbilityView ability =
+        new BattleFrame.AbilityView(
+            "Monk", 1, ChampionController.ON_COOLDOWN, 4_000, -1, true, "on cooldown");
     BattleFrame.SideView full =
         new BattleFrame.SideView(
-            0, 52_500, 5, 2, Arrays.asList(knight, null, arrows, null), next, List.of());
+            0,
+            52_500,
+            5,
+            2,
+            Arrays.asList(knight, null, arrows, null),
+            next,
+            Arrays.asList(ability, null),
+            1_500);
     BattleFrame.SideView none =
-        new BattleFrame.SideView(1, 0, 0, 0, Arrays.asList(null, null), null, List.of());
+        new BattleFrame.SideView(
+            1, 0, 0, 0, Arrays.asList(null, null), null, Arrays.asList(null, null), 0);
 
     TickFrame frame =
         TickFrames.of(
@@ -77,10 +116,22 @@ class TickFramesTest {
                 -1,
                 false,
                 null,
-                List.of()));
+                List.of(),
+                2,
+                61_000,
+                true,
+                51,
+                100,
+                2_000));
 
     assertThat(frame.overtime()).isTrue();
     assertThat(frame.elixirRate()).isEqualTo(3);
+    assertThat(frame.section()).isEqualTo(2);
+    assertThat(frame.sectionLeftMs()).isEqualTo(61_000);
+    assertThat(frame.frozen()).isTrue();
+    assertThat(frame.endTimerMs()).isEqualTo(51);
+    assertThat(frame.tiebreakMs()).isEqualTo(100);
+    assertThat(frame.nextCardCooldownMs()).isEqualTo(2_000);
     assertThat(frame.sides())
         .containsExactly(
             new SideFrame(
@@ -89,12 +140,24 @@ class TickFramesTest {
                 5,
                 2,
                 List.of(
-                    new CardFrame("Knight", 3, 11, false, true),
+                    new CardFrame("Knight", 3, 11, false, true, 1, 2, false),
                     CardFrame.NONE,
-                    new CardFrame("Arrows", 3, 9, true, false),
+                    new CardFrame("Arrows", 3, 9, true, false, 2, 2, true),
                     CardFrame.NONE),
-                new CardFrame("Giant", 5, 11, false, false)),
-            new SideFrame(1, 0, 0, 0, List.of(CardFrame.NONE, CardFrame.NONE), CardFrame.NONE));
+                new CardFrame("Giant", 5, 11, false, false, 0, 0, false),
+                List.of(
+                    new AbilityFrame("Monk", 1, AbilityState.ON_COOLDOWN, 4_000, -1, true, false),
+                    AbilityFrame.NONE),
+                1_500),
+            new SideFrame(
+                1,
+                0,
+                0,
+                0,
+                List.of(CardFrame.NONE, CardFrame.NONE),
+                CardFrame.NONE,
+                List.of(AbilityFrame.NONE, AbilityFrame.NONE),
+                0));
   }
 
   @Test
@@ -112,7 +175,9 @@ class TickFramesTest {
     read.getSession()
         .setStepListener(
             () -> {
-              heard.add(TickFrames.of(BattleAdapter.frame(read.getSession())));
+              TickFrame frame = TickFrames.of(BattleAdapter.frame(read.getSession()));
+              assertFollowsTheMatch(frame, read.getSession());
+              heard.add(frame);
               readStates.add(state(read.getSession()));
             });
     while (read.step()) {
@@ -138,6 +203,47 @@ class TickFramesTest {
     assertThat(heard.stream().flatMap(frame -> frame.entities().stream()))
         .as("a projectile in flight is off the ground")
         .anyMatch(entity -> entity.kind() == EntityKind.PROJECTILE && entity.height() > 0);
+  }
+
+  /** A frame says what the match holds, read straight from the core and the session. */
+  private static void assertFollowsTheMatch(TickFrame frame, BattleSession session) {
+    LadderMatch match = session.match();
+    Timeline timeline = match.getTimeline();
+    assertThat(frame.section()).isEqualTo(timeline.getSection());
+    assertThat(frame.sectionLeftMs()).isEqualTo(timeline.sectionLeftMs());
+    assertThat(frame.frozen()).isEqualTo(timeline.isFrozen());
+    assertThat(frame.endTimerMs()).isEqualTo(match.getEndTimerMs());
+    assertThat(frame.tiebreakMs()).isEqualTo(match.getTiebreakMs());
+    assertThat(frame.nextCardCooldownMs()).isEqualTo(timeline.getNextCardCooldownMs());
+    for (int side = 0; side < match.playerCount(); side++) {
+      MatchSide matchSide = match.side(side);
+      SideFrame sideFrame = frame.sides().get(side);
+      assertThat(sideFrame.nextCardCooldownLeftMs()).isEqualTo(matchSide.getHand().getCooldownMs());
+      for (int slot = 0; slot < Hand.SLOTS; slot++) {
+        int index = matchSide.getHand().slots()[slot];
+        CardFrame card = sideFrame.hand().get(slot);
+        if (index == Hand.EMPTY) {
+          assertThat(card).isEqualTo(CardFrame.NONE);
+        } else {
+          assertThat(card.name()).isEqualTo(matchSide.deck().get(index).name());
+          assertThat(card.evolutionCount()).isEqualTo(matchSide.evolutionCount(index));
+          assertThat(card.evolved())
+              .isEqualTo(matchSide.item(index).field() == EvolutionItem.EVOLVED);
+          assertThat(card.pending()).as("a replay's plays are never pending").isFalse();
+        }
+      }
+      for (int slot = 0; slot < BattleSession.ABILITY_SLOTS; slot++) {
+        BattleFrame.AbilityView ability = session.abilityView(side, slot);
+        AbilityFrame abilityFrame = sideFrame.abilities().get(slot);
+        if (ability == null) {
+          assertThat(abilityFrame).isEqualTo(AbilityFrame.NONE);
+        } else {
+          assertThat(abilityFrame.champion()).isEqualTo(ability.champion());
+          assertThat(abilityFrame.cooldownMs()).isEqualTo(ability.cooldownMs());
+          assertThat(abilityFrame.state()).isEqualTo(TickFrames.abilityState(ability.state()));
+        }
+      }
+    }
   }
 
   /** A digest of the battle read straight from the core, through nothing a plugin's frame uses. */

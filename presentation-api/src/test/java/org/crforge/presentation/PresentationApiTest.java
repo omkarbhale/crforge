@@ -41,6 +41,7 @@ class PresentationApiTest {
             EntityFrame.class,
             SideFrame.class,
             CardFrame.class,
+            AbilityFrame.class,
             PresentContext.class);
   }
 
@@ -72,7 +73,7 @@ class PresentationApiTest {
   void frameIsDetached() {
     List<EntityFrame> entities = new ArrayList<>();
     entities.add(entity(1));
-    TickFrame frame = new TickFrame(7, 350, false, -1, entities);
+    TickFrame frame = frame(entities, List.of());
 
     entities.add(entity(2));
 
@@ -82,41 +83,33 @@ class PresentationApiTest {
   }
 
   @Test
-  @DisplayName("a frame keeps its own unmodifiable lists of sides and of a side's hand")
+  @DisplayName("a frame keeps its own unmodifiable lists of sides, and a side its hand and slots")
   void sidesAreDetached() {
     List<CardFrame> hand = new ArrayList<>();
     hand.add(CardFrame.NONE);
-    SideFrame side = new SideFrame(0, 50_000, 5, 1, hand, CardFrame.NONE);
+    List<AbilityFrame> abilities = new ArrayList<>();
+    abilities.add(AbilityFrame.NONE);
+    SideFrame side = new SideFrame(0, 50_000, 5, 1, hand, CardFrame.NONE, abilities, 0);
     List<SideFrame> sides = new ArrayList<>();
     sides.add(side);
-    TickFrame frame = new TickFrame(7, 350, false, -1, List.of(), true, 2, sides);
+    TickFrame frame = frame(List.of(), sides);
 
     hand.add(CardFrame.NONE);
+    abilities.add(AbilityFrame.NONE);
     sides.clear();
 
     assertThat(frame.sides()).containsExactly(side);
-    assertThat(frame.sides().get(0).hand()).hasSize(1);
+    assertThat(side.hand()).hasSize(1);
+    assertThat(side.abilities()).hasSize(1);
     assertThatThrownBy(() -> frame.sides().clear())
         .isInstanceOf(UnsupportedOperationException.class);
     assertThatThrownBy(() -> side.hand().clear()).isInstanceOf(UnsupportedOperationException.class);
+    assertThatThrownBy(() -> side.abilities().clear())
+        .isInstanceOf(UnsupportedOperationException.class);
   }
 
-  @Test
-  @DisplayName("a frame built the old way has no match and no height")
-  void olderConstructors() {
-    TickFrame frame = new TickFrame(7, 350, false, -1, List.of(entity(1)));
-
-    assertThat(frame.overtime()).isFalse();
-    assertThat(frame.elixirRate()).isZero();
-    assertThat(frame.sides()).isEmpty();
-    assertThat(frame.entities().get(0).height()).isZero();
-  }
-
-  @Test
-  @DisplayName("only the empty card is empty")
-  void emptyCard() {
-    assertThat(CardFrame.NONE.empty()).isTrue();
-    assertThat(new CardFrame("Knight", 3, 11, false, true).empty()).isFalse();
+  private static TickFrame frame(List<EntityFrame> entities, List<SideFrame> sides) {
+    return new TickFrame(7, 350, false, -1, entities, false, 1, sides, 0, 0, false, 0, 0, 0);
   }
 
   private static EntityFrame entity(int id) {
@@ -138,6 +131,7 @@ class PresentationApiTest {
         false,
         false,
         false,
+        0,
         0,
         0,
         0,

@@ -43,8 +43,7 @@
  *       and special load progress, attack count, deploy countdown, height, target id, whether a
  *       king tower is inactive
  *   <li>TODO per-tick projectile fields: start, aim height, facing, target id
- *   <li>TODO match fields: section, section left, frozen, end timer, tiebreak time, next card
- *       cooldown, evolution count, a king's champion slots
+ *   <li>TODO match fields: a card's hero form and spell variant
  *   <li>TODO statuses, action meters and roles, which the frames the visualizer draws already hold
  *   <li>TODO value events: attack started and fired, died (with a final state for an entity that
  *       leaves during the tick), card played, action started and finished

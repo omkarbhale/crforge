@@ -26,6 +26,13 @@ import org.crforge.core.battle.unit.ChampionController;
  * @param over whether the battle has stopped stepping by its own rule
  * @param halted why the session stopped stepping on a refusal, or null
  * @param messages the session's latest messages, oldest first
+ * @param section the match timeline's current section, counted from 0; 0 outside a match
+ * @param sectionLeftMs the time left in that section in milliseconds, 0 for a section without a
+ *     length and outside a match
+ * @param frozen whether the match's end has frozen its timeline
+ * @param endTimerMs the match's end timer: 0 until it ends, then rising
+ * @param tiebreakMs the tiebreaker's time: 0 until it begins, then rising
+ * @param nextCardCooldownMs how long a played card's slot now stays empty, in milliseconds
  */
 public record BattleFrame(
     int tick,
@@ -38,7 +45,13 @@ public record BattleFrame(
     int winner,
     boolean over,
     String halted,
-    List<String> messages) {
+    List<String> messages,
+    int section,
+    int sectionLeftMs,
+    boolean frozen,
+    int endTimerMs,
+    int tiebreakMs,
+    int nextCardCooldownMs) {
 
   /**
    * One side of a match.
@@ -50,6 +63,8 @@ public record BattleFrame(
    * @param hand the four hand slots, null for an empty slot
    * @param next the card that refills the hand next, or null
    * @param abilities the king's two champion slots, null for a slot that follows no champion
+   * @param nextCardCooldownLeftMs the time left until the next card refills the hand, in
+   *     milliseconds
    */
   public record SideView(
       int side,
@@ -58,7 +73,8 @@ public record BattleFrame(
       int crowns,
       List<CardView> hand,
       CardView next,
-      List<AbilityView> abilities) {}
+      List<AbilityView> abilities,
+      int nextCardCooldownLeftMs) {}
 
   /**
    * One card of a hand.
@@ -67,10 +83,22 @@ public record BattleFrame(
    * @param cost its cost in whole elixir
    * @param level the level its side plays it at, counted from 1 across all rarities
    * @param unavailableReason why selection is disabled, or null if available
-   * @param pending whether it has been played and waits for its play to run
+   * @param pending whether it was played through the session's commands, from the screen or by a
+   *     model playing its side, and waits for its play to run; a replay's queued plays never show
+   *     it
+   * @param evolutionCount the king's count for the card: its plays since its last evolved play
+   * @param evolutionNeed the count its evolved row asks for, 0 for a card that does not evolve
+   * @param evolved whether its next play is evolved
    */
   public record CardView(
-      String name, int cost, int level, boolean pending, String unavailableReason) {}
+      String name,
+      int cost,
+      int level,
+      boolean pending,
+      String unavailableReason,
+      int evolutionCount,
+      int evolutionNeed,
+      boolean evolved) {}
 
   /**
    * One champion slot of a king: the champion or hero it follows and its ability's button.

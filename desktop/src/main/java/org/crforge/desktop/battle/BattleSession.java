@@ -378,7 +378,11 @@ public final class BattleSession {
     return cardLevel(side, match().side(side).getHand().queue().get(0));
   }
 
-  /** Whether a hand slot's card has been played and is waiting for its play to run. */
+  /**
+   * Whether a hand slot's card was played through this session's commands, from the screen or by a
+   * model playing its side, and is waiting for its play to run. A replay queues its plays on the
+   * battle, so they never show here.
+   */
   public boolean isPending(int side, int slot) {
     LadderMatch match = match();
     if (match == null || slot < 0 || slot >= Hand.SLOTS) {

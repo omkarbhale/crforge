@@ -36,7 +36,13 @@ class HudTextTest {
         winner,
         false,
         halted,
-        List.of("[100] red plays Knight on tick 100 (cmd0)"));
+        List.of("[100] red plays Knight on tick 100 (cmd0)"),
+        0,
+        0,
+        false,
+        0,
+        0,
+        0);
   }
 
   private static BattleFrame.SideView side(int side, int crowns) {
@@ -47,7 +53,8 @@ class HudTextTest {
         crowns,
         Arrays.asList(new BattleFrame.CardView[4]),
         null,
-        Arrays.asList(new BattleFrame.AbilityView[2]));
+        Arrays.asList(new BattleFrame.AbilityView[2]),
+        0);
   }
 
   @Test
@@ -107,7 +114,9 @@ class HudTextTest {
   @DisplayName("outside a match there are no crowns")
   void noMatch() {
     BattleFrame frame =
-        new BattleFrame(5, 250, false, 0, List.of(), List.of(), false, -1, false, null, List.of());
+        new BattleFrame(
+            5, 250, false, 0, List.of(), List.of(), false, -1, false, null, List.of(), 0, 0, false,
+            0, 0, 0);
 
     assertThat(HudText.of(frame, ViewState.ladder(), STATUS).crowns()).isNull();
   }

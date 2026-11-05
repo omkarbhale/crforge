@@ -17,11 +17,22 @@ import java.util.List;
  * @param crowns the crowns the side has taken
  * @param hand the hand's slots in order, {@link CardFrame#NONE} for an empty slot
  * @param next the card that refills the hand next, {@link CardFrame#NONE} for none
+ * @param abilities the king's champion slots in order, {@link AbilityFrame#NONE} for a slot that
+ *     follows no champion
+ * @param nextCardCooldownLeftMs the time left until the next card refills the hand, in milliseconds
  */
 public record SideFrame(
-    int side, int elixir, int wholeElixir, int crowns, List<CardFrame> hand, CardFrame next) {
+    int side,
+    int elixir,
+    int wholeElixir,
+    int crowns,
+    List<CardFrame> hand,
+    CardFrame next,
+    List<AbilityFrame> abilities,
+    int nextCardCooldownLeftMs) {
 
   public SideFrame {
     hand = List.copyOf(hand);
+    abilities = List.copyOf(abilities);
   }
 }

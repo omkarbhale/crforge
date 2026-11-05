@@ -81,7 +81,23 @@ class CrowdLayoutTest {
 
   private static BattleFrame frame(EntityView... entities) {
     return new BattleFrame(
-        0, 0, false, 1, Arrays.asList(entities), List.of(), false, -1, false, null, List.of());
+        0,
+        0,
+        false,
+        1,
+        Arrays.asList(entities),
+        List.of(),
+        false,
+        -1,
+        false,
+        null,
+        List.of(),
+        0,
+        0,
+        false,
+        0,
+        0,
+        0);
   }
 
   /** A synthetic troop at level 3 with the given id, side, row name and position. */
