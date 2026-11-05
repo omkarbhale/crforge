@@ -29,6 +29,9 @@ import java.util.List;
  * @param tiebreakMs the tiebreaker's time: 0 until it begins, then rising
  * @param nextCardCooldownMs the length a hand's refill countdown restarts at after filling a slot,
  *     in milliseconds
+ * @param deaths what died in the tick just run, in the order it died. One that dies may still stand
+ *     in {@code entities} until it leaves: this list, not its absence, tells a death
+ * @param strikes the attacks' own hits that landed in the tick just run, in the order they landed
  */
 public record TickFrame(
     int tick,
@@ -43,10 +46,50 @@ public record TickFrame(
     int sectionLeftMs,
     int endTimerMs,
     int tiebreakMs,
-    int nextCardCooldownMs) {
+    int nextCardCooldownMs,
+    List<DeathFrame> deaths,
+    List<StrikeFrame> strikes) {
 
   public TickFrame {
     entities = List.copyOf(entities);
     sides = List.copyOf(sides);
+    deaths = List.copyOf(deaths);
+    strikes = List.copyOf(strikes);
+  }
+
+  /**
+   * A frame with no events. Kept on purpose: crforge-render builds against this module live, and
+   * its tests and harness tools construct frames with this signature, so removing it breaks them.
+   */
+  public TickFrame(
+      int tick,
+      int timeMs,
+      boolean ended,
+      int winner,
+      List<EntityFrame> entities,
+      boolean overtime,
+      int elixirRate,
+      List<SideFrame> sides,
+      int section,
+      int sectionLeftMs,
+      int endTimerMs,
+      int tiebreakMs,
+      int nextCardCooldownMs) {
+    this(
+        tick,
+        timeMs,
+        ended,
+        winner,
+        entities,
+        overtime,
+        elixirRate,
+        sides,
+        section,
+        sectionLeftMs,
+        endTimerMs,
+        tiebreakMs,
+        nextCardCooldownMs,
+        List.of(),
+        List.of());
   }
 }

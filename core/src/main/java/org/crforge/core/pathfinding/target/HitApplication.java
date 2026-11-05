@@ -189,8 +189,11 @@ public final class HitApplication {
         queries.buffOnDamage(target);
       }
     } else if (!fires) {
+      // A complete charge's hit counts as special too, read before the charge is reset. It only
+      // goes on to whoever observes the battle.
+      boolean specialHit = special || queries.chargeProgress() >= HitQueries.CHARGE_COMPLETE;
       damage = charged(cfg, damage, queries);
-      DirectHit.resolve(t, target, damage, missed, queries);
+      DirectHit.resolve(t, target, damage, missed, specialHit, queries);
       // The buff on damage follows its own direct hit; a unit that fires never reaches it.
       if (!missed) {
         queries.buffOnDamage(target);

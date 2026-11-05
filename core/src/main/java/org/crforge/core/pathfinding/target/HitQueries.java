@@ -122,6 +122,17 @@ public interface HitQueries {
   void dealDamage(TargetView target, int damage, int hitId, int directionX, int directionY);
 
   /**
+   * Deals the damage of a landed hit to one target, knowing whether it is a special hit, which
+   * changes nothing the damage does and is only told to whoever observes the battle.
+   *
+   * @param special whether it is a special hit
+   */
+  default void dealDamage(
+      TargetView target, int damage, int hitId, int directionX, int directionY, boolean special) {
+    dealDamage(target, damage, hitId, directionX, directionY);
+  }
+
+  /**
    * Launches the projectiles of one hit of a unit that fires rather than hits directly: as many as
    * its column says, aimed at where the reference stood at the start of the visit. A battle that
    * has no projectiles launches nothing.
@@ -206,6 +217,17 @@ public interface HitQueries {
    * @param hitId the id this hit carries
    */
   default void areaDamage(int x, int y, int radius, int damage, int towerDamage, int hitId) {}
+
+  /**
+   * Deals the damage of a landed hit to a circle, knowing whether it is a special hit, which
+   * changes nothing the damage does and is only told to whoever observes the battle.
+   *
+   * @param special whether it is a special hit
+   */
+  default void areaDamage(
+      int x, int y, int radius, int damage, int towerDamage, int hitId, boolean special) {
+    areaDamage(x, y, radius, damage, towerDamage, hitId);
+  }
 
   /**
    * The buff the owner's row applies to what its hit reached, right after a direct hit that was not

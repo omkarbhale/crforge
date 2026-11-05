@@ -15,9 +15,23 @@ import java.util.Locale;
  * An immutable snapshot of one active buff, or the unit's persistent clone flag. Times use
  * milliseconds, with -1 for an effect that has no expiry timer. The applied side is the buff's
  * side, which can outlive its source; -1 means no side applies to this status.
+ *
+ * @param kind what it is shown as
+ * @param name what it is shown under: a buff's row name, or a label
+ * @param remainingMs the time left
+ * @param totalMs the whole time
+ * @param source what applied it, or null
+ * @param appliedSide the side it was applied for
+ * @param row the buff's row name in the game tables; null for the clone flag, which is no buff
  */
 public record UnitStatus(
-    Kind kind, String name, int remainingMs, int totalMs, String source, int appliedSide) {
+    Kind kind,
+    String name,
+    int remainingMs,
+    int totalMs,
+    String source,
+    int appliedSide,
+    String row) {
   /** Display priority: effects that stop actions precede clone identity and other buffs. */
   public enum Kind {
     FROZEN("Frozen"),

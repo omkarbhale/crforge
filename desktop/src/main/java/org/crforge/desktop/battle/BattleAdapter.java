@@ -320,7 +320,7 @@ public final class BattleAdapter {
   private static List<UnitStatus> statuses(WorldEntity entity) {
     List<UnitStatus> statuses = new ArrayList<>();
     if (entity instanceof CharacterEntity character && character.isClone()) {
-      statuses.add(new UnitStatus(UnitStatus.Kind.CLONE, "Clone", -1, -1, null, -1));
+      statuses.add(new UnitStatus(UnitStatus.Kind.CLONE, "Clone", -1, -1, null, -1, null));
     }
     for (var instance : entity.getBuffs().items()) {
       if (instance.getRemaining() == 0) continue;
@@ -336,7 +336,8 @@ public final class BattleAdapter {
               instance.getRemaining(),
               instance.getTotal(),
               sourceName(instance.getSource()),
-              instance.getSide()));
+              instance.getSide(),
+              buff.name()));
     }
     return List.copyOf(statuses);
   }

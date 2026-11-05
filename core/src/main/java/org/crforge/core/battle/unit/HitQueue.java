@@ -105,9 +105,16 @@ public final class HitQueue {
    * @param directionY direction of the hit along the arena's length
    * @param side the side a hit with no attacker kills for, or -1 for none; a hit with an attacker
    *     kills for the attacker's side
+   * @param special whether it is a special hit, which only the observers are told
    */
   private record DirectHitDue(
-      WorldEntity attacker, TargetView target, int damage, int directionX, int directionY, int side)
+      WorldEntity attacker,
+      TargetView target,
+      int damage,
+      int directionX,
+      int directionY,
+      int side,
+      boolean special)
       implements QueuedHit {}
 
   /**
@@ -138,14 +145,23 @@ public final class HitQueue {
 
   /**
    * One victim's share of a character's area damage waiting for the drain: dealt there as {@link
-   * #dealAreaDamageNow(WorldEntity, WorldEntity, int, int)} deals it.
+   * #dealAreaDamageNow(AreaHitDue)} deals it.
    *
    * @param attacker the entity whose hit made the area
    * @param victim the entity the area collected
    * @param damage hit points the area deals it, before its guards and the clamp to zero
    * @param hitId the id the hit carries
+   * @param attackHit whether the area is an attack's own hit, rather than a death's; only the
+   *     observers are told
+   * @param special whether that attack's hit is a special one; only the observers are told
    */
-  private record AreaHitDue(WorldEntity attacker, WorldEntity victim, int damage, int hitId)
+  private record AreaHitDue(
+      WorldEntity attacker,
+      WorldEntity victim,
+      int damage,
+      int hitId,
+      boolean attackHit,
+      boolean special)
       implements QueuedHit {}
 
   /**
@@ -495,7 +511,31 @@ public final class HitQueue {
    */
   public void dealDirectHit(
       WorldEntity attacker, TargetView target, int damage, int directionX, int directionY) {
-    queuedHits.add(new DirectHitDue(attacker, target, damage, directionX, directionY, -1));
+    dealDirectHit(attacker, target, damage, directionX, directionY, false);
+  }
+
+  /**
+   * Deals a direct hit as {@link #dealDirectHit(WorldEntity, TargetView, int, int, int)} does,
+   * knowing whether it is a special hit, which only the observers are told.
+   *
+   * @param special whether it is a special hit
+   */
+  public void dealDirectHit(
+      WorldEntity attacker,
+      TargetView target,
+      int damage,
+      int directionX,
+      int directionY,
+      boolean special) {
+    queuedHits.add(new DirectHitDue(attacker, target, damage, directionX, directionY, -1, special));
+  }
+
+  /** Tells the observers an attack's own hit landed; nothing in the battle reads it. */
+  private void attackHitLanded(
+      WorldEntity attacker, WorldEntity victim, boolean special, DamageResult result) {
+    if (attacker != null && victim != null && result.landed()) {
+      world.getEvents().attackHitLanded(attacker, victim, special);
+    }
   }
 
   /**
@@ -527,7 +567,7 @@ public final class HitQueue {
    */
   public void dealQueuedDamage(
       TargetView target, int damage, int directionX, int directionY, int side) {
-    queuedHits.add(new DirectHitDue(null, target, damage, directionX, directionY, side));
+    queuedHits.add(new DirectHitDue(null, target, damage, directionX, directionY, side, false));
   }
 
   /**
@@ -944,7 +984,21 @@ public final class HitQueue {
    */
   public DamageResult dealAreaDamage(
       WorldEntity attacker, WorldEntity victim, int damage, int hitId) {
-    queuedHits.add(new AreaHitDue(attacker, victim, damage, hitId));
+    queuedHits.add(new AreaHitDue(attacker, victim, damage, hitId, false, false));
+    return DamageResult.NOTHING;
+  }
+
+  /**
+   * Deals one victim's share of an area that is an attack's own hit, as {@link
+   * #dealAreaDamage(WorldEntity, WorldEntity, int, int)} deals any area's, the observers told of it
+   * as an attack's hit too.
+   *
+   * @param special whether that attack's hit is a special one
+   * @return what the damage did to the victim; nothing yet for a share queued for the drain
+   */
+  DamageResult dealAttackAreaDamage(
+      WorldEntity attacker, WorldEntity victim, int damage, int hitId, boolean special) {
+    queuedHits.add(new AreaHitDue(attacker, victim, damage, hitId, true, special));
     return DamageResult.NOTHING;
   }
 
@@ -952,8 +1006,11 @@ public final class HitQueue {
    * Deals one victim's share of the area of an entity's hit at once, and tells every observer what
    * it did. A victim that has left the battle takes nothing.
    */
-  private DamageResult dealAreaDamageNow(
-      WorldEntity attacker, WorldEntity victim, int damage, int hitId) {
+  private DamageResult dealAreaDamageNow(AreaHitDue due) {
+    WorldEntity attacker = due.attacker();
+    WorldEntity victim = due.victim();
+    int damage = due.damage();
+    int hitId = due.hitId();
     if (victim == null || world.entityOf(victim.getView()) != victim) {
       return DamageResult.NOTHING;
     }
@@ -962,6 +1019,9 @@ public final class HitQueue {
     DamageResult result = victim.takeDamage(damage, 0, 0, 0, false, attacker, attacker);
     reflect(victim, attacker, before, result, 0, 0);
     world.getEvents().areaHit(attacker, victim, damage, hitId, result);
+    if (due.attackHit()) {
+      attackHitLanded(attacker, victim, due.special(), result);
+    }
     if (result.died()) {
       victim.die(attacker);
     } else if (result.landed()) {
@@ -1442,11 +1502,16 @@ public final class HitQueue {
                 direct.directionY(),
                 false,
                 direct.side());
+        attackHitLanded(
+            direct.attacker(),
+            world.entityOf(direct.target().getEntity()),
+            direct.special(),
+            result);
         drainBuffOnDamage(direct.attacker(), direct.target(), result);
         continue;
       }
       if (queued instanceof AreaHitDue area) {
-        dealAreaDamageNow(area.attacker(), area.victim(), area.damage(), area.hitId());
+        dealAreaDamageNow(area);
         continue;
       }
       if (queued instanceof TetherHitDue tether) {

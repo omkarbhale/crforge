@@ -59,6 +59,22 @@ public final class DirectHit {
    */
   public static void resolve(
       TargetingState t, TargetView target, int damage, boolean missed, HitQueries queries) {
+    resolve(t, target, damage, missed, false, queries);
+  }
+
+  /**
+   * Resolves one hit as {@link #resolve(TargetingState, TargetView, int, boolean, HitQueries)}
+   * does, knowing whether it is a special hit, which only goes on to whoever observes the battle.
+   *
+   * @param special whether it is a special hit
+   */
+  public static void resolve(
+      TargetingState t,
+      TargetView target,
+      int damage,
+      boolean missed,
+      boolean special,
+      HitQueries queries) {
     TargetingConfig cfg = t.getConfig();
     int crownTowerDamage = crownTowerDamage(cfg.crownTowerDamagePercent(), damage);
     // Whether the owner may recoil after the hit is decided by its movement component as it stands
@@ -76,7 +92,7 @@ public final class DirectHit {
       // where its reference stood at the start of the visit, whether or not a target is left.
       int x = cfg.selfAsAoeCenter() ? t.getOwner().getX() : t.getLastReferenceX();
       int y = cfg.selfAsAoeCenter() ? t.getOwner().getY() : t.getLastReferenceY();
-      queries.areaDamage(x, y, cfg.areaDamageRadius(), damage, crownTowerDamage, hitId);
+      queries.areaDamage(x, y, cfg.areaDamageRadius(), damage, crownTowerDamage, hitId, special);
       queries.stepPushback(null);
       return;
     }
@@ -91,7 +107,7 @@ public final class DirectHit {
     // component, is pushed from the owner before the damage is dealt.
     queries.stepPushback(target);
     int dealt = target.isCrownTowerTarget() ? crownTowerDamage : damage;
-    queries.dealDamage(target, dealt, hitId, directionX, directionY);
+    queries.dealDamage(target, dealt, hitId, directionX, directionY, special);
     queries.directHitDealt();
     // Last, an owner with a movement component recoils by its own attack pushback, away from where
     // its reference stood at the start of the visit, as it does after each projectile it launches.
