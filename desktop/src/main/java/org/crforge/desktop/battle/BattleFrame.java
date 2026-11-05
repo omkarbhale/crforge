@@ -29,11 +29,12 @@ import org.crforge.core.battle.unit.ChampionController;
  * @param section the match timeline's current section, counted from 0; 0 outside a match
  * @param sectionLeftMs the time left in that section in milliseconds, 0 for a section without a
  *     length and outside a match
- * @param frozen whether the match's end has frozen its timeline
+ * @param frozen whether the match's end has frozen its timeline: the section and {@code
+ *     sectionLeftMs} stop, while {@code timeMs} keeps following the ticks
  * @param endTimerMs the match's end timer: 0 until it ends, then rising
  * @param tiebreakMs the tiebreaker's time: 0 until it begins, then rising
- * @param nextCardCooldownMs the length the refill countdown restarts at after filling a slot, in
- *     milliseconds
+ * @param nextCardCooldownMs the length a hand's refill countdown restarts at after filling a slot,
+ *     in milliseconds
  */
 public record BattleFrame(
     int tick,
@@ -64,9 +65,9 @@ public record BattleFrame(
    * @param hand the four hand slots, null for an empty slot
    * @param next the card that refills the hand next, or null
    * @param abilities the king's two champion slots, null for a slot that follows no champion
-   * @param nextCardCooldownLeftMs what is left of the refill countdown, in milliseconds: an empty
-   *     slot refills when it runs out. It also runs with a full hand, and a slot emptied with it at
-   *     0 refills on its play's step
+   * @param nextCardCooldownLeftMs what is left of the hand's refill countdown, in milliseconds: an
+   *     empty slot refills when it runs out. It also runs with a full hand, and a slot emptied with
+   *     it at 0 refills on its play's own step
    */
   public record SideView(
       int side,

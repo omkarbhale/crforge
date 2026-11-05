@@ -24,11 +24,12 @@ import java.util.List;
  * @param section the match's current section, counted from 0; 0 outside a match
  * @param sectionLeftMs the time left in that section in milliseconds, 0 for a section without a
  *     length and outside a match
- * @param frozen whether the match's end has frozen its clock
+ * @param frozen whether the match's end has frozen its timeline: the section and {@code
+ *     sectionLeftMs} stop, while {@code timeMs} keeps following the ticks
  * @param endTimerMs the match's end timer: 0 until it ends, then rising
  * @param tiebreakMs the tiebreaker's time: 0 until it begins, then rising
- * @param nextCardCooldownMs the length the refill countdown restarts at after filling a slot, in
- *     milliseconds
+ * @param nextCardCooldownMs the length a hand's refill countdown restarts at after filling a slot,
+ *     in milliseconds
  */
 public record TickFrame(
     int tick,
