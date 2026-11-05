@@ -36,6 +36,7 @@ package org.crforge.presentation;
  * @param headingY the direction a character faces along the length, unscaled
  * @param aimX a projectile's aim along the width, 0 otherwise
  * @param aimY a projectile's aim along the length, 0 otherwise
+ * @param height a projectile's height above the ground, 0 otherwise
  */
 public record EntityFrame(
     int id,
@@ -60,4 +61,58 @@ public record EntityFrame(
     int headingX,
     int headingY,
     int aimX,
-    int aimY) {}
+    int aimY,
+    int height) {
+
+  /** A frame with no height, for code written before {@code height} was added. */
+  public EntityFrame(
+      int id,
+      EntityKind kind,
+      int side,
+      String name,
+      int x,
+      int y,
+      int radius,
+      int hitPoints,
+      int maxHitPoints,
+      int shield,
+      int maxShield,
+      boolean air,
+      boolean king,
+      EntityState state,
+      boolean deploying,
+      boolean hidden,
+      boolean hasTarget,
+      int targetX,
+      int targetY,
+      int headingX,
+      int headingY,
+      int aimX,
+      int aimY) {
+    this(
+        id,
+        kind,
+        side,
+        name,
+        x,
+        y,
+        radius,
+        hitPoints,
+        maxHitPoints,
+        shield,
+        maxShield,
+        air,
+        king,
+        state,
+        deploying,
+        hidden,
+        hasTarget,
+        targetX,
+        targetY,
+        headingX,
+        headingY,
+        aimX,
+        aimY,
+        0);
+  }
+}

@@ -35,7 +35,13 @@ class PresentationApiTest {
       walk(method.getGenericReturnType(), records);
     }
     assertThat(records)
-        .contains(BattleStart.class, TickFrame.class, EntityFrame.class, PresentContext.class);
+        .contains(
+            BattleStart.class,
+            TickFrame.class,
+            EntityFrame.class,
+            SideFrame.class,
+            CardFrame.class,
+            PresentContext.class);
   }
 
   /** Follows a type, failing on any that is not a value of this package or the language. */
@@ -73,6 +79,44 @@ class PresentationApiTest {
     assertThat(frame.entities()).extracting(EntityFrame::id).containsExactly(1);
     assertThatThrownBy(() -> frame.entities().add(entity(3)))
         .isInstanceOf(UnsupportedOperationException.class);
+  }
+
+  @Test
+  @DisplayName("a frame keeps its own unmodifiable lists of sides and of a side's hand")
+  void sidesAreDetached() {
+    List<CardFrame> hand = new ArrayList<>();
+    hand.add(CardFrame.NONE);
+    SideFrame side = new SideFrame(0, 50_000, 5, 1, hand, CardFrame.NONE);
+    List<SideFrame> sides = new ArrayList<>();
+    sides.add(side);
+    TickFrame frame = new TickFrame(7, 350, false, -1, List.of(), true, 2, sides);
+
+    hand.add(CardFrame.NONE);
+    sides.clear();
+
+    assertThat(frame.sides()).containsExactly(side);
+    assertThat(frame.sides().get(0).hand()).hasSize(1);
+    assertThatThrownBy(() -> frame.sides().clear())
+        .isInstanceOf(UnsupportedOperationException.class);
+    assertThatThrownBy(() -> side.hand().clear()).isInstanceOf(UnsupportedOperationException.class);
+  }
+
+  @Test
+  @DisplayName("a frame built the old way has no match and no height")
+  void olderConstructors() {
+    TickFrame frame = new TickFrame(7, 350, false, -1, List.of(entity(1)));
+
+    assertThat(frame.overtime()).isFalse();
+    assertThat(frame.elixirRate()).isZero();
+    assertThat(frame.sides()).isEmpty();
+    assertThat(frame.entities().get(0).height()).isZero();
+  }
+
+  @Test
+  @DisplayName("only the empty card is empty")
+  void emptyCard() {
+    assertThat(CardFrame.NONE.empty()).isTrue();
+    assertThat(new CardFrame("Knight", 3, 11, false, true).empty()).isFalse();
   }
 
   private static EntityFrame entity(int id) {

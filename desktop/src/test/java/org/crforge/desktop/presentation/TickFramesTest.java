@@ -13,13 +13,24 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import org.crforge.core.battle.BattleEntity;
 import org.crforge.core.battle.data.GameTables;
+import org.crforge.core.battle.match.LadderMatch;
+import org.crforge.core.battle.projectile.ProjectileEntity;
+import org.crforge.core.battle.unit.AreaEffectEntity;
+import org.crforge.core.battle.unit.WorldEntity;
 import org.crforge.core.pathfinding.GridEntityState;
 import org.crforge.desktop.battle.BattleAdapter;
+import org.crforge.desktop.battle.BattleFrame;
+import org.crforge.desktop.battle.BattleSession;
 import org.crforge.desktop.replay.ReplayFile;
 import org.crforge.desktop.replay.ReplayPlayer;
+import org.crforge.presentation.CardFrame;
+import org.crforge.presentation.EntityKind;
 import org.crforge.presentation.EntityState;
+import org.crforge.presentation.SideFrame;
 import org.crforge.presentation.TickFrame;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,6 +53,51 @@ class TickFramesTest {
   }
 
   @Test
+  @DisplayName("a match's overtime, elixir rate and sides are copied, with no card for a null")
+  void matchFields() {
+    BattleFrame.CardView knight = new BattleFrame.CardView("Knight", 3, 11, false, null);
+    BattleFrame.CardView arrows = new BattleFrame.CardView("Arrows", 3, 9, true, "too expensive");
+    BattleFrame.CardView next = new BattleFrame.CardView("Giant", 5, 11, false, "not in hand");
+    BattleFrame.SideView full =
+        new BattleFrame.SideView(
+            0, 52_500, 5, 2, Arrays.asList(knight, null, arrows, null), next, List.of());
+    BattleFrame.SideView none =
+        new BattleFrame.SideView(1, 0, 0, 0, Arrays.asList(null, null), null, List.of());
+
+    TickFrame frame =
+        TickFrames.of(
+            new BattleFrame(
+                9,
+                450,
+                true,
+                3,
+                List.of(),
+                List.of(full, none),
+                false,
+                -1,
+                false,
+                null,
+                List.of()));
+
+    assertThat(frame.overtime()).isTrue();
+    assertThat(frame.elixirRate()).isEqualTo(3);
+    assertThat(frame.sides())
+        .containsExactly(
+            new SideFrame(
+                0,
+                52_500,
+                5,
+                2,
+                List.of(
+                    new CardFrame("Knight", 3, 11, false, true),
+                    CardFrame.NONE,
+                    new CardFrame("Arrows", 3, 9, true, false),
+                    CardFrame.NONE),
+                new CardFrame("Giant", 5, 11, false, false)),
+            new SideFrame(1, 0, 0, 0, List.of(CardFrame.NONE, CardFrame.NONE), CardFrame.NONE));
+  }
+
+  @Test
   @DisplayName("reading a frame after every tick leaves the battle as it plays without them")
   void readingChangesNothing() throws IOException {
     GameTables tables = GameTables.loadConfigured();
@@ -52,20 +108,61 @@ class TickFramesTest {
 
     ReplayPlayer read = new ReplayPlayer(replay, tables);
     List<TickFrame> heard = new ArrayList<>();
+    List<Integer> readStates = new ArrayList<>();
     read.getSession()
-        .setStepListener(() -> heard.add(TickFrames.of(BattleAdapter.frame(read.getSession()))));
+        .setStepListener(
+            () -> {
+              heard.add(TickFrames.of(BattleAdapter.frame(read.getSession())));
+              readStates.add(state(read.getSession()));
+            });
     while (read.step()) {
       // to the replay's end
     }
 
     ReplayPlayer unread = new ReplayPlayer(replay, tables);
+    List<Integer> unreadStates = new ArrayList<>();
+    unread.getSession().setStepListener(() -> unreadStates.add(state(unread.getSession())));
     while (unread.step()) {
       // to the replay's end
     }
 
     assertThat(heard).isNotEmpty();
+    assertThat(unreadStates).as("the battle's state at every tick").isEqualTo(readStates);
     assertThat(unread.getSession().tick()).isEqualTo(read.getSession().tick());
     assertThat(TickFrames.of(BattleAdapter.frame(unread.getSession())))
         .isEqualTo(heard.get(heard.size() - 1));
+
+    assertThat(heard).allSatisfy(frame -> assertThat(frame.sides()).hasSize(2));
+    assertThat(heard).allSatisfy(frame -> assertThat(frame.elixirRate()).isPositive());
+    assertThat(heard.get(0).sides().get(0).hand()).hasSize(4);
+    assertThat(heard.stream().flatMap(frame -> frame.entities().stream()))
+        .as("a projectile in flight is off the ground")
+        .anyMatch(entity -> entity.kind() == EntityKind.PROJECTILE && entity.height() > 0);
+  }
+
+  /** A digest of the battle read straight from the core, through nothing a plugin's frame uses. */
+  private static int state(BattleSession session) {
+    int hash = session.tick();
+    for (BattleEntity entity : session.getBattle().getBattle().getHolder().entities()) {
+      hash = 31 * hash + entity.getId();
+      if (entity instanceof WorldEntity world) {
+        hash = 31 * hash + world.getView().getX();
+        hash = 31 * hash + world.getView().getY();
+        hash = 31 * hash + (world.getHitPoints() == null ? 0 : world.getHitPoints().getHitPoints());
+      } else if (entity instanceof ProjectileEntity projectile) {
+        hash = 31 * hash + projectile.getX();
+        hash = 31 * hash + projectile.getY();
+        hash = 31 * hash + projectile.getZ();
+      } else if (entity instanceof AreaEffectEntity area) {
+        hash = 31 * hash + area.getX();
+        hash = 31 * hash + area.getY();
+      }
+    }
+    LadderMatch match = session.match();
+    for (int side = 0; side < match.playerCount(); side++) {
+      hash = 31 * hash + match.side(side).getElixir();
+      hash = 31 * hash + match.crowns(side);
+    }
+    return 31 * hash + match.getTimeline().getTimeMs();
   }
 }

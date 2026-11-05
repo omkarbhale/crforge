@@ -474,14 +474,14 @@ The arena is drawn by a plugin. With none on the classpath, the built-in visuali
 
 The API is a thin first slice, with no engine in it, so a renderer in any engine can read the same frames:
 
-- **Read-only by construction.** A plugin receives records of primitives, strings, enums and unmodifiable lists, detached from the battle (`TickFrame`, `EntityFrame`). The module depends on nothing, so no type of the battle core or a graphics engine can reach its surface. A plugin is not given `EntityView.grid`, `BattleWorld` or `WorldObserver`, the live channels the built-in visualizer's overlays and area hits read.
+- **Read-only by construction.** A plugin receives records of primitives, strings, enums and unmodifiable lists, detached from the battle (`TickFrame`, `EntityFrame`, `SideFrame`, `CardFrame`). The module depends on nothing, so no type of the battle core or a graphics engine can reach its surface. A plugin is not given `EntityView.grid`, `BattleWorld` or `WorldObserver`, the live channels the built-in visualizer's overlays and area hits read.
 - **Tick-driven.** `tick` is called for each tick the battle runs, however many run in one display refresh, and `present` carries no time: what is shown follows the ticks. Pausing stops `tick` while `present` goes on.
 - **Lifecycle.** `battleStarted` comes before a battle's first frame: the first battle, a restart, a step back, a data version switch or another replay. A step back plays the battle again to the tick before, and a plugin hears only the tick reached. `close` comes last.
 - **Failures stay the plugin's.** An exception from a plugin is logged, the plugin is closed and the built-in visualizer draws on, with the battle unaffected.
 
-The Javadoc of `org.crforge.presentation` lists what is deferred until a renderer needs it: attack timers and other per-tick fields, value events such as a universal death, match fields, statuses and audio. The workspace (hand panels, toolbar, log) is not drawn by a plugin, and its overlay toggles act on the built-in visualizer only.
+The Javadoc of `org.crforge.presentation` lists what is deferred until a renderer needs it: attack timers and other per-tick fields, value events such as a universal death, further match fields, statuses and audio. A frame already carries what a match's HUD shows: overtime, the elixir rate and each side's elixir, crowns, hand and next card, and a projectile's height. The workspace (hand panels, toolbar, log) is not drawn by a plugin, and its overlay toggles act on the built-in visualizer only.
 
-With no plugin the host adds nothing to the frame: it attaches no listener to the battle and builds no frame beyond the one the screen builds. Building per-tick frames for a plugin only reads the battle: `TickFramesTest` plays the example replay with and without them to the same end state.
+With no plugin the host adds nothing to the frame: it attaches no listener to the battle and builds no frame beyond the one the screen builds. Building per-tick frames for a plugin only reads the battle: `TickFramesTest` plays the example replay with and without them and holds the two battles equal at every tick.
 
 ### Golden draw traces
 

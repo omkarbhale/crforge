@@ -10,10 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 import org.crforge.core.pathfinding.GridEntityState;
 import org.crforge.desktop.battle.BattleFrame;
+import org.crforge.desktop.battle.BattleFrame.CardView;
+import org.crforge.desktop.battle.BattleFrame.SideView;
 import org.crforge.desktop.battle.EntityView;
+import org.crforge.presentation.CardFrame;
 import org.crforge.presentation.EntityFrame;
 import org.crforge.presentation.EntityKind;
 import org.crforge.presentation.EntityState;
+import org.crforge.presentation.SideFrame;
 import org.crforge.presentation.TickFrame;
 
 /**
@@ -31,7 +35,39 @@ final class TickFrames {
     for (EntityView view : frame.entities()) {
       entities.add(entity(view));
     }
-    return new TickFrame(frame.tick(), frame.timeMs(), frame.ended(), frame.winner(), entities);
+    List<SideFrame> sides = new ArrayList<>(frame.sides().size());
+    for (SideView view : frame.sides()) {
+      sides.add(side(view));
+    }
+    return new TickFrame(
+        frame.tick(),
+        frame.timeMs(),
+        frame.ended(),
+        frame.winner(),
+        entities,
+        frame.overtime(),
+        frame.elixirRate(),
+        sides);
+  }
+
+  private static SideFrame side(SideView view) {
+    List<CardFrame> hand = new ArrayList<>(view.hand().size());
+    for (CardView card : view.hand()) {
+      hand.add(card(card));
+    }
+    return new SideFrame(
+        view.side(), view.elixir(), view.wholeElixir(), view.crowns(), hand, card(view.next()));
+  }
+
+  private static CardFrame card(CardView card) {
+    return card == null
+        ? CardFrame.NONE
+        : new CardFrame(
+            card.name(),
+            card.cost(),
+            card.level(),
+            card.pending(),
+            card.unavailableReason() == null);
   }
 
   private static EntityFrame entity(EntityView view) {
@@ -58,7 +94,8 @@ final class TickFrames {
         view.headingX(),
         view.headingY(),
         view.aimX(),
-        view.aimY());
+        view.aimY(),
+        view.height());
   }
 
   private static EntityKind kind(EntityView.Kind kind) {
