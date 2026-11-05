@@ -35,16 +35,15 @@
  *
  * <h2>Deferred</h2>
  *
- * <p>This is a thin first slice, enough for one renderer to draw a unit fight. These are exposable
- * without changing the battle, and are added when a renderer needs them:
+ * <p>This is a thin first slice, enough for one renderer to draw a unit fight and a match's HUD.
+ * These are exposable without changing the battle, and are added when a renderer needs them:
  *
  * <ul>
  *   <li>TODO per-tick character fields: attack, load and start delay timers, sequence index, burst
  *       and special load progress, attack count, deploy countdown, height, target id, whether a
  *       king tower is inactive
- *   <li>TODO per-tick projectile fields: height, start, aim height, facing, target id
- *   <li>TODO match fields: section, section left, frozen, end timer, tiebreak time, next card
- *       cooldown, evolution count, hands and elixir
+ *   <li>TODO per-tick projectile fields: start, aim height, facing, target id
+ *   <li>TODO match fields: a card's hero form and spell variant, a play's actual cost
  *   <li>TODO statuses, action meters and roles, which the frames the visualizer draws already hold
  *   <li>TODO value events: attack started and fired, died (with a final state for an entity that
  *       leaves during the tick), card played, action started and finished

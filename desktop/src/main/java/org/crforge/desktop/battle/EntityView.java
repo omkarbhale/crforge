@@ -54,6 +54,7 @@ import org.crforge.core.pathfinding.GridUnitState;
  *     makes the body a box (its ProjectileRadius); 0 otherwise
  * @param bodyRadiusY the half height along the arena's length of that box (its ProjectileRadiusY);
  *     0 for a body that is a circle, a projectile without a body and anything but a projectile
+ * @param height a projectile's height above the ground, 0 otherwise
  * @param speed the distance a character's movement visit asked for in the last tick
  * @param grid a character's grid state, for the route overlay; null otherwise
  * @param meter the bar an action running on a character shows over it, such as the Royal Chef's
@@ -96,6 +97,7 @@ public record EntityView(
     int radiusY,
     int bodyRadius,
     int bodyRadiusY,
+    int height,
     int speed,
     GridUnitState grid,
     ActionMeter meter,

@@ -35,7 +35,14 @@ class PresentationApiTest {
       walk(method.getGenericReturnType(), records);
     }
     assertThat(records)
-        .contains(BattleStart.class, TickFrame.class, EntityFrame.class, PresentContext.class);
+        .contains(
+            BattleStart.class,
+            TickFrame.class,
+            EntityFrame.class,
+            SideFrame.class,
+            CardFrame.class,
+            AbilityFrame.class,
+            PresentContext.class);
   }
 
   /** Follows a type, failing on any that is not a value of this package or the language. */
@@ -66,13 +73,43 @@ class PresentationApiTest {
   void frameIsDetached() {
     List<EntityFrame> entities = new ArrayList<>();
     entities.add(entity(1));
-    TickFrame frame = new TickFrame(7, 350, false, -1, entities);
+    TickFrame frame = frame(entities, List.of());
 
     entities.add(entity(2));
 
     assertThat(frame.entities()).extracting(EntityFrame::id).containsExactly(1);
     assertThatThrownBy(() -> frame.entities().add(entity(3)))
         .isInstanceOf(UnsupportedOperationException.class);
+  }
+
+  @Test
+  @DisplayName("a frame keeps its own unmodifiable lists of sides, and a side its hand and slots")
+  void sidesAreDetached() {
+    List<CardFrame> hand = new ArrayList<>();
+    hand.add(CardFrame.NONE);
+    List<AbilityFrame> abilities = new ArrayList<>();
+    abilities.add(AbilityFrame.NONE);
+    SideFrame side = new SideFrame(0, 50_000, 5, 1, hand, CardFrame.NONE, abilities, 0);
+    List<SideFrame> sides = new ArrayList<>();
+    sides.add(side);
+    TickFrame frame = frame(List.of(), sides);
+
+    hand.add(CardFrame.NONE);
+    abilities.add(AbilityFrame.NONE);
+    sides.clear();
+
+    assertThat(frame.sides()).containsExactly(side);
+    assertThat(side.hand()).hasSize(1);
+    assertThat(side.abilities()).hasSize(1);
+    assertThatThrownBy(() -> frame.sides().clear())
+        .isInstanceOf(UnsupportedOperationException.class);
+    assertThatThrownBy(() -> side.hand().clear()).isInstanceOf(UnsupportedOperationException.class);
+    assertThatThrownBy(() -> side.abilities().clear())
+        .isInstanceOf(UnsupportedOperationException.class);
+  }
+
+  private static TickFrame frame(List<EntityFrame> entities, List<SideFrame> sides) {
+    return new TickFrame(7, 350, false, -1, entities, false, 1, sides, 0, 0, 0, 0, 0);
   }
 
   private static EntityFrame entity(int id) {
@@ -94,6 +131,7 @@ class PresentationApiTest {
         false,
         false,
         false,
+        0,
         0,
         0,
         0,

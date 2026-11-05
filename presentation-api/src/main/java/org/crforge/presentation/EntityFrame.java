@@ -36,6 +36,7 @@ package org.crforge.presentation;
  * @param headingY the direction a character faces along the length, unscaled
  * @param aimX a projectile's aim along the width, 0 otherwise
  * @param aimY a projectile's aim along the length, 0 otherwise
+ * @param height a projectile's height above the ground, 0 otherwise
  */
 public record EntityFrame(
     int id,
@@ -60,4 +61,5 @@ public record EntityFrame(
     int headingX,
     int headingY,
     int aimX,
-    int aimY) {}
+    int aimY,
+    int height) {}

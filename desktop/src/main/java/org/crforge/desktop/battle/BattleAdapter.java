@@ -20,6 +20,7 @@ import org.crforge.core.battle.action.ChefCooking;
 import org.crforge.core.battle.data.BattleRecords;
 import org.crforge.core.battle.data.GameRow;
 import org.crforge.core.battle.data.GameTables;
+import org.crforge.core.battle.match.EvolutionItem;
 import org.crforge.core.battle.match.Hand;
 import org.crforge.core.battle.match.LadderMatch;
 import org.crforge.core.battle.match.MatchCard;
@@ -108,6 +109,11 @@ public final class BattleAdapter {
     int rate = 0;
     boolean ended = false;
     int winner = -1;
+    int section = 0;
+    int sectionLeft = 0;
+    int endTimer = 0;
+    int tiebreak = 0;
+    int nextCardCooldown = 0;
     if (match != null) {
       for (int side = 0; side < match.playerCount(); side++) {
         sides.add(side(session, match, side));
@@ -119,6 +125,11 @@ public final class BattleAdapter {
       rate = Math.max(1, Math.round((float) openingBar / timeline.getFullBarMs()));
       ended = match.isEnded();
       winner = match.getWinner();
+      section = timeline.getSection();
+      sectionLeft = timeline.sectionLeftMs();
+      endTimer = match.getEndTimerMs();
+      tiebreak = match.getTiebreakMs();
+      nextCardCooldown = timeline.getNextCardCooldownMs();
     }
     return new BattleFrame(
         session.tick(),
@@ -131,7 +142,12 @@ public final class BattleAdapter {
         winner,
         session.isOver(),
         session.getHalted(),
-        session.messages(sideNames));
+        session.messages(sideNames),
+        section,
+        sectionLeft,
+        endTimer,
+        tiebreak,
+        nextCardCooldown);
   }
 
   /**
@@ -205,6 +221,7 @@ public final class BattleAdapter {
         view.getDirY(),
         bar == EntityView.Bar.TIMER ? timeLeftMs(hp, data) : 0,
         bar == EntityView.Bar.TIMER ? data.lifeTimeMs() : 0,
+        0,
         0,
         0,
         0,
@@ -369,6 +386,7 @@ public final class BattleAdapter {
         projectile.getData().radiusY(),
         projectile.getData().projectileRadiusY() >= 1 ? projectile.getData().projectileRadius() : 0,
         projectile.getData().projectileRadiusY(),
+        projectile.getZ(),
         0,
         null,
         null,
@@ -416,6 +434,7 @@ public final class BattleAdapter {
         0,
         0,
         0,
+        0,
         null,
         null,
         List.of(),
@@ -431,9 +450,10 @@ public final class BattleAdapter {
       if (card != null) {
         hand.set(
             slot,
-            new BattleFrame.CardView(
-                card.name(),
-                card.cost(),
+            card(
+                matchSide,
+                matchSide.getHand().slots()[slot],
+                card,
                 session.handCardLevel(side, slot),
                 session.isPending(side, slot),
                 session.cardUnavailableReason(side, slot)));
@@ -452,8 +472,35 @@ public final class BattleAdapter {
         Collections.unmodifiableList(hand),
         next == null
             ? null
-            : new BattleFrame.CardView(
-                next.name(), next.cost(), session.nextCardLevel(side), false, "not in hand"),
-        Collections.unmodifiableList(abilities));
+            : card(
+                matchSide,
+                matchSide.getHand().queue().get(0),
+                next,
+                session.nextCardLevel(side),
+                false,
+                "not in hand"),
+        Collections.unmodifiableList(abilities),
+        matchSide.getHand().getCooldownMs());
+  }
+
+  private static BattleFrame.CardView card(
+      MatchSide side,
+      int deckIndex,
+      MatchCard card,
+      int level,
+      boolean pending,
+      String unavailableReason) {
+    MatchCard evolved = card.formRow(MatchCard.EVO_FORM);
+    return new BattleFrame.CardView(
+        card.name(),
+        card.cost(),
+        level,
+        pending,
+        unavailableReason,
+        side.evolutionCount(deckIndex),
+        side.slotFlags(deckIndex) == MatchSide.EVOLUTION_SLOT && evolved != card
+            ? evolved.darkElixirCost()
+            : 0,
+        side.item(deckIndex).field() == EvolutionItem.EVOLVED);
   }
 }
