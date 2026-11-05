@@ -21,8 +21,8 @@ import org.crforge.presentation.StrikeFrame;
 /**
  * Collects a tick's deaths and strikes for a plugin, as values copied while the battle tells them.
  * It only reads what it is handed and only listens; the host drains it after each step. An entity
- * is reported dead once, under the first cause told. A morph and a plain removal tell none of the
- * hooks here, so they are no deaths.
+ * is reported dead once, under the first cause told. A morph, a plain removal and a spawner leaving
+ * at its limit tell none of the hooks here, so they are no deaths.
  */
 final class TickEventLog implements WorldObserver {
 
@@ -74,11 +74,6 @@ final class TickEventLog implements WorldObserver {
   @Override
   public void parentLeft(int tick, CharacterEntity rider, CharacterEntity parent) {
     died(rider, DeathCause.PARENT_LEFT);
-  }
-
-  @Override
-  public void destroyedAtLimit(int tick, CharacterEntity spawner) {
-    died(spawner, DeathCause.LIMIT);
   }
 
   @Override

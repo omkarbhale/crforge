@@ -7,7 +7,8 @@
 package org.crforge.presentation;
 
 /**
- * What ended a character or crown tower. A morph and a plain removal end none: they are no deaths.
+ * What ended a character or crown tower. A morph, a plain removal and a spawner leaving at its
+ * limit end none: they are no deaths.
  */
 public enum DeathCause {
   /** A hit, a spell, a buff or a rule of the match took its hit points. */
@@ -19,7 +20,5 @@ public enum DeathCause {
   /** An object without hit points ended by its own course, as a bomb does as its deploy ends. */
   EXPIRED,
   /** The parent it rode on left the battle. */
-  PARENT_LEFT,
-  /** A limited spawner spent its spawns and its row destroys it at that limit. */
-  LIMIT
+  PARENT_LEFT
 }

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.crforge.core.battle.GameData;
 import org.crforge.core.battle.data.GameTables;
 import org.crforge.core.battle.unit.CharacterEntity;
 import org.crforge.core.battle.unit.Standard1v1Battle;
@@ -57,9 +58,9 @@ class TickEventLogTest {
   /** A battle with the log on it, read as the host reads it: a frame after each step. */
   private static final class Played implements WorldObserver {
 
-    final Standard1v1Battle battle = new Standard1v1Battle(tables, LEVEL, false);
+    final Standard1v1Battle battle;
 
-    final BattleSession session = BattleSession.of(battle);
+    final BattleSession session;
 
     final TickEventLog log = new TickEventLog();
 
@@ -72,6 +73,12 @@ class TickEventLogTest {
     final Map<Integer, String> leftRows = new HashMap<>();
 
     Played() {
+      this(tables);
+    }
+
+    Played(GameTables on) {
+      battle = new Standard1v1Battle(on, LEVEL, false);
+      session = BattleSession.of(battle);
       battle.getWorld().addObserver(log);
       battle.getWorld().addObserver(this);
       session.setStepListener(
@@ -250,8 +257,8 @@ class TickEventLogTest {
   }
 
   @Test
-  @DisplayName("a spawner at its limit is told as such, and one entity dies once")
-  void limitAndOnce() {
+  @DisplayName("an entity dies once, under the first cause told")
+  void diesOnce() {
     Played played = new Played().play(1, "Knight", 0, 4500, 9000).run(5);
     CharacterEntity knight =
         played.battle.getBattle().getHolder().entities().stream()
@@ -261,14 +268,40 @@ class TickEventLogTest {
             .findFirst()
             .orElseThrow();
 
-    played.log.destroyedAtLimit(5, knight);
+    played.log.decayDied(5, knight, 1);
     played.log.entityDied(5, knight, null);
 
     assertThat(played.log.drainDeaths())
         .singleElement()
         .extracting(DeathFrame::cause)
-        .isEqualTo(DeathCause.LIMIT);
+        .isEqualTo(DeathCause.DECAY);
     assertThat(played.log.drainDeaths()).as("drained").isEmpty();
+  }
+
+  /** The egg's row is written as {@code BattlePhoenixTest} writes it, to hatch once and leave. */
+  @Test
+  @DisplayName("a limit exit is no death: the egg that hatched leaves without one")
+  void limitExitIsNoDeath(@TempDir Path folder) throws IOException {
+    GameTables hatching =
+        GameData.altered(
+            folder,
+            "characters",
+            rows ->
+                GameData.columns(rows, "PhoenixEgg")
+                    .put("SpawnCharacter", "PhoenixNoRespawn")
+                    .put("SpawnNumber", 1)
+                    .put("SpawnLimit", 1)
+                    .put("DeployTime", 1000)
+                    .put("SpawnStartTime", 3800)
+                    .put("SpawnPauseTime", 4300)
+                    .put("DestroyAtLimit", true));
+    Played played = new Played(hatching);
+    played.battle.deploy(
+        0, played.battle.getWorld().getRecords().unit("PhoenixEgg"), LEVEL, 0, 3500, 20000);
+    played.run(200);
+
+    assertThat(played.leftRows).as("the egg left").containsValue("PhoenixEgg");
+    assertThat(played.deathsOf("PhoenixEgg")).isEmpty();
   }
 
   @Test
