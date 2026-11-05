@@ -32,7 +32,8 @@ import org.crforge.core.battle.unit.ChampionController;
  * @param frozen whether the match's end has frozen its timeline
  * @param endTimerMs the match's end timer: 0 until it ends, then rising
  * @param tiebreakMs the tiebreaker's time: 0 until it begins, then rising
- * @param nextCardCooldownMs how long a played card's slot now stays empty, in milliseconds
+ * @param nextCardCooldownMs the length the refill countdown restarts at after filling a slot, in
+ *     milliseconds
  */
 public record BattleFrame(
     int tick,
@@ -63,8 +64,9 @@ public record BattleFrame(
    * @param hand the four hand slots, null for an empty slot
    * @param next the card that refills the hand next, or null
    * @param abilities the king's two champion slots, null for a slot that follows no champion
-   * @param nextCardCooldownLeftMs the time left until the next card refills the hand, in
-   *     milliseconds
+   * @param nextCardCooldownLeftMs what is left of the refill countdown, in milliseconds: an empty
+   *     slot refills when it runs out. It also runs with a full hand, and a slot emptied with it at
+   *     0 refills on its play's step
    */
   public record SideView(
       int side,
@@ -80,14 +82,18 @@ public record BattleFrame(
    * One card of a hand.
    *
    * @param name the card row name
-   * @param cost its cost in whole elixir
+   * @param cost its own row's cost in whole elixir, which need not be what a play of it spends: a
+   *     Mirror's play adds the card it repeats, and an evolved, hero or variant play costs its own
+   *     row or option
    * @param level the level its side plays it at, counted from 1 across all rarities
    * @param unavailableReason why selection is disabled, or null if available
    * @param pending whether it was played through the session's commands, from the screen or by a
    *     model playing its side, and waits for its play to run; a replay's queued plays never show
    *     it
-   * @param evolutionCount the king's count for the card: its plays since its last evolved play
-   * @param evolutionNeed the count its evolved row asks for, 0 for a card that does not evolve
+   * @param evolutionCount the king's count for an evolution slot's card, 0 for any other: its plays
+   *     since its last evolved or hero play, up to its need
+   * @param evolutionNeed the count its evolved row asks for, 0 for a card that does not evolve: one
+   *     outside an evolution slot, also in a hero slot, or without an evolved row
    * @param evolved whether its next play is evolved
    */
   public record CardView(

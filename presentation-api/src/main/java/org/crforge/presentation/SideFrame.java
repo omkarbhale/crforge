@@ -19,7 +19,9 @@ import java.util.List;
  * @param next the card that refills the hand next, {@link CardFrame#NONE} for none
  * @param abilities the king's champion slots in order, {@link AbilityFrame#NONE} for a slot that
  *     follows no champion
- * @param nextCardCooldownLeftMs the time left until the next card refills the hand, in milliseconds
+ * @param nextCardCooldownLeftMs what is left of the refill countdown, in milliseconds: an empty
+ *     slot refills when it runs out. It also runs with a full hand, and a slot emptied with it at 0
+ *     refills on its play's step
  */
 public record SideFrame(
     int side,

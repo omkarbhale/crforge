@@ -20,6 +20,7 @@ import org.crforge.core.battle.data.GameTables;
 import org.crforge.core.battle.match.EvolutionItem;
 import org.crforge.core.battle.match.Hand;
 import org.crforge.core.battle.match.LadderMatch;
+import org.crforge.core.battle.match.MatchCard;
 import org.crforge.core.battle.match.MatchSide;
 import org.crforge.core.battle.match.Timeline;
 import org.crforge.core.battle.projectile.ProjectileEntity;
@@ -161,6 +162,35 @@ class TickFramesTest {
   }
 
   @Test
+  @DisplayName(
+      "a card asks for an evolution count only where it can evolve: not outside an evolution slot,"
+          + " nor in a hero slot too")
+  void evolutionNeedFollowsTheSlot() {
+    GameTables tables = GameTables.loadConfigured();
+    assertThat(skeletonArmyNeed(tables, MatchSide.EVOLUTION_SLOT)).isPositive();
+    assertThat(skeletonArmyNeed(tables, 0)).isZero();
+    assertThat(skeletonArmyNeed(tables, MatchSide.EVOLUTION_SLOT | MatchSide.HERO_SLOT)).isZero();
+  }
+
+  /**
+   * What a frame says SkeletonArmy asks for in the given slots. The shuffle holds the Mirrors back
+   * while it draws the first four, so the card opens in hand.
+   */
+  private static int skeletonArmyNeed(GameTables tables, int slotFlags) {
+    List<String> deck =
+        List.of(
+            "SkeletonArmy", "Archer", "Mirror", "Mirror", "Mirror", "Mirror", "Mirror", "Mirror");
+    int[] slots = new int[deck.size()];
+    slots[0] = slotFlags;
+    BattleSession session = BattleSession.ladder(tables, deck, slots, deck, new int[deck.size()]);
+    return TickFrames.of(BattleAdapter.frame(session)).sides().get(0).hand().stream()
+        .filter(card -> card.name().equals("SkeletonArmy"))
+        .findFirst()
+        .orElseThrow()
+        .evolutionNeed();
+  }
+
+  @Test
   @DisplayName("reading a frame after every tick leaves the battle as it plays without them")
   void readingChangesNothing() throws IOException {
     GameTables tables = GameTables.loadConfigured();
@@ -227,11 +257,14 @@ class TickFramesTest {
         } else {
           assertThat(card.name()).isEqualTo(matchSide.deck().get(index).name());
           assertThat(card.evolutionCount()).isEqualTo(matchSide.evolutionCount(index));
+          assertThat(card.evolutionNeed()).isEqualTo(evolutionNeed(matchSide, index));
           assertThat(card.evolved())
               .isEqualTo(matchSide.item(index).field() == EvolutionItem.EVOLVED);
           assertThat(card.pending()).as("a replay's plays are never pending").isFalse();
         }
       }
+      assertThat(sideFrame.next().evolutionNeed())
+          .isEqualTo(evolutionNeed(matchSide, matchSide.getHand().queue().get(0)));
       for (int slot = 0; slot < BattleSession.ABILITY_SLOTS; slot++) {
         BattleFrame.AbilityView ability = session.abilityView(side, slot);
         AbilityFrame abilityFrame = sideFrame.abilities().get(slot);
@@ -244,6 +277,15 @@ class TickFramesTest {
         }
       }
     }
+  }
+
+  /** The count a deck card evolves at, from its row, 0 unless it alone holds an evolution slot. */
+  private static int evolutionNeed(MatchSide side, int index) {
+    MatchCard card = side.deck().get(index);
+    MatchCard evolved = card.formRow(MatchCard.EVO_FORM);
+    return side.slotFlags(index) == MatchSide.EVOLUTION_SLOT && evolved != card
+        ? evolved.darkElixirCost()
+        : 0;
   }
 
   /** A digest of the battle read straight from the core, through nothing a plugin's frame uses. */

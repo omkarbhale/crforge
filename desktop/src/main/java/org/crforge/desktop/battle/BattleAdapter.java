@@ -501,7 +501,9 @@ public final class BattleAdapter {
         pending,
         unavailableReason,
         side.evolutionCount(deckIndex),
-        evolved == card ? 0 : evolved.darkElixirCost(),
+        side.slotFlags(deckIndex) == MatchSide.EVOLUTION_SLOT && evolved != card
+            ? evolved.darkElixirCost()
+            : 0,
         side.item(deckIndex).field() == EvolutionItem.EVOLVED);
   }
 }

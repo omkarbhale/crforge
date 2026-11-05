@@ -27,7 +27,8 @@ import java.util.List;
  * @param frozen whether the match's end has frozen its clock
  * @param endTimerMs the match's end timer: 0 until it ends, then rising
  * @param tiebreakMs the tiebreaker's time: 0 until it begins, then rising
- * @param nextCardCooldownMs how long a played card's slot now stays empty, in milliseconds
+ * @param nextCardCooldownMs the length the refill countdown restarts at after filling a slot, in
+ *     milliseconds
  */
 public record TickFrame(
     int tick,
