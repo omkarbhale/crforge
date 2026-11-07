@@ -15,13 +15,17 @@ import org.crforge.desktop.battle.BattleFrame.AbilityView;
 import org.crforge.desktop.battle.BattleFrame.CardView;
 import org.crforge.desktop.battle.BattleFrame.SideView;
 import org.crforge.desktop.battle.EntityView;
+import org.crforge.desktop.battle.UnitStatus;
 import org.crforge.presentation.AbilityFrame;
 import org.crforge.presentation.AbilityState;
 import org.crforge.presentation.CardFrame;
+import org.crforge.presentation.DeathFrame;
 import org.crforge.presentation.EntityFrame;
 import org.crforge.presentation.EntityKind;
 import org.crforge.presentation.EntityState;
 import org.crforge.presentation.SideFrame;
+import org.crforge.presentation.StatusFrame;
+import org.crforge.presentation.StrikeFrame;
 import org.crforge.presentation.TickFrame;
 
 /**
@@ -34,7 +38,13 @@ final class TickFrames {
     // Utility class
   }
 
-  static TickFrame of(BattleFrame frame) {
+  /**
+   * A plugin's frame with the tick's events.
+   *
+   * @param deaths what died in the tick just run; none on a battle's first frame
+   * @param strikes the attacks' hits that landed in it; none on a battle's first frame
+   */
+  static TickFrame of(BattleFrame frame, List<DeathFrame> deaths, List<StrikeFrame> strikes) {
     List<EntityFrame> entities = new ArrayList<>(frame.entities().size());
     for (EntityView view : frame.entities()) {
       entities.add(entity(view));
@@ -56,7 +66,9 @@ final class TickFrames {
         frame.sectionLeftMs(),
         frame.endTimerMs(),
         frame.tiebreakMs(),
-        frame.nextCardCooldownMs());
+        frame.nextCardCooldownMs(),
+        deaths,
+        strikes);
   }
 
   private static SideFrame side(SideView view) {
@@ -155,7 +167,22 @@ final class TickFrames {
         view.headingY(),
         view.aimX(),
         view.aimY(),
-        view.height());
+        view.height(),
+        statuses(view),
+        view.hasStatus(UnitStatus.Kind.CLONE));
+  }
+
+  /** The buffs on an entity; a clone's flag stands in the view's statuses but is no buff row. */
+  private static List<StatusFrame> statuses(EntityView view) {
+    List<StatusFrame> statuses = new ArrayList<>(view.statuses().size());
+    for (UnitStatus status : view.statuses()) {
+      if (status.row() != null) {
+        statuses.add(
+            new StatusFrame(
+                status.row(), status.remainingMs(), status.totalMs(), status.appliedSide()));
+      }
+    }
+    return statuses;
   }
 
   private static EntityKind kind(EntityView.Kind kind) {

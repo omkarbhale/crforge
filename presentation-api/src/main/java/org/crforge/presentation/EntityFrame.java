@@ -6,6 +6,8 @@
 
 package org.crforge.presentation;
 
+import java.util.List;
+
 /**
  * One entity of a battle at a tick. Positions and distances are in game units (1000 per tile) as
  * the battle holds them: {@code x} along the arena's width, {@code y} along its length from side 0
@@ -37,6 +39,8 @@ package org.crforge.presentation;
  * @param aimX a projectile's aim along the width, 0 otherwise
  * @param aimY a projectile's aim along the length, 0 otherwise
  * @param height a projectile's height above the ground, 0 otherwise
+ * @param statuses the buffs on a character or crown tower now, empty for anything else
+ * @param isClone whether a character is a clone, for its whole life; false for anything else
  */
 public record EntityFrame(
     int id,
@@ -62,4 +66,70 @@ public record EntityFrame(
     int headingY,
     int aimX,
     int aimY,
-    int height) {}
+    int height,
+    List<StatusFrame> statuses,
+    boolean isClone) {
+
+  public EntityFrame {
+    statuses = List.copyOf(statuses);
+  }
+
+  /**
+   * A frame with no statuses, of no clone. Kept on purpose: crforge-render builds against this
+   * module live, and its tests and harness tools construct frames with this signature, so removing
+   * it breaks them.
+   */
+  public EntityFrame(
+      int id,
+      EntityKind kind,
+      int side,
+      String name,
+      int x,
+      int y,
+      int radius,
+      int hitPoints,
+      int maxHitPoints,
+      int shield,
+      int maxShield,
+      boolean air,
+      boolean king,
+      EntityState state,
+      boolean deploying,
+      boolean hidden,
+      boolean hasTarget,
+      int targetX,
+      int targetY,
+      int headingX,
+      int headingY,
+      int aimX,
+      int aimY,
+      int height) {
+    this(
+        id,
+        kind,
+        side,
+        name,
+        x,
+        y,
+        radius,
+        hitPoints,
+        maxHitPoints,
+        shield,
+        maxShield,
+        air,
+        king,
+        state,
+        deploying,
+        hidden,
+        hasTarget,
+        targetX,
+        targetY,
+        headingX,
+        headingY,
+        aimX,
+        aimY,
+        height,
+        List.of(),
+        false);
+  }
+}

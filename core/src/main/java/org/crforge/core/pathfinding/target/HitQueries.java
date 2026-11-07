@@ -118,8 +118,11 @@ public interface HitQueries {
    * @param hitId the id this hit carries
    * @param directionX direction of the hit along the arena's width
    * @param directionY direction of the hit along the arena's length
+   * @param special whether it is a special hit, which changes nothing the damage does and is only
+   *     told to whoever observes the battle
    */
-  void dealDamage(TargetView target, int damage, int hitId, int directionX, int directionY);
+  void dealDamage(
+      TargetView target, int damage, int hitId, int directionX, int directionY, boolean special);
 
   /**
    * Launches the projectiles of one hit of a unit that fires rather than hits directly: as many as
@@ -204,8 +207,11 @@ public interface HitQueries {
    * @param damage what an ordinary victim takes
    * @param towerDamage what a crown tower takes
    * @param hitId the id this hit carries
+   * @param special whether it is a special hit, which changes nothing the damage does and is only
+   *     told to whoever observes the battle
    */
-  default void areaDamage(int x, int y, int radius, int damage, int towerDamage, int hitId) {}
+  default void areaDamage(
+      int x, int y, int radius, int damage, int towerDamage, int hitId, boolean special) {}
 
   /**
    * The buff the owner's row applies to what its hit reached, right after a direct hit that was not

@@ -112,6 +112,32 @@ public interface WorldObserver {
   default void entityRemoved(int tick, WorldEntity removed) {}
 
   /**
+   * A hit took an entity's last hit points, as its death handler starts: told before the death does
+   * anything, at the position it dies at. The deaths without a death handler have hooks of their
+   * own: {@link #decayDied}, {@link #diedAtRemoval} and {@link #parentLeft}.
+   *
+   * @param tick the tick it died in
+   * @param dying the entity
+   * @param attacker what killed it, the entity itself for one that killed itself, or null for
+   *     nothing
+   */
+  default void entityDied(int tick, WorldEntity dying, BattleEntity attacker) {}
+
+  /**
+   * An attack's own hit landed on a victim, at the damage drain: a targeting visit's direct hit, a
+   * dash landing's, or one victim's share of the area of either. A projectile's hit, an action's, a
+   * death's area and a hit a guard turned away are not told here.
+   *
+   * @param tick the tick it landed in
+   * @param attacker the entity whose hit it is
+   * @param victim the entity it landed on
+   * @param special true for a special hit: a loaded or charged special, a complete charge's hit or
+   *     a dash landing's, those for which a row's special damage effect is meant
+   */
+  default void attackHitLanded(
+      int tick, WorldEntity attacker, WorldEntity victim, boolean special) {}
+
+  /**
    * A spawned child was linked into its source's group, right after the source, so the group reads
    * newest first.
    *

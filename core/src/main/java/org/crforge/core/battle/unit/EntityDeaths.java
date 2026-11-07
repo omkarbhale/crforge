@@ -119,6 +119,7 @@ public final class EntityDeaths {
    * @param killingSide the side of the killing hit, or -1 for none
    */
   void entityDied(WorldEntity dying, BattleEntity attacker, int killingSide) {
+    world.getEvents().entityDied(dying, attacker);
     UnitData data = dying.getData();
     deathSlot(dying, data);
     killedDone(dying, attacker);
@@ -658,9 +659,11 @@ public final class EntityDeaths {
 
               @Override
               public DamageResult damage(TargetView victim, int dealt, int id) {
-                return world
-                    .getHits()
-                    .dealAreaDamage(owner, world.entityOf(victim.getEntity()), dealt, id);
+                WorldEntity hit = world.entityOf(victim.getEntity());
+                // Only a dash landing's area is an attack's hit; a death's is not.
+                return gated
+                    ? world.getHits().dealAttackAreaDamage(owner, hit, dealt, id, true)
+                    : world.getHits().dealAreaDamage(owner, hit, dealt, id);
               }
 
               @Override

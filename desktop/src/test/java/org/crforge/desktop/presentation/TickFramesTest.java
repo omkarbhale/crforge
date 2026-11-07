@@ -122,7 +122,9 @@ class TickFramesTest {
                 61_000,
                 51,
                 100,
-                2_000));
+                2_000),
+            List.of(),
+            List.of());
 
     assertThat(frame.overtime()).isTrue();
     assertThat(frame.elixirRate()).isEqualTo(3);
@@ -181,7 +183,7 @@ class TickFramesTest {
     int[] slots = new int[deck.size()];
     slots[0] = slotFlags;
     BattleSession session = BattleSession.ladder(tables, deck, slots, deck, new int[deck.size()]);
-    return TickFrames.of(BattleAdapter.frame(session)).sides().get(0).hand().stream()
+    return frameOf(session).sides().get(0).hand().stream()
         .filter(card -> card.name().equals("SkeletonArmy"))
         .findFirst()
         .orElseThrow()
@@ -203,7 +205,7 @@ class TickFramesTest {
     read.getSession()
         .setStepListener(
             () -> {
-              TickFrame frame = TickFrames.of(BattleAdapter.frame(read.getSession()));
+              TickFrame frame = frameOf(read.getSession());
               assertFollowsTheMatch(frame, read.getSession());
               heard.add(frame);
               readStates.add(state(read.getSession()));
@@ -222,8 +224,7 @@ class TickFramesTest {
     assertThat(heard).isNotEmpty();
     assertThat(unreadStates).as("the battle's state at every tick").isEqualTo(readStates);
     assertThat(unread.getSession().tick()).isEqualTo(read.getSession().tick());
-    assertThat(TickFrames.of(BattleAdapter.frame(unread.getSession())))
-        .isEqualTo(heard.get(heard.size() - 1));
+    assertThat(frameOf(unread.getSession())).isEqualTo(heard.get(heard.size() - 1));
 
     assertThat(heard).allSatisfy(frame -> assertThat(frame.sides()).hasSize(2));
     assertThat(heard).allSatisfy(frame -> assertThat(frame.elixirRate()).isPositive());
@@ -231,6 +232,11 @@ class TickFramesTest {
     assertThat(heard.stream().flatMap(frame -> frame.entities().stream()))
         .as("a projectile in flight is off the ground")
         .anyMatch(entity -> entity.kind() == EntityKind.PROJECTILE && entity.height() > 0);
+  }
+
+  /** A session's frame as it stands, with no events told. */
+  private static TickFrame frameOf(BattleSession session) {
+    return TickFrames.of(BattleAdapter.frame(session), List.of(), List.of());
   }
 
   /** A frame says what the match holds, read straight from the core and the session. */

@@ -42,7 +42,70 @@ class PresentationApiTest {
             SideFrame.class,
             CardFrame.class,
             AbilityFrame.class,
+            StatusFrame.class,
+            DeathFrame.class,
+            StrikeFrame.class,
             PresentContext.class);
+  }
+
+  /** Those signatures are held for crforge-render, whose tests and tools construct frames. */
+  @Test
+  @DisplayName("the constructors from before statuses and events default them to empty, no clone")
+  void olderConstructors() {
+    assertThat(entity(1).statuses()).isEmpty();
+    assertThat(entity(1).isClone()).isFalse();
+    TickFrame frame = frame(List.of(entity(1)), List.of());
+    assertThat(frame.deaths()).isEmpty();
+    assertThat(frame.strikes()).isEmpty();
+  }
+
+  @Test
+  @DisplayName("a frame's statuses and events are copied and cannot be changed")
+  void statusesAndEventsAreCopied() {
+    List<StatusFrame> statuses = new ArrayList<>(List.of(new StatusFrame("Freeze", 500, 4000, 1)));
+    List<DeathFrame> deaths =
+        new ArrayList<>(List.of(new DeathFrame(1, "Knight", 0, 10, 20, DeathCause.KILLED)));
+    List<StrikeFrame> strikes = new ArrayList<>(List.of(new StrikeFrame(1, 2, true)));
+    EntityFrame old = entity(1);
+    EntityFrame entity =
+        new EntityFrame(
+            old.id(),
+            old.kind(),
+            old.side(),
+            old.name(),
+            old.x(),
+            old.y(),
+            old.radius(),
+            old.hitPoints(),
+            old.maxHitPoints(),
+            old.shield(),
+            old.maxShield(),
+            old.air(),
+            old.king(),
+            old.state(),
+            old.deploying(),
+            old.hidden(),
+            old.hasTarget(),
+            old.targetX(),
+            old.targetY(),
+            old.headingX(),
+            old.headingY(),
+            old.aimX(),
+            old.aimY(),
+            old.height(),
+            statuses,
+            false);
+    TickFrame frame =
+        new TickFrame(
+            7, 350, false, -1, List.of(), false, 1, List.of(), 0, 0, 0, 0, 0, deaths, strikes);
+    statuses.clear();
+    deaths.clear();
+    strikes.clear();
+    assertThat(entity.statuses()).hasSize(1);
+    assertThat(frame.deaths()).hasSize(1);
+    assertThat(frame.strikes()).hasSize(1);
+    assertThatThrownBy(() -> frame.deaths().clear())
+        .isInstanceOf(UnsupportedOperationException.class);
   }
 
   /** Follows a type, failing on any that is not a value of this package or the language. */

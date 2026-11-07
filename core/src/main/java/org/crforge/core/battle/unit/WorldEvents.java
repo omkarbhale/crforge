@@ -1389,6 +1389,20 @@ public final class WorldEvents {
     }
   }
 
+  /** A hit took an entity's last hit points, as its death handler starts. */
+  void entityDied(WorldEntity dying, BattleEntity attacker) {
+    for (WorldObserver observer : observers) {
+      observer.entityDied(tick(), dying, attacker);
+    }
+  }
+
+  /** An attack's own hit landed on a victim, at the damage drain. */
+  void attackHitLanded(WorldEntity attacker, WorldEntity victim, boolean special) {
+    for (WorldObserver observer : observers) {
+      observer.attackHitLanded(tick(), attacker, victim, special);
+    }
+  }
+
   /** An evolved Royal Ghost's run made an area effect: a summon area, or the damage area. */
   void ghostAreaMade(CharacterEntity ghost, AreaEffectEntity area, WorldEntity target) {
     for (WorldObserver observer : observers) {

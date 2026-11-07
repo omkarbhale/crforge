@@ -814,9 +814,16 @@ public abstract class WorldEntity extends BattleEntity implements ActionOwner, S
 
       @Override
       public void dealDamage(
-          TargetView target, int damage, int hitId, int directionX, int directionY) {
+          TargetView target,
+          int damage,
+          int hitId,
+          int directionX,
+          int directionY,
+          boolean special) {
         // Queued for the damage drain.
-        world.getHits().dealDirectHit(WorldEntity.this, target, damage, directionX, directionY);
+        world
+            .getHits()
+            .dealDirectHit(WorldEntity.this, target, damage, directionX, directionY, special);
       }
 
       @Override
@@ -861,8 +868,9 @@ public abstract class WorldEntity extends BattleEntity implements ActionOwner, S
       }
 
       @Override
-      public void areaDamage(int x, int y, int radius, int damage, int towerDamage, int hitId) {
-        damageArea(x, y, radius, damage, towerDamage, hitId);
+      public void areaDamage(
+          int x, int y, int radius, int damage, int towerDamage, int hitId, boolean special) {
+        damageArea(x, y, radius, damage, towerDamage, hitId, special);
       }
 
       @Override
@@ -1094,7 +1102,8 @@ public abstract class WorldEntity extends BattleEntity implements ActionOwner, S
    * it collects: a dasher whose immunity after its dash still counts takes no share, even when its
    * own visit of the tick counts the immunity to 0 before the damage drain.
    */
-  private void damageArea(int x, int y, int radius, int damage, int towerDamage, int hitId) {
+  private void damageArea(
+      int x, int y, int radius, int damage, int towerDamage, int hitId, boolean special) {
     List<TargetView> entities = new ArrayList<>();
     for (WorldEntity entity : world.present()) {
       entities.add(entity.getTargetView());
@@ -1118,8 +1127,8 @@ public abstract class WorldEntity extends BattleEntity implements ActionOwner, S
               public DamageResult damage(TargetView victim, int dealt, int id) {
                 return world
                     .getHits()
-                    .dealAreaDamage(
-                        WorldEntity.this, world.entityOf(victim.getEntity()), dealt, id);
+                    .dealAttackAreaDamage(
+                        WorldEntity.this, world.entityOf(victim.getEntity()), dealt, id, special);
               }
             });
     world.getEvents().areaDamaged(this, area, outcome);

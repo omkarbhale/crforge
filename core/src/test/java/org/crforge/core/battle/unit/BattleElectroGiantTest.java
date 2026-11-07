@@ -413,8 +413,8 @@ class BattleElectroGiantTest {
     BattleWorld world = scene.match.getWorld();
     // Both hits wait for the next drain, in this order: the witch's is struck back, the Knight's
     // fells the Giant.
-    world.getHits().dealDirectHit(witch, scene.giant.getTargetView(), 1, 0, 0);
-    world.getHits().dealDirectHit(knight, scene.giant.getTargetView(), 100, 0, 0);
+    world.getHits().dealDirectHit(witch, scene.giant.getTargetView(), 1, 0, 0, false);
+    world.getHits().dealDirectHit(knight, scene.giant.getTargetView(), 100, 0, 0, false);
     scene.step(1);
 
     // The witch's reflected damage was dealt after the Knight's hit: the Giant was down.
@@ -507,7 +507,7 @@ class BattleElectroGiantTest {
     // The Dark Prince's hit on the Giant, then a hit of exactly its shield on the Dark Prince
     // queued after it, both for the next step's drain.
     BattleWorld world = scene.match.getWorld();
-    world.getHits().dealDirectHit(prince, scene.giant.getTargetView(), 100, 0, 0);
+    world.getHits().dealDirectHit(prince, scene.giant.getTargetView(), 100, 0, 0, false);
     world.getHits().dealQueuedDamage(prince.getTargetView(), shield, 0, 0, 0);
     scene.step(1);
 

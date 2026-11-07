@@ -3289,7 +3289,9 @@ public class CharacterEntity extends WorldEntity {
                   + " no run holds");
         }
         hit = world.entityOf(reference.getEntity());
-        world.getHits().dealDirectHit(this, reference, damage, view.getDirX(), view.getDirY());
+        world
+            .getHits()
+            .dealDirectHit(this, reference, damage, view.getDirX(), view.getDirY(), true);
         t.clearAttack();
         t.setLoadTimerMs(data.loadTimeMs());
       }

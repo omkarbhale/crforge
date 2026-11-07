@@ -38,7 +38,12 @@ class DirectHitTest {
 
         @Override
         public void dealDamage(
-            TargetView hit, int damage, int hitId, int directionX, int directionY) {
+            TargetView hit,
+            int damage,
+            int hitId,
+            int directionX,
+            int directionY,
+            boolean special) {
           dealt.add("%d %d %d %d".formatted(damage, hitId, directionX, directionY));
           order.add("damage");
         }
@@ -75,7 +80,7 @@ class DirectHitTest {
   @Test
   @DisplayName("an ordinary target takes the plain damage, from the owner towards the reference")
   void anOrdinaryTargetTakesThePlainDamage() {
-    DirectHit.resolve(t, target, 202, false, queries);
+    DirectHit.resolve(t, target, 202, false, false, queries);
 
     assertThat(dealt).containsExactly("202 1 0 2000");
   }
@@ -83,7 +88,7 @@ class DirectHitTest {
   @Test
   @DisplayName("the step's pushback is asked for before the target's damage")
   void theStepPushbackComesBeforeTheDamage() {
-    DirectHit.resolve(t, target, 202, false, queries);
+    DirectHit.resolve(t, target, 202, false, false, queries);
 
     assertThat(order).containsExactly("pushback", "damage", "dealt");
   }
@@ -94,7 +99,7 @@ class DirectHitTest {
     t.setConfig(t.getConfig().toBuilder().crownTowerDamagePercent(-70).build());
     target.setCrownTowerTarget(true);
 
-    DirectHit.resolve(t, target, 202, false, queries);
+    DirectHit.resolve(t, target, 202, false, false, queries);
 
     assertThat(dealt).as("30 percent of 202, rounded up").containsExactly("61 1 0 2000");
   }
@@ -104,7 +109,7 @@ class DirectHitTest {
   void anOrdinaryTargetIgnoresTheCrownTowerPercentage() {
     t.setConfig(t.getConfig().toBuilder().crownTowerDamagePercent(-70).build());
 
-    DirectHit.resolve(t, target, 202, false, queries);
+    DirectHit.resolve(t, target, 202, false, false, queries);
 
     assertThat(dealt).containsExactly("202 1 0 2000");
   }
@@ -112,8 +117,8 @@ class DirectHitTest {
   @Test
   @DisplayName("a cancelled hit and a hit with no target still count a hit id and touch nothing")
   void aCancelledHitTouchesNothing() {
-    DirectHit.resolve(t, target, 202, true, queries);
-    DirectHit.resolve(t, null, 202, false, queries);
+    DirectHit.resolve(t, target, 202, true, false, queries);
+    DirectHit.resolve(t, null, 202, false, false, queries);
 
     assertThat(dealt).isEmpty();
     assertThat(queries.nextHitId()).as("both hits took an id before they stopped").isEqualTo(3);

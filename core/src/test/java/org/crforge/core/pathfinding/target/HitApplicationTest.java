@@ -32,6 +32,10 @@ class HitApplicationTest {
   private static final class RecordingQueries implements HitQueries {
 
     private final List<String> dealt = new ArrayList<>();
+
+    /** What each hit dealt told its observers: whether it is a special one. */
+    private final List<Boolean> specials = new ArrayList<>();
+
     private boolean forbidden;
     private int hitCounter;
     private int charge = NO_CHARGE;
@@ -76,7 +80,9 @@ class HitApplicationTest {
     }
 
     @Override
-    public void dealDamage(TargetView hit, int damage, int hitId, int directionX, int directionY) {
+    public void dealDamage(
+        TargetView hit, int damage, int hitId, int directionX, int directionY, boolean special) {
+      specials.add(special);
       order.add("damage");
       dealt.add(
           "%s %d %d %d %d"
@@ -348,6 +354,23 @@ class HitApplicationTest {
 
     assertThat(queries.dealt).containsExactly("target 783 1 0 2000");
     assertThat(queries.resets).isEqualTo(1);
+  }
+
+  @Test
+  @DisplayName("only a complete charge's hit or a loaded special's is told as special")
+  void whichHitsAreToldAsSpecial() {
+    t.setLastReferenceY(2000);
+
+    HitApplication.apply(t, target, queries);
+    queries.charge = 5000;
+    HitApplication.apply(t, target, queries);
+    queries.charge = HitQueries.CHARGE_COMPLETE;
+    HitApplication.apply(t, target, queries);
+    queries.charge = HitQueries.NO_CHARGE;
+    t.setSpecialLoadPending(true);
+    HitApplication.apply(t, target, queries);
+
+    assertThat(queries.specials).containsExactly(false, false, true, true);
   }
 
   @Test

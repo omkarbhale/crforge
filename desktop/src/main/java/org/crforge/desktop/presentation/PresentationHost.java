@@ -40,6 +40,9 @@ public final class PresentationHost {
   /** The battle a plugin was last told of, or null. */
   private BattleSession followed;
 
+  /** What that battle's ticks are collecting for a plugin, or null while none is told. */
+  private TickEventLog events;
+
   private PresentationHost(BuiltinPresentation builtin, PresentationPlugin active) {
     this.builtin = builtin;
     this.active = active;
@@ -98,10 +101,9 @@ public final class PresentationHost {
     if (active == builtin || session == followed) {
       return;
     }
-    if (followed != null) {
-      followed.setStepListener(null);
-    }
+    stopFollowing();
     followed = session;
+    events = new TickEventLog();
     contained(
         () -> {
           TileMap map = session.getBattle().getWorld().getTileMap();
@@ -110,12 +112,30 @@ public final class PresentationHost {
           tellTick(session);
         });
     if (active != builtin) {
+      // Attached after the battle's first tell, which carries no events whatever its tick, since
+      // no log heard the ticks run to reach it: the log hears from the next step on. It only
+      // listens, and the session's own area log already keeps the battle's observer list from
+      // being empty.
+      session.getBattle().getWorld().addObserver(events);
       session.setStepListener(() -> contained(() -> tellTick(session)));
     }
   }
 
   private void tellTick(BattleSession session) {
-    active.tick(TickFrames.of(BattleAdapter.frame(session)));
+    active.tick(
+        TickFrames.of(BattleAdapter.frame(session), events.drainDeaths(), events.drainStrikes()));
+  }
+
+  /** Lets go of the battle followed: no more ticks, and its log stops collecting. */
+  private void stopFollowing() {
+    if (followed != null) {
+      followed.setStepListener(null);
+    }
+    if (events != null) {
+      // An observer cannot be detached; a stopped log just ignores what it is told.
+      events.stop();
+      events = null;
+    }
   }
 
   /**
@@ -147,9 +167,7 @@ public final class PresentationHost {
     if (active == builtin) {
       return;
     }
-    if (followed != null) {
-      followed.setStepListener(null);
-    }
+    stopFollowing();
     PresentationPlugin closing = active;
     active = builtin;
     closeQuietly(closing);
