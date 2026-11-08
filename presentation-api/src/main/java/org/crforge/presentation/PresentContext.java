@@ -10,10 +10,10 @@ package org.crforge.presentation;
  * Where a display refresh draws. The host has set the display up for the arena's rectangle before
  * the call.
  *
- * @param viewportX the arena's left edge in window pixels
- * @param viewportY the arena's bottom edge in window pixels, counted from the window's bottom
- * @param viewportWidth the arena's width in window pixels
- * @param viewportHeight the arena's height in window pixels
+ * @param viewportX the rectangle's left edge in window pixels
+ * @param viewportY the rectangle's bottom edge in window pixels, counted from the window's bottom
+ * @param viewportWidth the rectangle's width in window pixels
+ * @param viewportHeight the rectangle's height in window pixels
  * @param bottomSide the side the view has at the bottom, 0 or 1: the two sides' views are half a
  *     turn apart
  */
