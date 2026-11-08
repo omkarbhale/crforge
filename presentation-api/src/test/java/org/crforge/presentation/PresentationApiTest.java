@@ -100,10 +100,14 @@ class PresentationApiTest {
 
   /** Those signatures are held for crforge-render, whose tests and tools construct frames. */
   @Test
-  @DisplayName("the constructors from before statuses and events default them to empty, no clone")
+  @DisplayName(
+      "the constructors from before statuses, events and the level default them to empty, no"
+          + " clone, no level")
   void olderConstructors() {
     assertThat(entity(1).statuses()).isEmpty();
     assertThat(entity(1).isClone()).isFalse();
+    assertThat(entity(1).level()).isEqualTo(EntityFrame.NO_LEVEL);
+    assertThat(withLevel(entity(1), 11).level()).isEqualTo(11);
     TickFrame frame = frame(List.of(entity(1)), List.of());
     assertThat(frame.deaths()).isEmpty();
     assertThat(frame.strikes()).isEmpty();
@@ -145,6 +149,7 @@ class PresentationApiTest {
             old.height(),
             statuses,
             false);
+    assertThat(entity.level()).as("the constructor from before the level").isZero();
     TickFrame frame =
         new TickFrame(
             7, 350, false, -1, List.of(), false, 1, List.of(), 0, 0, 0, 0, 0, deaths, strikes);
@@ -219,6 +224,38 @@ class PresentationApiTest {
     assertThatThrownBy(() -> side.hand().clear()).isInstanceOf(UnsupportedOperationException.class);
     assertThatThrownBy(() -> side.abilities().clear())
         .isInstanceOf(UnsupportedOperationException.class);
+  }
+
+  /** The entity at the given level, built with the record's own constructor. */
+  private static EntityFrame withLevel(EntityFrame old, int level) {
+    return new EntityFrame(
+        old.id(),
+        old.kind(),
+        old.side(),
+        old.name(),
+        old.x(),
+        old.y(),
+        old.radius(),
+        old.hitPoints(),
+        old.maxHitPoints(),
+        old.shield(),
+        old.maxShield(),
+        old.air(),
+        old.king(),
+        old.state(),
+        old.deploying(),
+        old.hidden(),
+        old.hasTarget(),
+        old.targetX(),
+        old.targetY(),
+        old.headingX(),
+        old.headingY(),
+        old.aimX(),
+        old.aimY(),
+        old.height(),
+        old.statuses(),
+        old.isClone(),
+        level);
   }
 
   private static TickFrame frame(List<EntityFrame> entities, List<SideFrame> sides) {

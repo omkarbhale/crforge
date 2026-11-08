@@ -41,6 +41,10 @@ import java.util.List;
  * @param height a projectile's height above the ground, 0 otherwise
  * @param statuses the buffs on a character or crown tower now, empty for anything else
  * @param isClone whether a character is a clone, for its whole life; false for anything else
+ * @param level the level the battle holds the entity at, counted from 1 across all rarities as the
+ *     match counts a card's level: a troop's, building's or tower's own level, which a level change
+ *     moves, and a projectile's or area effect's the level it was made at; {@link #NO_LEVEL} when
+ *     the frame was built without one
  */
 public record EntityFrame(
     int id,
@@ -68,16 +72,85 @@ public record EntityFrame(
     int aimY,
     int height,
     List<StatusFrame> statuses,
-    boolean isClone) {
+    boolean isClone,
+    int level) {
+
+  /**
+   * The level of a frame built without one: by the constructors from before the level. Every entity
+   * of a battle stands at a level counted from 1, so this is never a battle's value.
+   */
+  public static final int NO_LEVEL = 0;
 
   public EntityFrame {
     statuses = List.copyOf(statuses);
   }
 
   /**
-   * A frame with no statuses, of no clone. Kept on purpose: crforge-render builds against this
+   * A frame with no level ({@link #NO_LEVEL}). Kept on purpose: crforge-render builds against this
    * module live, and its tests and harness tools construct frames with this signature, so removing
    * it breaks them.
+   */
+  public EntityFrame(
+      int id,
+      EntityKind kind,
+      int side,
+      String name,
+      int x,
+      int y,
+      int radius,
+      int hitPoints,
+      int maxHitPoints,
+      int shield,
+      int maxShield,
+      boolean air,
+      boolean king,
+      EntityState state,
+      boolean deploying,
+      boolean hidden,
+      boolean hasTarget,
+      int targetX,
+      int targetY,
+      int headingX,
+      int headingY,
+      int aimX,
+      int aimY,
+      int height,
+      List<StatusFrame> statuses,
+      boolean isClone) {
+    this(
+        id,
+        kind,
+        side,
+        name,
+        x,
+        y,
+        radius,
+        hitPoints,
+        maxHitPoints,
+        shield,
+        maxShield,
+        air,
+        king,
+        state,
+        deploying,
+        hidden,
+        hasTarget,
+        targetX,
+        targetY,
+        headingX,
+        headingY,
+        aimX,
+        aimY,
+        height,
+        statuses,
+        isClone,
+        NO_LEVEL);
+  }
+
+  /**
+   * A frame with no statuses, of no clone, with no level ({@link #NO_LEVEL}). Kept on purpose:
+   * crforge-render builds against this module live, and its tests and harness tools construct
+   * frames with this signature, so removing it breaks them.
    */
   public EntityFrame(
       int id,
@@ -130,6 +203,7 @@ public record EntityFrame(
         aimY,
         height,
         List.of(),
-        false);
+        false,
+        NO_LEVEL);
   }
 }

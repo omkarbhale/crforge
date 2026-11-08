@@ -169,7 +169,8 @@ final class TickFrames {
         view.aimY(),
         view.height(),
         statuses(view),
-        view.hasStatus(UnitStatus.Kind.CLONE));
+        view.hasStatus(UnitStatus.Kind.CLONE),
+        view.level());
   }
 
   /** The buffs on an entity; a clone's flag stands in the view's statuses but is no buff row. */
