@@ -396,6 +396,7 @@ public class ReplayGameScreen implements Screen {
               List.of(),
               view),
           workspace.presentContext());
+      workspace.setDrawnArena(presentation.drawnArena());
       newAreaHits.clear();
       workspace.draw(delta);
     } catch (Exception e) {

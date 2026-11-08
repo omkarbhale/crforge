@@ -8,6 +8,7 @@ package org.crforge.presentation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -45,7 +46,56 @@ class PresentationApiTest {
             StatusFrame.class,
             DeathFrame.class,
             StrikeFrame.class,
-            PresentContext.class);
+            PresentContext.class,
+            ArenaProjection.class);
+  }
+
+  @Test
+  @DisplayName("a plugin reports no projection unless it says where it drew")
+  void noProjectionByDefault() {
+    PresentationPlugin plugin =
+        new PresentationPlugin() {
+          @Override
+          public String id() {
+            return "none";
+          }
+
+          @Override
+          public void battleStarted(BattleStart battle) {}
+
+          @Override
+          public void tick(TickFrame frame) {}
+
+          @Override
+          public void present(PresentContext context) {}
+        };
+    assertThat(plugin.arenaProjection()).isNull();
+  }
+
+  @Test
+  @DisplayName("a projection maps a pixel back to the position it draws there, on each axis")
+  void projectionRoundTrip() {
+    // Reversed across the arena and scaled differently along it, off the rectangle's corner.
+    ArenaProjection projection = new ArenaProjection(612.5f, -41f, -0.0242f, 0.0299f);
+    assertThat(projection.pixelX(9000)).isCloseTo(612.5f - 217.8f, within(1e-3f));
+    assertThat(projection.pixelY(32000)).isCloseTo(-41f + 956.8f, within(1e-3f));
+    for (float x : new float[] {0, 500, 9000, 17_500, 18_000}) {
+      assertThat(projection.x(projection.pixelX(x))).isCloseTo(x, within(0.05f));
+    }
+    for (float y : new float[] {0, 500, 16_000, 31_500, 32_000}) {
+      assertThat(projection.y(projection.pixelY(y))).isCloseTo(y, within(0.05f));
+    }
+  }
+
+  @Test
+  @DisplayName("a projection no point maps back through is refused")
+  void projectionRefused() {
+    assertThatThrownBy(() -> new ArenaProjection(0, 0, 0, 1))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new ArenaProjection(0, 0, 1, Float.NaN))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new ArenaProjection(Float.POSITIVE_INFINITY, 0, 1, 1))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   /** Those signatures are held for crforge-render, whose tests and tools construct frames. */
