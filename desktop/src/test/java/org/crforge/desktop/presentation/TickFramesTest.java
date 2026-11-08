@@ -14,7 +14,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.crforge.core.battle.BattleEntity;
 import org.crforge.core.battle.data.GameTables;
 import org.crforge.core.battle.match.EvolutionItem;
@@ -28,6 +30,7 @@ import org.crforge.core.battle.unit.AreaEffectEntity;
 import org.crforge.core.battle.unit.ChampionController;
 import org.crforge.core.battle.unit.WorldEntity;
 import org.crforge.core.pathfinding.GridEntityState;
+import org.crforge.core.pathfinding.combat.PackedLevel;
 import org.crforge.desktop.battle.BattleAdapter;
 import org.crforge.desktop.battle.BattleFrame;
 import org.crforge.desktop.battle.BattleSession;
@@ -36,6 +39,7 @@ import org.crforge.desktop.replay.ReplayPlayer;
 import org.crforge.presentation.AbilityFrame;
 import org.crforge.presentation.AbilityState;
 import org.crforge.presentation.CardFrame;
+import org.crforge.presentation.EntityFrame;
 import org.crforge.presentation.EntityKind;
 import org.crforge.presentation.EntityState;
 import org.crforge.presentation.SideFrame;
@@ -232,6 +236,14 @@ class TickFramesTest {
     assertThat(heard.stream().flatMap(frame -> frame.entities().stream()))
         .as("a projectile in flight is off the ground")
         .anyMatch(entity -> entity.kind() == EntityKind.PROJECTILE && entity.height() > 0);
+    assertThat(heard.get(0).entities())
+        .as("the crown towers stand at their levels from the first frame")
+        .filteredOn(entity -> entity.kind() == EntityKind.TOWER)
+        .hasSize(6)
+        .allSatisfy(tower -> assertThat(tower.level()).isPositive());
+    assertThat(heard.stream().flatMap(frame -> frame.entities().stream()))
+        .as("a troop stands at its level")
+        .anyMatch(entity -> entity.kind() == EntityKind.TROOP && entity.level() > 0);
   }
 
   /** A session's frame as it stands, with no events told. */
@@ -241,6 +253,22 @@ class TickFramesTest {
 
   /** A frame says what the match holds, read straight from the core and the session. */
   private static void assertFollowsTheMatch(TickFrame frame, BattleSession session) {
+    Map<Integer, Integer> levels = new HashMap<>();
+    for (BattleEntity entity : session.getBattle().getBattle().getHolder().entities()) {
+      if (entity instanceof WorldEntity world) {
+        levels.put(world.getId(), world.level());
+      } else if (entity instanceof ProjectileEntity projectile) {
+        levels.put(projectile.getId(), projectile.level());
+      } else if (entity instanceof AreaEffectEntity area) {
+        levels.put(area.getId(), PackedLevel.level(area.getPackedLevel()));
+      }
+    }
+    for (EntityFrame entity : frame.entities()) {
+      assertThat(entity.level())
+          .as("the level of %s #%d", entity.name(), entity.id())
+          .isEqualTo(levels.get(entity.id()))
+          .isPositive();
+    }
     LadderMatch match = session.match();
     Timeline timeline = match.getTimeline();
     assertThat(frame.section()).isEqualTo(timeline.getSection());
@@ -301,6 +329,7 @@ class TickFramesTest {
         hash = 31 * hash + world.getView().getX();
         hash = 31 * hash + world.getView().getY();
         hash = 31 * hash + (world.getHitPoints() == null ? 0 : world.getHitPoints().getHitPoints());
+        hash = 31 * hash + world.level();
       } else if (entity instanceof ProjectileEntity projectile) {
         hash = 31 * hash + projectile.getX();
         hash = 31 * hash + projectile.getY();
