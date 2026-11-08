@@ -52,6 +52,10 @@ public interface PresentationPlugin {
    * after each {@link #present} and maps the mouse back through it, so that hovering and clicking
    * point at the battle position drawn under the mouse.
    *
+   * <p>It is the last refresh's projection, so the mouse follows a change of camera one refresh
+   * late: right after the view turns, the first refresh's hover is still mapped as drawn before the
+   * turn.
+   *
    * <p>By default, null: the host then takes the whole rectangle as the arena, drawn as the
    * built-in visualizer draws it.
    *
