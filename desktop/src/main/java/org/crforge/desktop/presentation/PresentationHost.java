@@ -16,6 +16,7 @@ import org.crforge.desktop.battle.BattleAdapter;
 import org.crforge.desktop.battle.BattleFrame;
 import org.crforge.desktop.battle.BattleSession;
 import org.crforge.desktop.render.BattleRenderer;
+import org.crforge.presentation.ArenaProjection;
 import org.crforge.presentation.BattleStart;
 import org.crforge.presentation.PresentContext;
 import org.crforge.presentation.PresentationPlugin;
@@ -42,6 +43,12 @@ public final class PresentationHost {
 
   /** What that battle's ticks are collecting for a plugin, or null while none is told. */
   private TickEventLog events;
+
+  /**
+   * Where the plugin drew the arena at the last refresh, in window pixels from the bottom left, or
+   * null while the arena fills its whole rectangle.
+   */
+  private ArenaProjection drawnArena;
 
   private PresentationHost(BuiltinPresentation builtin, PresentationPlugin active) {
     this.builtin = builtin;
@@ -152,8 +159,13 @@ public final class PresentationHost {
       BattleRenderer.Inputs inputs,
       PresentContext context) {
     builtin.prepare(frame, camera, inputs);
+    drawnArena = null;
     if (active != builtin) {
-      contained(() -> active.present(context));
+      contained(
+          () -> {
+            active.present(context);
+            drawnArena = inWindow(active.arenaProjection(), context);
+          });
     }
     // Not contained: a failure of the built-in visualizer is the screen's, as it always was. It
     // also draws the frame a plugin failed on.
@@ -162,8 +174,32 @@ public final class PresentationHost {
     }
   }
 
+  /**
+   * Where the arena was drawn at the last refresh: the projection the plugin reported, moved from
+   * its rectangle into the window, with pixel rows counted from the window's bottom.
+   *
+   * @return the projection, or null when the arena fills its whole rectangle: drawn by the built-in
+   *     visualizer, or by a plugin that reported none
+   */
+  public ArenaProjection drawnArena() {
+    return drawnArena;
+  }
+
+  /** A projection of a rectangle moved into the window, or null for none. */
+  private static ArenaProjection inWindow(ArenaProjection projection, PresentContext context) {
+    if (projection == null) {
+      return null;
+    }
+    return new ArenaProjection(
+        projection.originX() + context.viewportX(),
+        projection.originY() + context.viewportY(),
+        projection.scaleX(),
+        projection.scaleY());
+  }
+
   /** The screen is going: the plugin is closed. */
   public void close() {
+    drawnArena = null;
     if (active == builtin) {
       return;
     }

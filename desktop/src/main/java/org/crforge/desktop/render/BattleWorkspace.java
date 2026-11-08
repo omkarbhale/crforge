@@ -31,6 +31,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import org.crforge.desktop.battle.BattleFrame;
+import org.crforge.presentation.ArenaProjection;
 import org.crforge.presentation.PresentContext;
 
 /** Scene2D controls surrounding a separately projected arena; never steps or mutates a battle. */
@@ -84,6 +85,12 @@ public final class BattleWorkspace implements Disposable {
   private WorkspaceViewport bounds = new WorkspaceViewport(0, 0, 1, 1);
   private BattleFrame frame;
   private int selectedId = -1;
+
+  /**
+   * Where a plugin reported drawing the arena, in window pixels, or null for the whole rectangle.
+   */
+  private ArenaProjection drawnArena;
+
   private boolean inspecting;
   private String lastEvents = "";
   private String details = "";
@@ -526,8 +533,32 @@ public final class BattleWorkspace implements Disposable {
     return bounds.contains(screenX, screenY, Gdx.graphics.getHeight());
   }
 
+  /**
+   * A window point back to the arena's pixels, the ones {@link #hoverAt}, {@link #inspectAt} and
+   * {@link ViewOrientation} read: through where the arena was last drawn when that was reported,
+   * else across the arena's whole rectangle.
+   *
+   * @param position the window point, its row counted from the top; replaced by the arena point
+   */
   public void unproject(Vector3 position) {
-    arenaViewport.unproject(position);
+    if (drawnArena == null) {
+      arenaViewport.unproject(position);
+      return;
+    }
+    ViewOrientation orientation = view.getOrientation();
+    float x = drawnArena.x(position.x);
+    float y = drawnArena.y(Gdx.graphics.getHeight() - position.y);
+    position.set(orientation.px(x), orientation.py(y), 0);
+  }
+
+  /**
+   * Where the arena was last drawn, for {@link #unproject}.
+   *
+   * @param projection the battle's positions to window pixels, rows counted from the window's
+   *     bottom; null when the arena fills its whole rectangle
+   */
+  public void setDrawnArena(ArenaProjection projection) {
+    drawnArena = projection;
   }
 
   public void beginArena() {

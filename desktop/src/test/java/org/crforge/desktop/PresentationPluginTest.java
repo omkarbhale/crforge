@@ -20,12 +20,22 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.crforge.core.battle.data.GameTables;
+import org.crforge.core.pathfinding.grid.TileMap;
+import org.crforge.core.util.GameUnits;
 import org.crforge.desktop.battle.BattleSession;
 import org.crforge.desktop.battle.DataVersions;
+import org.crforge.desktop.presentation.PresentationHost;
+import org.crforge.desktop.render.BattleWorkspace;
+import org.crforge.desktop.render.RenderConstants;
+import org.crforge.desktop.render.ViewOrientation;
+import org.crforge.desktop.render.WorkspaceViewport;
 import org.crforge.desktop.replay.ReplayFile;
 import org.crforge.desktop.replay.ReplayPlayer;
 import org.crforge.desktop.screen.ReplayGameScreen;
+import org.crforge.presentation.ArenaProjection;
 import org.crforge.presentation.BattleStart;
+import org.crforge.presentation.EntityFrame;
+import org.crforge.presentation.EntityKind;
 import org.crforge.presentation.PresentContext;
 import org.crforge.presentation.PresentationPlugin;
 import org.crforge.presentation.TickFrame;
@@ -45,6 +55,15 @@ class PresentationPluginTest {
   private static final int WIDTH = 1120;
 
   private static final int HEIGHT = 1040;
+
+  /**
+   * Tiles the hover tests point into, three quarters of the way across and along each: the corners,
+   * both sides' halves, and the far edge, where a whole-rectangle mapping of a smaller drawn arena
+   * is furthest off.
+   */
+  private static final int[][] TILES = {
+    {0, 0}, {17, 0}, {0, 31}, {17, 31}, {4, 27}, {9, 15}, {13, 6}
+  };
 
   private static GameTables tables;
 
@@ -194,6 +213,149 @@ class PresentationPluginTest {
     assertThat(stepListener(session())).isNull();
   }
 
+  @Test
+  @DisplayName("with no plugin, a hover maps across the arena's whole rectangle, as before")
+  void hoverWithoutPlugin() throws Exception {
+    open();
+    run(1);
+    key(Input.Keys.SPACE);
+    run(1);
+    assertThat(host().drawnArena()).isNull();
+    assertHoversAcrossRectangle();
+    key(Input.Keys.F);
+    run(1);
+    assertHoversAcrossRectangle();
+  }
+
+  @Test
+  @DisplayName("a plugin that reports no projection keeps the whole-rectangle hover")
+  void hoverWithoutProjection() throws Exception {
+    install(Recording.class);
+    open();
+    run(1);
+    key(Input.Keys.SPACE);
+    run(1);
+    assertThat(host().drawnArena()).isNull();
+    assertHoversAcrossRectangle();
+  }
+
+  @Test
+  @DisplayName(
+      "a plugin's projection maps a hover and a click back to the battle position drawn there")
+  void hoverThroughProjection() throws Exception {
+    install(Projecting.class);
+    open();
+    run(1);
+    key(Input.Keys.SPACE);
+    run(1);
+    Projecting plugin = (Projecting) Recording.last;
+    assertThat(plugin.drawn.scaleY()).as("a replay opens on side 1's view").isNegative();
+    assertHoversThroughProjection(plugin);
+
+    // The click picks the tower drawn under the mouse, not the one the rectangle has there.
+    int half = tileMapHeight() / 2;
+    EntityFrame tower =
+        plugin.frames.get(plugin.frames.size() - 1).entities().stream()
+            .filter(entity -> entity.kind() == EntityKind.TOWER)
+            .filter(entity -> entity.y() > half)
+            .findFirst()
+            .orElseThrow();
+    PresentContext context = plugin.presents.get(plugin.presents.size() - 1);
+    click(
+        context.viewportX() + plugin.drawn.pixelX(tower.x()),
+        context.viewportY() + plugin.drawn.pixelY(tower.y()));
+    assertThat(selected()).isEqualTo(tower.id());
+
+    // Flipped, the plugin draws the other view and the hover follows it from its next refresh.
+    key(Input.Keys.F);
+    run(1);
+    assertThat(plugin.drawn.scaleX()).as("side 0's view mirrors the width").isNegative();
+    assertHoversThroughProjection(plugin);
+  }
+
+  @Test
+  @DisplayName("a plugin whose projection fails is closed, and the hover is the rectangle's again")
+  void failingProjection() throws Exception {
+    install(FailsOnProjection.class);
+    open();
+    run(1);
+    assertThat(Recording.last.closed).isTrue();
+    assertThat(host().drawnArena()).isNull();
+    assertFailureContained();
+    key(Input.Keys.SPACE);
+    run(1);
+    assertHoversAcrossRectangle();
+  }
+
+  @Test
+  @DisplayName("a projection a plugin cannot make is refused, and the plugin closed")
+  void refusedProjection() throws Exception {
+    install(FlatProjection.class);
+    open();
+    run(1);
+    assertThat(Recording.last.closed).isTrue();
+    assertThat(host().drawnArena()).isNull();
+    assertFailureContained();
+  }
+
+  /**
+   * A point three quarters into a tile, in game units: in its second routing cell, clear of any
+   * edge that a rounding could put on either side.
+   */
+  private static float inside(int tile) {
+    return tile * GameUnits.UNITS_PER_TILE + 0.75f * GameUnits.UNITS_PER_TILE;
+  }
+
+  /** Each of {@link #TILES} hovered where the arena's whole rectangle draws a point in it. */
+  private void assertHoversAcrossRectangle() throws Exception {
+    PresentContext context = workspace().presentContext();
+    ViewOrientation view = ViewOrientation.of(tileMap(), context.bottomSide());
+    for (int[] tile : TILES) {
+      float x = view.px(inside(tile[0]));
+      float y = view.py(inside(tile[1])) - RenderConstants.BOTTOM_UI_HEIGHT;
+      hover(
+          context.viewportX() + x / WorkspaceViewport.WORLD_WIDTH * context.viewportWidth(),
+          context.viewportY() + y / WorkspaceViewport.WORLD_HEIGHT * context.viewportHeight());
+      assertHovered(tile);
+    }
+  }
+
+  /** Each of {@link #TILES} hovered where the plugin's projection drew a point in it. */
+  private void assertHoversThroughProjection(Projecting plugin) throws Exception {
+    PresentContext context = plugin.presents.get(plugin.presents.size() - 1);
+    for (int[] tile : TILES) {
+      hover(
+          context.viewportX() + plugin.drawn.pixelX(inside(tile[0])),
+          context.viewportY() + plugin.drawn.pixelY(inside(tile[1])));
+      assertHovered(tile);
+    }
+  }
+
+  private void assertHovered(int[] tile) throws Exception {
+    String name = "tile " + tile[0] + ", " + tile[1];
+    assertThat(screenInt("hoverTileX")).as(name).isEqualTo(tile[0]);
+    assertThat(screenInt("hoverTileY")).as(name).isEqualTo(tile[1]);
+    // Three quarters into a tile is in the second of its two routing cells on each axis.
+    assertThat(screenInt("hoverCellX")).as(name).isEqualTo(2 * tile[0] + 1);
+    assertThat(screenInt("hoverCellY")).as(name).isEqualTo(2 * tile[1] + 1);
+  }
+
+  /** The mouse moves to a window point, its row counted from the window's bottom. */
+  private static void hover(float x, float y) {
+    int screenX = Math.round(x);
+    int screenY = HEIGHT - Math.round(y);
+    Gdx.input.setCursorPosition(screenX, screenY);
+    Gdx.input.getInputProcessor().mouseMoved(screenX, screenY);
+  }
+
+  /** A left click at a window point, its row counted from the window's bottom. */
+  private static void click(float x, float y) {
+    hover(x, y);
+    Gdx.input
+        .getInputProcessor()
+        .touchDown(Math.round(x), HEIGHT - Math.round(y), 0, Input.Buttons.LEFT);
+  }
+
   private void assertFailureContained() throws Exception {
     Recording plugin = Recording.last;
     int heard = plugin.frames.size() + plugin.presents.size();
@@ -258,6 +420,35 @@ class PresentationPluginTest {
     Field field = ReplayGameScreen.class.getDeclaredField("player");
     field.setAccessible(true);
     return ((ReplayPlayer) field.get(game.getScreen())).getSession();
+  }
+
+  private TileMap tileMap() throws Exception {
+    return session().getBattle().getWorld().getTileMap();
+  }
+
+  private Object screenField(String name) throws Exception {
+    Field field = ReplayGameScreen.class.getDeclaredField(name);
+    field.setAccessible(true);
+    return field.get(game.getScreen());
+  }
+
+  private int screenInt(String name) throws Exception {
+    return (Integer) screenField(name);
+  }
+
+  private PresentationHost host() throws Exception {
+    return (PresentationHost) screenField("presentation");
+  }
+
+  private BattleWorkspace workspace() throws Exception {
+    return (BattleWorkspace) screenField("workspace");
+  }
+
+  /** The entity the workspace inspects. */
+  private int selected() throws Exception {
+    Field field = BattleWorkspace.class.getDeclaredField("selectedId");
+    field.setAccessible(true);
+    return (Integer) field.get(workspace());
   }
 
   private int tileMapWidth() throws Exception {
@@ -334,6 +525,62 @@ class PresentationPluginTest {
     @Override
     public void present(PresentContext context) {
       throw new IllegalStateException("a plugin's bug");
+    }
+  }
+
+  /**
+   * Draws the arena smaller than its rectangle and off its centre, as a game camera does: 36,000
+   * game units along the arena's length fill the rectangle's height, and the width is drawn at
+   * 0.839 / 1.036 of that scale, each axis reversed as the view of its side turns it.
+   */
+  public static class Projecting extends Recording {
+
+    ArenaProjection drawn;
+
+    private int width;
+
+    private int length;
+
+    @Override
+    public void battleStarted(BattleStart battle) {
+      super.battleStarted(battle);
+      width = battle.arenaWidthUnits();
+      length = battle.arenaHeightUnits();
+    }
+
+    @Override
+    public void present(PresentContext context) {
+      super.present(context);
+      float along = context.viewportHeight() / 36_000f;
+      float across = along * 0.839f / 1.036f;
+      float scaleX = context.bottomSide() == 0 ? -across : across;
+      float scaleY = context.bottomSide() == 1 ? -along : along;
+      float centreX = context.viewportWidth() / 2f + 13;
+      float centreY = context.viewportHeight() / 2f - 7;
+      drawn =
+          new ArenaProjection(
+              centreX - scaleX * width / 2f, centreY - scaleY * length / 2f, scaleX, scaleY);
+    }
+
+    @Override
+    public ArenaProjection arenaProjection() {
+      return drawn;
+    }
+  }
+
+  /** Fails when asked where it drew. */
+  public static class FailsOnProjection extends Recording {
+    @Override
+    public ArenaProjection arenaProjection() {
+      throw new IllegalStateException("a plugin's bug");
+    }
+  }
+
+  /** Reports an arena drawn flat, which no point can be mapped back through. */
+  public static class FlatProjection extends Recording {
+    @Override
+    public ArenaProjection arenaProjection() {
+      return new ArenaProjection(0, 0, 0, 1);
     }
   }
 }

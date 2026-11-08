@@ -47,6 +47,24 @@ public interface PresentationPlugin {
    */
   void present(PresentContext context);
 
+  /**
+   * Where the last {@link #present} drew the arena, in the rectangle it was given. The host asks
+   * after each {@link #present} and maps the mouse back through it, so that hovering and clicking
+   * point at the battle position drawn under the mouse.
+   *
+   * <p>It is the last refresh's projection, so the mouse follows a change of camera one refresh
+   * late: right after the view turns, the first refresh's hover is still mapped as drawn before the
+   * turn.
+   *
+   * <p>By default, null: the host then takes the whole rectangle as the arena, drawn as the
+   * built-in visualizer draws it.
+   *
+   * @return the projection the last {@link #present} drew with, or null
+   */
+  default ArenaProjection arenaProjection() {
+    return null;
+  }
+
   /** The plugin will not be called again: its resources can go. */
   default void close() {}
 }

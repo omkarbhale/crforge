@@ -537,6 +537,7 @@ public class DebugGameScreen implements Screen {
               List.of(versions.statusLine(), F_NOTE),
               view),
           workspace.presentContext());
+      workspace.setDrawnArena(presentation.drawnArena());
       newAreaHits.clear();
       workspace.draw(delta);
     } catch (Exception e) {
