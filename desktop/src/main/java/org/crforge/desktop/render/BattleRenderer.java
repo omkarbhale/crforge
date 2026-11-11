@@ -36,6 +36,7 @@ import org.crforge.desktop.battle.EntityView;
 import org.crforge.desktop.battle.LandingTiles;
 import org.crforge.desktop.battle.UnitStatus;
 import org.crforge.desktop.model.ModelView;
+import org.crforge.presentation.PresentationPlugin;
 
 /**
  * Draws a battle core session from the frames {@link org.crforge.desktop.battle.BattleAdapter}
@@ -138,6 +139,12 @@ public class BattleRenderer {
 
   private float hoverY = Float.NaN;
 
+  /**
+   * The unit a plugin said it drew under the mouse at the last hover, or {@link
+   * PresentationPlugin#NO_ENTITY}: then the unit is picked at {@link #hoverX}, {@link #hoverY}.
+   */
+  private int hoverDrawn = PresentationPlugin.NO_ENTITY;
+
   /** The unit under the mouse this frame, or -1: it keeps its full label and numbers, on top. */
   private int hoveredEntity = -1;
 
@@ -166,16 +173,25 @@ public class BattleRenderer {
     inspectedEntity = id;
   }
 
-  /** The mouse's point on the arena, in the window's arena pixels, for the hovered unit. */
-  public void setHoverPoint(float x, float y) {
+  /**
+   * The mouse's point on the arena, for the hovered unit.
+   *
+   * @param x the point in the window's arena pixels
+   * @param y the point in the window's arena pixels
+   * @param drawn the unit a plugin said it drew there, or {@link PresentationPlugin#NO_ENTITY} to
+   *     pick the unit at the point
+   */
+  public void setHoverPoint(float x, float y, int drawn) {
     hoverX = x;
     hoverY = y;
+    hoverDrawn = drawn;
   }
 
   /** The mouse left the arena: no unit is hovered. */
   public void clearHoverPoint() {
     hoverX = Float.NaN;
     hoverY = Float.NaN;
+    hoverDrawn = PresentationPlugin.NO_ENTITY;
   }
 
   /**
@@ -335,7 +351,10 @@ public class BattleRenderer {
     ctx.setProjection(camera);
     TileMap tileMap = inputs.world().getTileMap();
     view = inputs.view().getOrientation();
-    hoveredEntity = entityAt(frame, view, hoverX, hoverY);
+    hoveredEntity =
+        hoverDrawn != PresentationPlugin.NO_ENTITY
+            ? hoverDrawn
+            : entityAt(frame, view, hoverX, hoverY);
     crowd = CrowdLayout.of(frame, inspectedEntity, hoveredEntity);
     HudText hud = HudText.of(frame, inputs.view(), statusLines(inputs));
 

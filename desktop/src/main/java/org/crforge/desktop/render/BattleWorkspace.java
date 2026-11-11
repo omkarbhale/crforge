@@ -33,6 +33,7 @@ import java.util.function.IntConsumer;
 import org.crforge.desktop.battle.BattleFrame;
 import org.crforge.presentation.ArenaProjection;
 import org.crforge.presentation.PresentContext;
+import org.crforge.presentation.PresentationPlugin;
 
 /** Scene2D controls surrounding a separately projected arena; never steps or mutates a battle. */
 public final class BattleWorkspace implements Disposable {
@@ -91,6 +92,12 @@ public final class BattleWorkspace implements Disposable {
    */
   private ArenaProjection drawnArena;
 
+  /** Asks what draws the arena for the entity it drew at a window point; see {@link #entityAt}. */
+  private EntityPick drawnPick = (windowX, windowY) -> PresentationPlugin.NO_ENTITY;
+
+  /** The arena point {@link #entityAt} and {@link #hoverAt} work out, kept to save allocations. */
+  private final Vector3 arenaPoint = new Vector3();
+
   private boolean inspecting;
   private String lastEvents = "";
   private String details = "";
@@ -109,6 +116,19 @@ public final class BattleWorkspace implements Disposable {
   private boolean archiveButton;
 
   private record Toggle(TextButton button, BooleanSupplier value) {}
+
+  /** What draws the arena, asked which entity it drew at a window point. */
+  @FunctionalInterface
+  public interface EntityPick {
+
+    /**
+     * @param windowX the window pixel column
+     * @param windowY the window pixel row, counted from the window's bottom
+     * @return the entity's id, or {@link PresentationPlugin#NO_ENTITY} to leave the pick to the
+     *     workspace
+     */
+    int entityAt(float windowX, float windowY);
+  }
 
   public BattleWorkspace(
       OrthographicCamera camera,
@@ -534,9 +554,9 @@ public final class BattleWorkspace implements Disposable {
   }
 
   /**
-   * A window point back to the arena's pixels, the ones {@link #hoverAt}, {@link #inspectAt} and
-   * {@link ViewOrientation} read: through where the arena was last drawn when that was reported,
-   * else across the arena's whole rectangle.
+   * A window point back to the arena's pixels, the ones the hover and inspect picks and {@link
+   * ViewOrientation} read: through where the arena was last drawn when that was reported, else
+   * across the arena's whole rectangle.
    *
    * @param position the window point, its row counted from the top; replaced by the arena point
    */
@@ -588,18 +608,59 @@ public final class BattleWorkspace implements Disposable {
     return inspecting;
   }
 
-  public void inspectAt(float x, float y) {
+  /**
+   * Who draws the arena, asked first which entity is under the mouse for a hover or an inspect
+   * click. Without one, or when it names none, the workspace picks on the battle position under the
+   * mouse, as the built-in visualizer draws it.
+   */
+  public void setEntityPick(EntityPick pick) {
+    drawnPick = pick;
+  }
+
+  /**
+   * Inspects the entity under a click.
+   *
+   * @param screenX the window point's column
+   * @param screenY the window point's row, counted from the top
+   */
+  public void inspectAt(int screenX, int screenY) {
     if (frame == null) return;
-    selectedId = BattleRenderer.entityAt(frame, view.getOrientation(), x, y);
+    selectedId = entityAt(screenX, screenY);
     renderer.setInspectedEntity(selectedId);
   }
 
   /**
-   * The mouse's point on the arena, in arena pixels: the unit under it is drawn with its full label
-   * and numbers, on top.
+   * The mouse's point on the arena: the unit under it is drawn with its full label and numbers, on
+   * top.
+   *
+   * @param screenX the window point's column
+   * @param screenY the window point's row, counted from the top
    */
-  public void hoverAt(float x, float y) {
-    renderer.setHoverPoint(x, y);
+  public void hoverAt(int screenX, int screenY) {
+    int drawn = drawnPick.entityAt(screenX, Gdx.graphics.getHeight() - screenY);
+    Vector3 point = arenaPoint(screenX, screenY);
+    renderer.setHoverPoint(point.x, point.y, drawn);
+  }
+
+  /**
+   * The entity under a window point: the one the arena's painter says it drew there, else the
+   * nearest character whose body holds the battle position under it ({@link
+   * BattleRenderer#entityAt}).
+   */
+  private int entityAt(int screenX, int screenY) {
+    int drawn = drawnPick.entityAt(screenX, Gdx.graphics.getHeight() - screenY);
+    if (drawn != PresentationPlugin.NO_ENTITY) {
+      return drawn;
+    }
+    Vector3 point = arenaPoint(screenX, screenY);
+    return BattleRenderer.entityAt(frame, view.getOrientation(), point.x, point.y);
+  }
+
+  /** A window point, its row counted from the top, in arena pixels ({@link #unproject}). */
+  private Vector3 arenaPoint(int screenX, int screenY) {
+    arenaPoint.set(screenX, screenY, 0);
+    unproject(arenaPoint);
+    return arenaPoint;
   }
 
   /** The mouse left the arena. */

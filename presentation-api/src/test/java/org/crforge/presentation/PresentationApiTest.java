@@ -51,7 +51,7 @@ class PresentationApiTest {
   }
 
   @Test
-  @DisplayName("a plugin reports no projection unless it says where it drew")
+  @DisplayName("a plugin reports no projection and names no pick unless it says so")
   void noProjectionByDefault() {
     PresentationPlugin plugin =
         new PresentationPlugin() {
@@ -70,6 +70,10 @@ class PresentationApiTest {
           public void present(PresentContext context) {}
         };
     assertThat(plugin.arenaProjection()).isNull();
+    assertThat(plugin.entityAt(0, 0))
+        .as("a plugin names no entity unless it picks on its own")
+        .isEqualTo(PresentationPlugin.NO_ENTITY)
+        .isNegative();
   }
 
   @Test

@@ -18,6 +18,9 @@ package org.crforge.presentation;
  */
 public interface PresentationPlugin {
 
+  /** What {@link #entityAt} answers when it names no entity: the host then picks on its own. */
+  int NO_ENTITY = -1;
+
   /** A short name for the plugin, for the log. The lowest wins when several are found. */
   String id();
 
@@ -63,6 +66,27 @@ public interface PresentationPlugin {
    */
   default ArenaProjection arenaProjection() {
     return null;
+  }
+
+  /**
+   * The entity the last {@link #present} drew at a pixel, for the host's hover and inspect click.
+   * The plugin knows the art it drew, which the host does not: a flyer lifted above its ground
+   * point, the upper part of a tall sprite. The host asks the plugin first, and picks on its own,
+   * from the battle position under the pixel, when the plugin answers {@link #NO_ENTITY}.
+   *
+   * <p>The pixel is in the rectangle the last {@link #present} was given, as {@link
+   * ArenaProjection} counts it: the column from its left edge, the row from its bottom edge. It may
+   * lie outside the art drawn, and before the first {@link #present} nothing has been drawn.
+   *
+   * <p>By default, {@link #NO_ENTITY}: the host picks as it does for the built-in visualizer.
+   *
+   * @param pixelX the pixel column, from the rectangle's left edge
+   * @param pixelY the pixel row, from the rectangle's bottom edge
+   * @return the {@link EntityFrame#id} of an entity of the last tick told, drawn at the pixel, or
+   *     {@link #NO_ENTITY} to leave the pick to the host
+   */
+  default int entityAt(float pixelX, float pixelY) {
+    return NO_ENTITY;
   }
 
   /** The plugin will not be called again: its resources can go. */

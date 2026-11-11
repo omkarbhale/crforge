@@ -139,6 +139,7 @@ public class DebugGameScreen implements Screen {
     workspace =
         new BattleWorkspace(
             camera, renderer, view, false, this::handleAction, this::selectCard, this::useAbility);
+    workspace.setEntityPick(presentation::entityAt);
     workspace.configureVersions(
         versions.versions(),
         versions.current().version(),
@@ -275,9 +276,9 @@ public class DebugGameScreen implements Screen {
       workspace.clearHover();
       return;
     }
+    workspace.hoverAt(screenX, screenY);
     touchPos.set(screenX, screenY, 0);
     workspace.unproject(touchPos);
-    workspace.hoverAt(touchPos.x, touchPos.y);
 
     // touchPos.y is world Y (0 is bottom of UI); the arena starts at BOTTOM_UI_HEIGHT. The view
     // maps the pixel back to the battle's tile: in the game's view of side 0 this screen draws,
@@ -302,10 +303,8 @@ public class DebugGameScreen implements Screen {
 
   private void handleLeftClick(int screenX, int screenY) {
     if (!workspace.onArena(screenX, screenY)) return;
-    touchPos.set(screenX, screenY, 0);
-    workspace.unproject(touchPos);
     if (workspace.isInspecting()) {
-      workspace.inspectAt(touchPos.x, touchPos.y);
+      workspace.inspectAt(screenX, screenY);
       return;
     }
 
