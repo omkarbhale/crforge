@@ -98,6 +98,11 @@ public final class BattleWorkspace implements Disposable {
   /** The arena point {@link #entityAt} and {@link #hoverAt} work out, kept to save allocations. */
   private final Vector3 arenaPoint = new Vector3();
 
+  /** The card selected to be played at the last {@link #update}, told to a plugin. */
+  private int selectedSide = PresentContext.NO_SELECTION;
+
+  private int selectedSlot = PresentContext.NO_SELECTION;
+
   private boolean inspecting;
   private String lastEvents = "";
   private String details = "";
@@ -546,7 +551,9 @@ public final class BattleWorkspace implements Disposable {
         bounds.y(),
         bounds.width(),
         bounds.height(),
-        view.getOrientation().bottomSide());
+        view.getOrientation().bottomSide(),
+        selectedSlot < 0 ? PresentContext.NO_SELECTION : selectedSide,
+        selectedSlot < 0 ? PresentContext.NO_SELECTION : selectedSlot);
   }
 
   public boolean onArena(int screenX, int screenY) {
@@ -725,6 +732,8 @@ public final class BattleWorkspace implements Disposable {
       int selectedSlot,
       int endTick) {
     this.frame = frame;
+    this.selectedSide = selectedSide;
+    this.selectedSlot = selectedSlot;
     if (refusalPane.isVisible()) {
       // A replay opened after a refused one: what showRefused turned off comes back.
       refusalPane.setVisible(false);

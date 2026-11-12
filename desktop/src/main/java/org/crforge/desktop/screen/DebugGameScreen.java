@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.crforge.core.battle.Battle;
 import org.crforge.core.battle.deploy.CardPlacement;
 import org.crforge.core.battle.deploy.DeployCard;
+import org.crforge.core.battle.match.Hand;
 import org.crforge.core.battle.match.MatchCard;
 import org.crforge.core.pathfinding.grid.TileMap;
 import org.crforge.core.util.GameUnits;
@@ -37,6 +38,8 @@ import org.crforge.desktop.render.BattleWorkspace;
 import org.crforge.desktop.render.ViewOrientation;
 import org.crforge.desktop.render.ViewState;
 import org.crforge.desktop.render.WorkspaceAction;
+import org.crforge.presentation.CardCommand;
+import org.crforge.presentation.PresentationPlugin;
 
 /**
  * Debug screen for visualizing a battle on the battle core: a Ladder battle between the decks of
@@ -267,6 +270,11 @@ public class DebugGameScreen implements Screen {
             }
             return true;
           }
+
+          @Override
+          public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+            return button == Input.Buttons.LEFT && askedOfHand(screenX, screenY, true);
+          }
         };
   }
 
@@ -294,15 +302,21 @@ public class DebugGameScreen implements Screen {
 
   /** Whether the hovered tile lies on the arena. */
   private boolean hoverOnArena() {
+    return onArena(hoverTileX, hoverTileY);
+  }
+
+  /** Whether a tile lies on the arena. */
+  private boolean onArena(int tileX, int tileY) {
     TileMap tileMap = session.getBattle().getWorld().getTileMap();
-    return hoverTileX >= 0
-        && hoverTileY >= 0
-        && hoverTileX < tileMap.widthUnits() / GameUnits.UNITS_PER_TILE
-        && hoverTileY < tileMap.heightUnits() / GameUnits.UNITS_PER_TILE;
+    return tileX >= 0
+        && tileY >= 0
+        && tileX < tileMap.widthUnits() / GameUnits.UNITS_PER_TILE
+        && tileY < tileMap.heightUnits() / GameUnits.UNITS_PER_TILE;
   }
 
   private void handleLeftClick(int screenX, int screenY) {
     if (!workspace.onArena(screenX, screenY)) return;
+    if (askedOfHand(screenX, screenY, false)) return;
     if (workspace.isInspecting()) {
       workspace.inspectAt(screenX, screenY);
       return;
@@ -313,17 +327,70 @@ public class DebugGameScreen implements Screen {
     if (selectedSlot < 0 || !hoverOnArena()) {
       return;
     }
+    playSelected(hoverTileX, hoverTileY);
+  }
+
+  /** Plays the selected card at a tile's centre, in game units; deselects it when it was given. */
+  private void playSelected(int tileX, int tileY) {
     boolean played =
         session.play(
-            selectedSide,
-            selectedSlot,
-            GameUnits.tileCenter(hoverTileX),
-            GameUnits.tileCenter(hoverTileY));
+            selectedSide, selectedSlot, GameUnits.tileCenter(tileX), GameUnits.tileCenter(tileY));
     logLatestMessage();
     if (played) {
       // Deselect after a play that was given (matches real CR)
       deselect();
     }
+  }
+
+  /**
+   * Carries out what a plugin that draws the hand asks of it for a press or a release on the arena
+   * ({@link PresentationPlugin#cardCommandAt}), as the hand buttons and arena clicks are carried
+   * out: a selection through {@link #selectCard}, a play through {@link #playSelected} at the tile
+   * holding the position. A play asked while inspecting is left to the inspect click.
+   *
+   * @return whether the plugin took the press or release: false leaves it to the screen
+   */
+  private boolean askedOfHand(int screenX, int screenY, boolean released) {
+    if (!workspace.onArena(screenX, screenY)) return false;
+    CardCommand command =
+        presentation.cardCommandAt(screenX, Gdx.graphics.getHeight() - screenY, released);
+    if (command == null || (command instanceof CardCommand.Play && workspace.isInspecting())) {
+      return false;
+    }
+    switch (command) {
+      case CardCommand.Select select -> {
+        if (select.side() < 0
+            || select.side() > 1
+            || select.slot() < 0
+            || select.slot() >= Hand.SLOTS) {
+          log.info(
+              "[tick {}] No hand slot {} of side {} to select",
+              session.tick(),
+              select.slot(),
+              select.side());
+        } else {
+          selectCard(select.side(), select.slot());
+        }
+      }
+      case CardCommand.Play play -> playAsked(play.x(), play.y());
+      case CardCommand.Deselect deselect -> deselect();
+    }
+    return true;
+  }
+
+  /** Plays the selected card at a battle position a plugin asked for, as a click on its tile. */
+  private void playAsked(float x, float y) {
+    if (selectedSlot < 0) {
+      log.info("[tick {}] No card selected to play", session.tick());
+      return;
+    }
+    int tileX = Float.isFinite(x) ? (int) Math.floor(x / GameUnits.UNITS_PER_TILE) : -1;
+    int tileY = Float.isFinite(y) ? (int) Math.floor(y / GameUnits.UNITS_PER_TILE) : -1;
+    if (!onArena(tileX, tileY)) {
+      log.info("[tick {}] No tile of the arena at {}, {} to play on", session.tick(), x, y);
+      return;
+    }
+    playSelected(tileX, tileY);
   }
 
   private void selectCard(int side, int slot) {

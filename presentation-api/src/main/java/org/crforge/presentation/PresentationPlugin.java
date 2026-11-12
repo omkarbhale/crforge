@@ -89,6 +89,36 @@ public interface PresentationPlugin {
     return NO_ENTITY;
   }
 
+  /**
+   * What a press or a release of the viewer's main button at a pixel asks of the hand, for a plugin
+   * that draws the hand and lets the viewer play from it: select a slot's card, play the selected
+   * card at a battle position, or let it go. The host carries the command out as it carries out its
+   * own hand buttons and arena clicks, under the same rules and checks, and the plugin never
+   * reaches the battle itself. A click is a press then a release at the same pixel; a drag from a
+   * card onto the arena is a press on the card and a release on the arena. Which of the two names
+   * which command is the plugin's choice.
+   *
+   * <p>The host asks only where a battle's cards can be played, only for a pixel of the arena's
+   * rectangle, and only after a {@link #present}. It asks before acting on its own: a command
+   * answered takes the press or release, and the host does nothing else with it; null leaves it to
+   * the host, which then acts as it does for the built-in visualizer. A play answered while the
+   * host inspects units is not taken: the press inspects, as a click does. What the host has
+   * selected is told in the next {@link PresentContext}.
+   *
+   * <p>The pixel is in the rectangle the last {@link #present} was given, as {@link #entityAt}
+   * counts it: the column from its left edge, the row from its bottom edge.
+   *
+   * <p>By default, null: the host plays from its own hand buttons and arena clicks only.
+   *
+   * @param pixelX the pixel column, from the rectangle's left edge
+   * @param pixelY the pixel row, from the rectangle's bottom edge
+   * @param released false for a press of the button, true for its release
+   * @return the command, or null to leave the press or release to the host
+   */
+  default CardCommand cardCommandAt(float pixelX, float pixelY, boolean released) {
+    return null;
+  }
+
   /** The plugin will not be called again: its resources can go. */
   default void close() {}
 }
