@@ -105,13 +105,21 @@ class PresentationApiTest {
   /** Those signatures are held for crforge-render, whose tests and tools construct frames. */
   @Test
   @DisplayName(
-      "the constructors from before statuses, events and the level default them to empty, no"
-          + " clone, no level")
+      "the constructors from before statuses, events, the level and attack timing default them to"
+          + " empty, no clone, no level, no attack timing")
   void olderConstructors() {
     assertThat(entity(1).statuses()).isEmpty();
     assertThat(entity(1).isClone()).isFalse();
     assertThat(entity(1).level()).isEqualTo(EntityFrame.NO_LEVEL);
+    assertThat(entity(1).attack()).isEqualTo(AttackFrame.NONE);
     assertThat(withLevel(entity(1), 11).level()).isEqualTo(11);
+    assertThat(withLevel(entity(1), 11).attack()).isEqualTo(AttackFrame.NONE);
+    AttackFrame attack = new AttackFrame(650, 0, 0, 1200, 700, 2);
+    EntityFrame attacking = withAttack(withLevel(entity(1), 11), attack);
+    assertThat(attacking.attack()).isEqualTo(attack);
+    assertThat(attacking.level()).isEqualTo(11);
+    assertThat(AttackFrame.NONE.sequenceIndex()).isEqualTo(AttackFrame.NO_SEQUENCE_STEP);
+    assertThatThrownBy(() -> withAttack(entity(1), null)).isInstanceOf(NullPointerException.class);
     TickFrame frame = frame(List.of(entity(1)), List.of());
     assertThat(frame.deaths()).isEmpty();
     assertThat(frame.strikes()).isEmpty();
@@ -230,7 +238,7 @@ class PresentationApiTest {
         .isInstanceOf(UnsupportedOperationException.class);
   }
 
-  /** The entity at the given level, built with the record's own constructor. */
+  /** The entity at the given level, built with the constructor from before attack timing. */
   private static EntityFrame withLevel(EntityFrame old, int level) {
     return new EntityFrame(
         old.id(),
@@ -260,6 +268,39 @@ class PresentationApiTest {
         old.statuses(),
         old.isClone(),
         level);
+  }
+
+  /** The entity with the given attack timing, built with the record's own constructor. */
+  private static EntityFrame withAttack(EntityFrame old, AttackFrame attack) {
+    return new EntityFrame(
+        old.id(),
+        old.kind(),
+        old.side(),
+        old.name(),
+        old.x(),
+        old.y(),
+        old.radius(),
+        old.hitPoints(),
+        old.maxHitPoints(),
+        old.shield(),
+        old.maxShield(),
+        old.air(),
+        old.king(),
+        old.state(),
+        old.deploying(),
+        old.hidden(),
+        old.hasTarget(),
+        old.targetX(),
+        old.targetY(),
+        old.headingX(),
+        old.headingY(),
+        old.aimX(),
+        old.aimY(),
+        old.height(),
+        old.statuses(),
+        old.isClone(),
+        old.level(),
+        attack);
   }
 
   private static TickFrame frame(List<EntityFrame> entities, List<SideFrame> sides) {

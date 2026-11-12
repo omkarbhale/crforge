@@ -7,6 +7,7 @@
 package org.crforge.presentation;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * One entity of a battle at a tick. Positions and distances are in game units (1000 per tile) as
@@ -45,6 +46,10 @@ import java.util.List;
  *     match counts a card's level: a troop's, building's or tower's own level, which a level change
  *     moves, and a projectile's or area effect's the level it was made at; {@link #NO_LEVEL} when
  *     the frame was built without one
+ * @param attack where a character's or crown tower's attack timing stands: its attack timer, load
+ *     and start delay timers, the hit speed and load time they are counted against, and the index
+ *     of the active attack sequence step; {@link AttackFrame#NONE} for a projectile or area effect
+ *     and when the frame was built without one
  */
 public record EntityFrame(
     int id,
@@ -73,7 +78,8 @@ public record EntityFrame(
     int height,
     List<StatusFrame> statuses,
     boolean isClone,
-    int level) {
+    int level,
+    AttackFrame attack) {
 
   /**
    * The level of a frame built without one: by the constructors from before the level. Every entity
@@ -83,12 +89,77 @@ public record EntityFrame(
 
   public EntityFrame {
     statuses = List.copyOf(statuses);
+    Objects.requireNonNull(attack, "attack; AttackFrame.NONE stands for none");
   }
 
   /**
-   * A frame with no level ({@link #NO_LEVEL}). Kept on purpose: crforge-render builds against this
-   * module live, and its tests and harness tools construct frames with this signature, so removing
-   * it breaks them.
+   * A frame with no attack timing ({@link AttackFrame#NONE}). Kept on purpose: crforge-render
+   * builds against this module live, and its tests and harness tools construct frames with this
+   * signature, so removing it breaks them.
+   */
+  public EntityFrame(
+      int id,
+      EntityKind kind,
+      int side,
+      String name,
+      int x,
+      int y,
+      int radius,
+      int hitPoints,
+      int maxHitPoints,
+      int shield,
+      int maxShield,
+      boolean air,
+      boolean king,
+      EntityState state,
+      boolean deploying,
+      boolean hidden,
+      boolean hasTarget,
+      int targetX,
+      int targetY,
+      int headingX,
+      int headingY,
+      int aimX,
+      int aimY,
+      int height,
+      List<StatusFrame> statuses,
+      boolean isClone,
+      int level) {
+    this(
+        id,
+        kind,
+        side,
+        name,
+        x,
+        y,
+        radius,
+        hitPoints,
+        maxHitPoints,
+        shield,
+        maxShield,
+        air,
+        king,
+        state,
+        deploying,
+        hidden,
+        hasTarget,
+        targetX,
+        targetY,
+        headingX,
+        headingY,
+        aimX,
+        aimY,
+        height,
+        statuses,
+        isClone,
+        level,
+        AttackFrame.NONE);
+  }
+
+  /**
+   * A frame with no level ({@link #NO_LEVEL}) and no attack timing ({@link AttackFrame#NONE}). Kept
+   * on purpose: crforge-render builds against this module live, and its tests and harness tools
+   * construct frames with this signature, so removing it breaks them.
    */
   public EntityFrame(
       int id,
@@ -144,13 +215,15 @@ public record EntityFrame(
         height,
         statuses,
         isClone,
-        NO_LEVEL);
+        NO_LEVEL,
+        AttackFrame.NONE);
   }
 
   /**
-   * A frame with no statuses, of no clone, with no level ({@link #NO_LEVEL}). Kept on purpose:
-   * crforge-render builds against this module live, and its tests and harness tools construct
-   * frames with this signature, so removing it breaks them.
+   * A frame with no statuses, of no clone, with no level ({@link #NO_LEVEL}) and no attack timing
+   * ({@link AttackFrame#NONE}). Kept on purpose: crforge-render builds against this module live,
+   * and its tests and harness tools construct frames with this signature, so removing it breaks
+   * them.
    */
   public EntityFrame(
       int id,
@@ -204,6 +277,7 @@ public record EntityFrame(
         height,
         List.of(),
         false,
-        NO_LEVEL);
+        NO_LEVEL,
+        AttackFrame.NONE);
   }
 }
