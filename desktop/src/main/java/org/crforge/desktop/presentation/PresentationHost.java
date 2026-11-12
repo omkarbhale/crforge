@@ -18,6 +18,7 @@ import org.crforge.desktop.battle.BattleSession;
 import org.crforge.desktop.render.BattleRenderer;
 import org.crforge.presentation.ArenaProjection;
 import org.crforge.presentation.BattleStart;
+import org.crforge.presentation.CardCommand;
 import org.crforge.presentation.PresentContext;
 import org.crforge.presentation.PresentationPlugin;
 
@@ -212,6 +213,32 @@ public final class PresentationHost {
             picked[0] =
                 active.entityAt(windowX - rectangle.viewportX(), windowY - rectangle.viewportY()));
     return picked[0];
+  }
+
+  /**
+   * What the plugin asks of the hand for a press or a release at a window point, after the last
+   * refresh ({@link PresentationPlugin#cardCommandAt}). Only asked; the caller checks and carries
+   * out the command. A failure of the call is contained like any other: the plugin is closed and
+   * the answer is that it asked nothing.
+   *
+   * @param windowX the window pixel column
+   * @param windowY the window pixel row, counted from the window's bottom
+   * @param released false for a press, true for a release
+   * @return the plugin's command, or null when the built-in visualizer draws, the plugin has drawn
+   *     nothing yet or it asks nothing: the caller then acts on its own
+   */
+  public CardCommand cardCommandAt(float windowX, float windowY, boolean released) {
+    PresentContext rectangle = drawnIn;
+    if (active == builtin || rectangle == null) {
+      return null;
+    }
+    CardCommand[] asked = {null};
+    contained(
+        () ->
+            asked[0] =
+                active.cardCommandAt(
+                    windowX - rectangle.viewportX(), windowY - rectangle.viewportY(), released));
+    return asked[0];
   }
 
   /** A projection of a rectangle moved into the window, or null for none. */

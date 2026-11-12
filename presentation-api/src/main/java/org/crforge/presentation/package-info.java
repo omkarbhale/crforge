@@ -26,6 +26,10 @@
  *       exception halting the battle
  * </ul>
  *
+ * <p>What a plugin hands back is a value too: a {@link org.crforge.presentation.CardCommand} asks
+ * the host to select or play a card, and the host checks and carries it out as it does its own hand
+ * buttons and arena clicks.
+ *
  * <h2>Tick-driven</h2>
  *
  * <p>A plugin hears one {@link org.crforge.presentation.TickFrame} for each tick the battle runs,

@@ -47,11 +47,14 @@ class PresentationApiTest {
             DeathFrame.class,
             StrikeFrame.class,
             PresentContext.class,
-            ArenaProjection.class);
+            ArenaProjection.class,
+            CardCommand.Select.class,
+            CardCommand.Play.class,
+            CardCommand.Deselect.class);
   }
 
   @Test
-  @DisplayName("a plugin reports no projection and names no pick unless it says so")
+  @DisplayName("a plugin reports no projection, names no pick and asks nothing unless it says so")
   void noProjectionByDefault() {
     PresentationPlugin plugin =
         new PresentationPlugin() {
@@ -74,6 +77,20 @@ class PresentationApiTest {
         .as("a plugin names no entity unless it picks on its own")
         .isEqualTo(PresentationPlugin.NO_ENTITY)
         .isNegative();
+    assertThat(plugin.cardCommandAt(0, 0, false))
+        .as("a press leaves the hand to the host")
+        .isNull();
+    assertThat(plugin.cardCommandAt(0, 0, true)).as("a release leaves it too").isNull();
+  }
+
+  /** That signature is held for crforge-render, whose tests construct contexts. */
+  @Test
+  @DisplayName("the constructor from before the selection says no card is selected")
+  void contextWithoutSelection() {
+    PresentContext context = new PresentContext(10, 20, 300, 400, 1);
+    assertThat(context.selectedSide()).isEqualTo(PresentContext.NO_SELECTION).isNegative();
+    assertThat(context.selectedSlot()).isEqualTo(PresentContext.NO_SELECTION);
+    assertThat(context).isEqualTo(new PresentContext(10, 20, 300, 400, 1, -1, -1));
   }
 
   @Test
@@ -188,6 +205,13 @@ class PresentationApiTest {
     }
     assertThat(value.getPackageName()).as("%s", value).isEqualTo("org.crforge.presentation");
     if (value.isEnum()) {
+      return;
+    }
+    if (value.isSealed()) {
+      // A choice of values, such as a command: each of its kinds is a record of them.
+      for (Class<?> kind : value.getPermittedSubclasses()) {
+        walk(kind, records);
+      }
       return;
     }
     assertThat(value.isRecord()).as("%s is a record", value).isTrue();
