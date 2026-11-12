@@ -153,6 +153,7 @@ class CrowdLayoutTest {
         null,
         List.of(),
         UnitRole.NONE,
-        EntityView.Bar.HEALTH);
+        EntityView.Bar.HEALTH,
+        EntityView.Attack.NONE);
   }
 }

@@ -39,6 +39,8 @@ import org.crforge.core.pathfinding.GridEntityState;
 import org.crforge.core.pathfinding.combat.HitPoints;
 import org.crforge.core.pathfinding.combat.PackedLevel;
 import org.crforge.core.pathfinding.target.TargetView;
+import org.crforge.core.pathfinding.target.TargetingConfig;
+import org.crforge.core.pathfinding.target.TargetingState;
 
 /**
  * Reads a battle core session into what the renderers draw: one {@link EntityView} per entity of
@@ -232,7 +234,21 @@ public final class BattleAdapter {
         meter(entity),
         statuses(entity),
         kind == EntityView.Kind.TOWER ? UnitRole.NONE : UnitRole.of(data),
-        bar);
+        bar,
+        attack(entity));
+  }
+
+  /** A character's attack timing, read from its targeting component and columns. */
+  private static EntityView.Attack attack(WorldEntity entity) {
+    TargetingState targeting = entity.getTargeting();
+    TargetingConfig config = targeting.getConfig();
+    return new EntityView.Attack(
+        targeting.getAttackTimerMs(),
+        targeting.getLoadTimerMs(),
+        targeting.getAttackStartDelayMs(),
+        config.hitSpeed(),
+        config.loadTime(),
+        targeting.getAttackSequenceIndex());
   }
 
   /**
@@ -393,7 +409,8 @@ public final class BattleAdapter {
         null,
         List.of(),
         UnitRole.NONE,
-        EntityView.Bar.HEALTH);
+        EntityView.Bar.HEALTH,
+        EntityView.Attack.NONE);
   }
 
   private static EntityView areaEffect(AreaEffectEntity area) {
@@ -440,7 +457,8 @@ public final class BattleAdapter {
         null,
         List.of(),
         UnitRole.NONE,
-        EntityView.Bar.HEALTH);
+        EntityView.Bar.HEALTH,
+        EntityView.Attack.NONE);
   }
 
   private static BattleFrame.SideView side(BattleSession session, LadderMatch match, int side) {

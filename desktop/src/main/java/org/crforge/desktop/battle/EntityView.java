@@ -63,6 +63,8 @@ import org.crforge.core.pathfinding.GridUnitState;
  * @param role what a troop or building does in a fight, read from its row, for its role icon;
  *     {@link UnitRole#NONE} for towers and non-characters
  * @param bar what a character's bar shows: its health, a timer, or nothing (see {@link Bar})
+ * @param attack a character's attack timing as its targeting holds it, copied after the step;
+ *     {@link Attack#NONE} otherwise
  */
 public record EntityView(
     int id,
@@ -103,10 +105,35 @@ public record EntityView(
     ActionMeter meter,
     List<UnitStatus> statuses,
     UnitRole role,
-    Bar bar) {
+    Bar bar,
+    Attack attack) {
 
   public EntityView {
     statuses = List.copyOf(statuses);
+  }
+
+  /**
+   * A character's attack timing, copied from its targeting component and columns. All times are
+   * milliseconds.
+   *
+   * @param timerMs the attack timer: the attack time elapsed, 0 while no attack runs
+   * @param loadTimerMs the load countdown: how much of the wind-up is still to run
+   * @param startDelayMs how long the attack timer is still held at 0 by a sequence step's start
+   *     delay
+   * @param hitSpeedMs the hit speed the timer is counted against
+   * @param loadTimeMs the wind-up the battle holds before a hit
+   * @param sequenceIndex the index of the active attack sequence step, or -1 for none
+   */
+  public record Attack(
+      int timerMs,
+      int loadTimerMs,
+      int startDelayMs,
+      int hitSpeedMs,
+      int loadTimeMs,
+      int sequenceIndex) {
+
+    /** No attack timing: a projectile's or area effect's. */
+    public static final Attack NONE = new Attack(0, 0, 0, 0, 0, -1);
   }
 
   public boolean hasStatus(UnitStatus.Kind kind) {

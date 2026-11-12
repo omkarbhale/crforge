@@ -39,9 +39,8 @@
  * These are exposable without changing the battle, and are added when a renderer needs them:
  *
  * <ul>
- *   <li>TODO per-tick character fields: attack, load and start delay timers, sequence index, burst
- *       and special load progress, attack count, deploy countdown, height, target id, whether a
- *       king tower is inactive
+ *   <li>TODO per-tick character fields: burst and special load progress, attack count, deploy
+ *       countdown, height, target id, whether a king tower is inactive
  *   <li>TODO per-tick projectile fields: start, aim height, facing, target id
  *   <li>TODO match fields: a card's hero form and spell variant, a play's actual cost
  *   <li>TODO action meters and roles, which the frames the visualizer draws already hold

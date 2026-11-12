@@ -31,6 +31,7 @@ import org.crforge.core.battle.unit.ChampionController;
 import org.crforge.core.battle.unit.WorldEntity;
 import org.crforge.core.pathfinding.GridEntityState;
 import org.crforge.core.pathfinding.combat.PackedLevel;
+import org.crforge.core.pathfinding.target.TargetingState;
 import org.crforge.desktop.battle.BattleAdapter;
 import org.crforge.desktop.battle.BattleFrame;
 import org.crforge.desktop.battle.BattleSession;
@@ -38,6 +39,7 @@ import org.crforge.desktop.replay.ReplayFile;
 import org.crforge.desktop.replay.ReplayPlayer;
 import org.crforge.presentation.AbilityFrame;
 import org.crforge.presentation.AbilityState;
+import org.crforge.presentation.AttackFrame;
 import org.crforge.presentation.CardFrame;
 import org.crforge.presentation.EntityFrame;
 import org.crforge.presentation.EntityKind;
@@ -244,6 +246,19 @@ class TickFramesTest {
     assertThat(heard.stream().flatMap(frame -> frame.entities().stream()))
         .as("a troop stands at its level")
         .anyMatch(entity -> entity.kind() == EntityKind.TROOP && entity.level() > 0);
+    assertThat(heard.stream().flatMap(frame -> frame.entities().stream()))
+        .as("an attacking troop's timer runs against its hit speed")
+        .anyMatch(
+            entity ->
+                entity.kind() == EntityKind.TROOP
+                    && entity.state() == EntityState.ATTACKING
+                    && entity.attack().timerMs() > 0
+                    && entity.attack().hitSpeedMs() > 0);
+    assertThat(heard.stream().flatMap(frame -> frame.entities().stream()))
+        .as("a projectile has no attack timing")
+        .filteredOn(entity -> entity.kind() == EntityKind.PROJECTILE)
+        .isNotEmpty()
+        .allSatisfy(projectile -> assertThat(projectile.attack()).isEqualTo(AttackFrame.NONE));
   }
 
   /** A session's frame as it stands, with no events told. */
@@ -254,9 +269,20 @@ class TickFramesTest {
   /** A frame says what the match holds, read straight from the core and the session. */
   private static void assertFollowsTheMatch(TickFrame frame, BattleSession session) {
     Map<Integer, Integer> levels = new HashMap<>();
+    Map<Integer, AttackFrame> attacks = new HashMap<>();
     for (BattleEntity entity : session.getBattle().getBattle().getHolder().entities()) {
       if (entity instanceof WorldEntity world) {
         levels.put(world.getId(), world.level());
+        TargetingState targeting = world.getTargeting();
+        attacks.put(
+            world.getId(),
+            new AttackFrame(
+                targeting.getAttackTimerMs(),
+                targeting.getLoadTimerMs(),
+                targeting.getAttackStartDelayMs(),
+                targeting.getConfig().hitSpeed(),
+                targeting.getConfig().loadTime(),
+                targeting.getAttackSequenceIndex()));
       } else if (entity instanceof ProjectileEntity projectile) {
         levels.put(projectile.getId(), projectile.level());
       } else if (entity instanceof AreaEffectEntity area) {
@@ -268,6 +294,9 @@ class TickFramesTest {
           .as("the level of %s #%d", entity.name(), entity.id())
           .isEqualTo(levels.get(entity.id()))
           .isPositive();
+      assertThat(entity.attack())
+          .as("the attack timing of %s #%d", entity.name(), entity.id())
+          .isEqualTo(attacks.getOrDefault(entity.id(), AttackFrame.NONE));
     }
     LadderMatch match = session.match();
     Timeline timeline = match.getTimeline();
@@ -330,6 +359,8 @@ class TickFramesTest {
         hash = 31 * hash + world.getView().getY();
         hash = 31 * hash + (world.getHitPoints() == null ? 0 : world.getHitPoints().getHitPoints());
         hash = 31 * hash + world.level();
+        hash = 31 * hash + world.getTargeting().getAttackTimerMs();
+        hash = 31 * hash + world.getTargeting().getAttackSequenceIndex();
       } else if (entity instanceof ProjectileEntity projectile) {
         hash = 31 * hash + projectile.getX();
         hash = 31 * hash + projectile.getY();

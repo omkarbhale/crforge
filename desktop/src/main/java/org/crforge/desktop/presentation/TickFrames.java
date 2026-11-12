@@ -18,6 +18,7 @@ import org.crforge.desktop.battle.EntityView;
 import org.crforge.desktop.battle.UnitStatus;
 import org.crforge.presentation.AbilityFrame;
 import org.crforge.presentation.AbilityState;
+import org.crforge.presentation.AttackFrame;
 import org.crforge.presentation.CardFrame;
 import org.crforge.presentation.DeathFrame;
 import org.crforge.presentation.EntityFrame;
@@ -170,7 +171,22 @@ final class TickFrames {
         view.height(),
         statuses(view),
         view.hasStatus(UnitStatus.Kind.CLONE),
-        view.level());
+        view.level(),
+        attack(view.attack()));
+  }
+
+  /**
+   * A character's attack timing; a projectile's or area effect's {@link EntityView.Attack#NONE}
+   * copies across equal to {@link AttackFrame#NONE}.
+   */
+  private static AttackFrame attack(EntityView.Attack attack) {
+    return new AttackFrame(
+        attack.timerMs(),
+        attack.loadTimerMs(),
+        attack.startDelayMs(),
+        attack.hitSpeedMs(),
+        attack.loadTimeMs(),
+        attack.sequenceIndex());
   }
 
   /** The buffs on an entity; a clone's flag stands in the view's statuses but is no buff row. */
