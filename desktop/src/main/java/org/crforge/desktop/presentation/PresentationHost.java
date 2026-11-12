@@ -50,6 +50,9 @@ public final class PresentationHost {
    */
   private ArenaProjection drawnArena;
 
+  /** The rectangle the plugin last drew in, or null while it has drawn none. */
+  private PresentContext drawnIn;
+
   private PresentationHost(BuiltinPresentation builtin, PresentationPlugin active) {
     this.builtin = builtin;
     this.active = active;
@@ -160,10 +163,12 @@ public final class PresentationHost {
       PresentContext context) {
     builtin.prepare(frame, camera, inputs);
     drawnArena = null;
+    drawnIn = null;
     if (active != builtin) {
       contained(
           () -> {
             active.present(context);
+            drawnIn = context;
             drawnArena = inWindow(active.arenaProjection(), context);
           });
     }
@@ -185,6 +190,30 @@ public final class PresentationHost {
     return drawnArena;
   }
 
+  /**
+   * The entity the plugin drew at a window point at the last refresh, by its own pick ({@link
+   * PresentationPlugin#entityAt}). A failure of the pick is contained like any other: the plugin is
+   * closed and the answer is that none was named.
+   *
+   * @param windowX the window pixel column
+   * @param windowY the window pixel row, counted from the window's bottom
+   * @return the plugin's entity id, or {@link PresentationPlugin#NO_ENTITY} when the built-in
+   *     visualizer draws, the plugin has drawn nothing yet or it names none: the caller then picks
+   *     on its own
+   */
+  public int entityAt(float windowX, float windowY) {
+    PresentContext rectangle = drawnIn;
+    if (active == builtin || rectangle == null) {
+      return PresentationPlugin.NO_ENTITY;
+    }
+    int[] picked = {PresentationPlugin.NO_ENTITY};
+    contained(
+        () ->
+            picked[0] =
+                active.entityAt(windowX - rectangle.viewportX(), windowY - rectangle.viewportY()));
+    return picked[0];
+  }
+
   /** A projection of a rectangle moved into the window, or null for none. */
   private static ArenaProjection inWindow(ArenaProjection projection, PresentContext context) {
     if (projection == null) {
@@ -200,6 +229,7 @@ public final class PresentationHost {
   /** The screen is going: the plugin is closed. */
   public void close() {
     drawnArena = null;
+    drawnIn = null;
     if (active == builtin) {
       return;
     }

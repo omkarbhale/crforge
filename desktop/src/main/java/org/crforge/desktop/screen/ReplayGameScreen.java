@@ -149,6 +149,7 @@ public class ReplayGameScreen implements Screen {
             this::handleAction,
             (side, slot) -> {},
             (side, slot) -> {});
+    workspace.setEntityPick(presentation::entityAt);
     showData();
     if (browser != null) {
       ReplayArchive archive = browser.archive();
@@ -311,9 +312,7 @@ public class ReplayGameScreen implements Screen {
           @Override
           public boolean touchDown(int screenX, int screenY, int pointer, int button) {
             if (button != Input.Buttons.LEFT || !workspace.onArena(screenX, screenY)) return false;
-            touchPos.set(screenX, screenY, 0);
-            workspace.unproject(touchPos);
-            workspace.inspectAt(touchPos.x, touchPos.y);
+            workspace.inspectAt(screenX, screenY);
             return true;
           }
         };
@@ -327,9 +326,9 @@ public class ReplayGameScreen implements Screen {
       workspace.clearHover();
       return;
     }
+    workspace.hoverAt(screenX, screenY);
     touchPos.set(screenX, screenY, 0);
     workspace.unproject(touchPos);
-    workspace.hoverAt(touchPos.x, touchPos.y);
     // The battle's tile and cell under the mouse, whichever way up the arena is drawn.
     ViewOrientation orientation = view.getOrientation();
     hoverTileX = orientation.tileColumnAt(touchPos.x);

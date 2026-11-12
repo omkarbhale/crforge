@@ -7,6 +7,7 @@
 package org.crforge.desktop;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.badlogic.gdx.Gdx;
@@ -22,9 +23,12 @@ import java.util.List;
 import org.crforge.core.battle.data.GameTables;
 import org.crforge.core.pathfinding.grid.TileMap;
 import org.crforge.core.util.GameUnits;
+import org.crforge.desktop.battle.BattleAdapter;
 import org.crforge.desktop.battle.BattleSession;
 import org.crforge.desktop.battle.DataVersions;
+import org.crforge.desktop.battle.EntityView;
 import org.crforge.desktop.presentation.PresentationHost;
+import org.crforge.desktop.render.BattleRenderer;
 import org.crforge.desktop.render.BattleWorkspace;
 import org.crforge.desktop.render.RenderConstants;
 import org.crforge.desktop.render.ViewOrientation;
@@ -298,6 +302,93 @@ class PresentationPluginTest {
     assertFailureContained();
   }
 
+  @Test
+  @DisplayName("with no plugin, the host is asked no pick and a click picks as before")
+  void pickWithoutPlugin() throws Exception {
+    open();
+    run(1);
+    key(Input.Keys.SPACE);
+    run(1);
+    assertThat(host().entityAt(WIDTH / 2f, HEIGHT / 2f)).isEqualTo(PresentationPlugin.NO_ENTITY);
+
+    // The far tower's ground point, mapped across the arena's whole rectangle.
+    PresentContext context = workspace().presentContext();
+    ViewOrientation view = ViewOrientation.of(tileMap(), context.bottomSide());
+    int half = tileMapHeight() / 2;
+    EntityView tower =
+        BattleAdapter.frame(session()).entities().stream()
+            .filter(entity -> entity.kind() == EntityView.Kind.TOWER)
+            .filter(entity -> entity.y() > half)
+            .findFirst()
+            .orElseThrow();
+    float x = view.px(tower.x());
+    float y = view.py(tower.y()) - RenderConstants.BOTTOM_UI_HEIGHT;
+    click(
+        context.viewportX() + x / WorkspaceViewport.WORLD_WIDTH * context.viewportWidth(),
+        context.viewportY() + y / WorkspaceViewport.WORLD_HEIGHT * context.viewportHeight());
+    assertThat(selected()).isEqualTo(tower.id());
+    assertThat(hoverDrawn()).isEqualTo(PresentationPlugin.NO_ENTITY);
+  }
+
+  @Test
+  @DisplayName("a plugin's pick answers a click and a hover; when it names none, the host picks")
+  void pluginPicks() throws Exception {
+    install(Picking.class);
+    open();
+    run(1);
+    key(Input.Keys.SPACE);
+    run(1);
+    Picking plugin = (Picking) Recording.last;
+    PresentContext context = plugin.presents.get(plugin.presents.size() - 1);
+    EntityFrame far = farTower(plugin);
+    int half = tileMapHeight() / 2;
+    EntityFrame near =
+        plugin.frames.get(plugin.frames.size() - 1).entities().stream()
+            .filter(entity -> entity.kind() == EntityKind.TOWER)
+            .filter(entity -> entity.y() < half)
+            .findFirst()
+            .orElseThrow();
+
+    // The plugin says it drew the near tower where the host has the far one's ground point: its
+    // answer wins, and it is asked in its rectangle's pixels.
+    plugin.atX = plugin.drawn.pixelX(far.x());
+    plugin.atY = plugin.drawn.pixelY(far.y());
+    plugin.answer = near.id();
+    click(context.viewportX() + plugin.atX, context.viewportY() + plugin.atY);
+    assertThat(selected()).isEqualTo(near.id());
+    float[] asked = plugin.asked.get(plugin.asked.size() - 1);
+    assertThat(asked[0]).isCloseTo(plugin.atX, within(0.5f));
+    assertThat(asked[1]).isCloseTo(plugin.atY, within(0.5f));
+    assertThat(hoverDrawn()).as("the click's hover").isEqualTo(near.id());
+
+    // Naming none, the host picks the tower whose ground point is under the mouse.
+    plugin.answer = PresentationPlugin.NO_ENTITY;
+    click(context.viewportX() + plugin.atX, context.viewportY() + plugin.atY);
+    assertThat(selected()).isEqualTo(far.id());
+    assertThat(hoverDrawn()).isEqualTo(PresentationPlugin.NO_ENTITY);
+  }
+
+  @Test
+  @DisplayName("a plugin whose pick fails is closed, and the host picks")
+  void failingPick() throws Exception {
+    install(FailsOnPick.class);
+    open();
+    run(1);
+    key(Input.Keys.SPACE);
+    run(1);
+    Projecting plugin = (Projecting) Recording.last;
+    PresentContext context = plugin.presents.get(plugin.presents.size() - 1);
+    EntityFrame far = farTower(plugin);
+    click(
+        context.viewportX() + plugin.drawn.pixelX(far.x()),
+        context.viewportY() + plugin.drawn.pixelY(far.y()));
+    assertThat(plugin.closed).isTrue();
+    assertThat(selected()).isEqualTo(far.id());
+    assertThat(host().entityAt(WIDTH / 2f, HEIGHT / 2f)).isEqualTo(PresentationPlugin.NO_ENTITY);
+    key(Input.Keys.SPACE);
+    assertFailureContained();
+  }
+
   /**
    * A point three quarters into a tile, in game units: in its second routing cell, clear of any
    * edge that a rounding could put on either side.
@@ -451,6 +542,23 @@ class PresentationPluginTest {
     return (Integer) field.get(workspace());
   }
 
+  /** A tower on side 1's half, from the plugin's last tick. */
+  private EntityFrame farTower(Recording plugin) throws Exception {
+    int half = tileMapHeight() / 2;
+    return plugin.frames.get(plugin.frames.size() - 1).entities().stream()
+        .filter(entity -> entity.kind() == EntityKind.TOWER)
+        .filter(entity -> entity.y() > half)
+        .findFirst()
+        .orElseThrow();
+  }
+
+  /** The unit a plugin named under the mouse at the last hover, as the renderer holds it. */
+  private int hoverDrawn() throws Exception {
+    Field field = BattleRenderer.class.getDeclaredField("hoverDrawn");
+    field.setAccessible(true);
+    return (Integer) field.get(screenField("renderer"));
+  }
+
   private int tileMapWidth() throws Exception {
     return session().getBattle().getWorld().getTileMap().widthUnits();
   }
@@ -565,6 +673,32 @@ class PresentationPluginTest {
     @Override
     public ArenaProjection arenaProjection() {
       return drawn;
+    }
+  }
+
+  /** Draws as {@link Projecting} does and names {@link #answer} drawn at one pixel. */
+  public static class Picking extends Projecting {
+
+    final List<float[]> asked = new ArrayList<>();
+
+    float atX = Float.NaN;
+
+    float atY = Float.NaN;
+
+    int answer = NO_ENTITY;
+
+    @Override
+    public int entityAt(float pixelX, float pixelY) {
+      asked.add(new float[] {pixelX, pixelY});
+      return Math.abs(pixelX - atX) <= 1 && Math.abs(pixelY - atY) <= 1 ? answer : NO_ENTITY;
+    }
+  }
+
+  /** Fails when asked what it drew under the mouse. */
+  public static class FailsOnPick extends Projecting {
+    @Override
+    public int entityAt(float pixelX, float pixelY) {
+      throw new IllegalStateException("a plugin's bug");
     }
   }
 
