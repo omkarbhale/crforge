@@ -46,10 +46,10 @@
  *   <li>TODO per-tick character fields: burst and special load progress, attack count, deploy
  *       countdown, height, target id, whether a king tower is inactive
  *   <li>TODO per-tick projectile fields: start, aim height, facing, target id
- *   <li>TODO match fields: a card's hero form and spell variant, a play's actual cost
+ *   <li>TODO match fields: a hand card's hero form and spell variant, a play's actual cost
  *   <li>TODO action meters and roles, which the frames the visualizer draws already hold
- *   <li>TODO value events: attack started and fired, a special projectile launch, card played,
- *       action started and finished
+ *   <li>TODO value events: attack started and fired, a special projectile launch, action started
+ *       and finished
  *   <li>TODO a static battle header: cosmetics, emotes, profiles
  *   <li>TODO audio output
  * </ul>

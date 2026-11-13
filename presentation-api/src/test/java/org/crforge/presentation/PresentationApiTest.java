@@ -46,6 +46,7 @@ class PresentationApiTest {
             StatusFrame.class,
             DeathFrame.class,
             StrikeFrame.class,
+            CardPlayFrame.class,
             PresentContext.class,
             ArenaProjection.class,
             CardCommand.Select.class,
@@ -140,6 +141,62 @@ class PresentationApiTest {
     TickFrame frame = frame(List.of(entity(1)), List.of());
     assertThat(frame.deaths()).isEmpty();
     assertThat(frame.strikes()).isEmpty();
+    assertThat(frame.plays()).isEmpty();
+  }
+
+  /** That signature is held for crforge-render, whose tests construct frames with events. */
+  @Test
+  @DisplayName("the constructor from before card plays tells its events and no play")
+  void eventsWithoutPlays() {
+    List<DeathFrame> deaths = List.of(new DeathFrame(1, "Knight", 0, 10, 20, DeathCause.KILLED));
+    List<StrikeFrame> strikes = List.of(new StrikeFrame(1, 2, true));
+    TickFrame frame =
+        new TickFrame(
+            7, 350, false, -1, List.of(), false, 1, List.of(), 0, 0, 0, 0, 0, deaths, strikes);
+    assertThat(frame.deaths()).isEqualTo(deaths);
+    assertThat(frame.strikes()).isEqualTo(strikes);
+    assertThat(frame.plays()).isEmpty();
+    assertThat(frame)
+        .isEqualTo(
+            new TickFrame(
+                7, 350, false, -1, List.of(), false, 1, List.of(), 0, 0, 0, 0, 0, deaths, strikes,
+                List.of()));
+  }
+
+  @Test
+  @DisplayName("a card play keeps its own unmodifiable list of units, and counts them")
+  void cardPlayIsDetached() {
+    List<Integer> units = new ArrayList<>(List.of(1_000_007, 1_000_008, 1_000_009));
+    CardPlayFrame play = new CardPlayFrame(1, "SkeletonArmy", CardForm.EVOLVED, 9000, 22500, units);
+    TickFrame frame =
+        new TickFrame(
+            7,
+            350,
+            false,
+            -1,
+            List.of(),
+            false,
+            1,
+            List.of(),
+            0,
+            0,
+            0,
+            0,
+            0,
+            List.of(),
+            List.of(),
+            new ArrayList<>(List.of(play)));
+    units.clear();
+
+    assertThat(play.unitIds()).containsExactly(1_000_007, 1_000_008, 1_000_009);
+    assertThat(play.unitCount()).isEqualTo(3);
+    assertThat(frame.plays()).containsExactly(play);
+    assertThatThrownBy(() -> play.unitIds().clear())
+        .isInstanceOf(UnsupportedOperationException.class);
+    assertThatThrownBy(() -> frame.plays().clear())
+        .isInstanceOf(UnsupportedOperationException.class);
+    CardPlayFrame spell = new CardPlayFrame(0, "Fireball", CardForm.BASIC, 9000, 25000, List.of());
+    assertThat(spell.unitCount()).as("a spell makes no unit").isZero();
   }
 
   @Test
@@ -200,7 +257,8 @@ class PresentationApiTest {
       return;
     }
     Class<?> value = (Class<?>) type;
-    if (value.isPrimitive() || value == String.class) {
+    // A boxed int is as much a value as the int: a list of ids holds them.
+    if (value.isPrimitive() || value == String.class || value == Integer.class) {
       return;
     }
     assertThat(value.getPackageName()).as("%s", value).isEqualTo("org.crforge.presentation");

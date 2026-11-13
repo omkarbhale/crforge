@@ -20,6 +20,7 @@ import org.crforge.presentation.AbilityFrame;
 import org.crforge.presentation.AbilityState;
 import org.crforge.presentation.AttackFrame;
 import org.crforge.presentation.CardFrame;
+import org.crforge.presentation.CardPlayFrame;
 import org.crforge.presentation.DeathFrame;
 import org.crforge.presentation.EntityFrame;
 import org.crforge.presentation.EntityKind;
@@ -40,12 +41,28 @@ final class TickFrames {
   }
 
   /**
-   * A plugin's frame with the tick's events.
+   * A plugin's frame with the tick's deaths and strikes, and no card plays.
    *
    * @param deaths what died in the tick just run; none on a battle's first frame
    * @param strikes the attacks' hits that landed in it; none on a battle's first frame
    */
   static TickFrame of(BattleFrame frame, List<DeathFrame> deaths, List<StrikeFrame> strikes) {
+    return of(frame, deaths, strikes, List.of());
+  }
+
+  /**
+   * A plugin's frame with the tick's events.
+   *
+   * @param deaths what died in the tick just run; none on a battle's first frame
+   * @param strikes the attacks' hits that landed in it; none on a battle's first frame
+   * @param plays the card plays that ran in it and put their card down; none on a battle's first
+   *     frame
+   */
+  static TickFrame of(
+      BattleFrame frame,
+      List<DeathFrame> deaths,
+      List<StrikeFrame> strikes,
+      List<CardPlayFrame> plays) {
     List<EntityFrame> entities = new ArrayList<>(frame.entities().size());
     for (EntityView view : frame.entities()) {
       entities.add(entity(view));
@@ -69,7 +86,8 @@ final class TickFrames {
         frame.tiebreakMs(),
         frame.nextCardCooldownMs(),
         deaths,
-        strikes);
+        strikes,
+        plays);
   }
 
   private static SideFrame side(SideView view) {

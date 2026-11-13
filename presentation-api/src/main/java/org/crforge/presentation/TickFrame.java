@@ -34,6 +34,9 @@ import java.util.List;
  *     first frame carries none, whatever its tick: the ticks run to reach it are not told
  * @param strikes the attacks' own hits that landed in the tick just run, in the order they landed.
  *     A battle's first frame carries none, whatever its tick
+ * @param plays the card plays that ran in the tick just run and put their card down, both sides'
+ *     and a replay's, in the order they ran. A play runs at the head of its tick, so its units
+ *     already stand in {@code entities}. A battle's first frame carries none, whatever its tick
  */
 public record TickFrame(
     int tick,
@@ -50,13 +53,55 @@ public record TickFrame(
     int tiebreakMs,
     int nextCardCooldownMs,
     List<DeathFrame> deaths,
-    List<StrikeFrame> strikes) {
+    List<StrikeFrame> strikes,
+    List<CardPlayFrame> plays) {
 
   public TickFrame {
     entities = List.copyOf(entities);
     sides = List.copyOf(sides);
     deaths = List.copyOf(deaths);
     strikes = List.copyOf(strikes);
+    plays = List.copyOf(plays);
+  }
+
+  /**
+   * A frame with deaths and strikes but no card plays. Kept on purpose: crforge-render builds
+   * against this module live, and its tests construct frames with this signature, so removing it
+   * breaks them.
+   */
+  public TickFrame(
+      int tick,
+      int timeMs,
+      boolean ended,
+      int winner,
+      List<EntityFrame> entities,
+      boolean overtime,
+      int elixirRate,
+      List<SideFrame> sides,
+      int section,
+      int sectionLeftMs,
+      int endTimerMs,
+      int tiebreakMs,
+      int nextCardCooldownMs,
+      List<DeathFrame> deaths,
+      List<StrikeFrame> strikes) {
+    this(
+        tick,
+        timeMs,
+        ended,
+        winner,
+        entities,
+        overtime,
+        elixirRate,
+        sides,
+        section,
+        sectionLeftMs,
+        endTimerMs,
+        tiebreakMs,
+        nextCardCooldownMs,
+        deaths,
+        strikes,
+        List.of());
   }
 
   /**
@@ -91,6 +136,7 @@ public record TickFrame(
         endTimerMs,
         tiebreakMs,
         nextCardCooldownMs,
+        List.of(),
         List.of(),
         List.of());
   }
