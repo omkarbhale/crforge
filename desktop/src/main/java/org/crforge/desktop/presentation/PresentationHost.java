@@ -45,6 +45,9 @@ public final class PresentationHost {
   /** What that battle's ticks are collecting for a plugin, or null while none is told. */
   private TickEventLog events;
 
+  /** What tells that battle's card plays to a plugin, or null while none is told. */
+  private TickPlays plays;
+
   /**
    * Where the plugin drew the arena at the last refresh, in window pixels from the bottom left, or
    * null while the arena fills its whole rectangle.
@@ -115,6 +118,7 @@ public final class PresentationHost {
     stopFollowing();
     followed = session;
     events = new TickEventLog();
+    plays = new TickPlays(session.getBattle());
     contained(
         () -> {
           TileMap map = session.getBattle().getWorld().getTileMap();
@@ -134,7 +138,11 @@ public final class PresentationHost {
 
   private void tellTick(BattleSession session) {
     active.tick(
-        TickFrames.of(BattleAdapter.frame(session), events.drainDeaths(), events.drainStrikes()));
+        TickFrames.of(
+            BattleAdapter.frame(session),
+            events.drainDeaths(),
+            events.drainStrikes(),
+            plays.drain()));
   }
 
   /** Lets go of the battle followed: no more ticks, and its log stops collecting. */
@@ -147,6 +155,7 @@ public final class PresentationHost {
       events.stop();
       events = null;
     }
+    plays = null;
   }
 
   /**
