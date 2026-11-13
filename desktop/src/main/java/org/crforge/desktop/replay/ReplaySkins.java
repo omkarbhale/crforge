@@ -59,8 +59,10 @@ public record ReplaySkins(int rndSeed, List<PlayerSkins> players) {
     JsonNode seed = document.path("rndSeed");
     List<PlayerSkins> players = new ArrayList<>();
     JsonNode entries = document.path("battle").path("hbd");
-    for (int i = 0; i < entries.size(); i++) {
-      player(i, entries.get(i).path("sk")).ifPresent(players::add);
+    if (entries.isArray()) {
+      for (int i = 0; i < entries.size(); i++) {
+        player(i, entries.get(i).path("sk")).ifPresent(players::add);
+      }
     }
     return new ReplaySkins(seed.isInt() ? seed.asInt() : 0, players);
   }

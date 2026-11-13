@@ -88,6 +88,18 @@ class ReplaySkinsTest {
   }
 
   @Test
+  @DisplayName("an hbd that is not a list gives no player, and the seed is still read")
+  void hbdNotAList() throws Exception {
+    ReplaySkins object =
+        ReplaySkins.of(json("{'rndSeed': 9, 'battle': {'hbd': {'a': {'sk': {'os': [1]}}}}}"));
+    assertThat(object.rndSeed()).isEqualTo(9);
+    assertThat(object.players()).isEmpty();
+    ReplaySkins text = ReplaySkins.of(json("{'rndSeed': 9, 'battle': {'hbd': 'x'}}"));
+    assertThat(text.rndSeed()).isEqualTo(9);
+    assertThat(text.players()).isEmpty();
+  }
+
+  @Test
   @DisplayName("a replay as the client writes it carries both players' sets and its seed")
   void everyField() {
     ObjectNode document = Replays.archerQueenWithEveryField();
