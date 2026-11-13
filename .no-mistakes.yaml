@@ -6,3 +6,23 @@
 # using CDN-sourced tables). Remove no_ci only if the fork is ever granted the
 # game-tables data secret and Actions is re-enabled.
 no_ci: true
+
+# The test step runs the unit tests of every module except conformance (golden and reference
+# battles, owned by local validation). The test agent's shell has no java on PATH, so set
+# JAVA_HOME (overridable from the environment). The tables come from the game's asset CDN once
+# and are built into the cache (~/.crforge, or $CRFORGE_CACHE); later runs read the cache and
+# fetch nothing.
+commands:
+  test: >-
+    JAVA_HOME="${JAVA_HOME:-/home/omkar/tools/jdk-21.0.12.1+1}"
+    GRADLE_OPTS="-Xmx512m"
+    ./gradlew --no-daemon --console=plain -Dorg.gradle.jvmargs=-Xmx768m
+    -Pcrforge.assetSource="${CRFORGE_ASSET_SOURCE:-cdn}"
+    -Pcrforge.cache="${CRFORGE_CACHE:-$HOME/.crforge}"
+    :core:test :presentation-api:test :desktop:test :tables:test :env:test
+
+test:
+  instructions: |
+    Run only the configured test command (the unit tests of :core, :presentation-api, :desktop,
+    :tables and :env). Do not run conformance, golden capture or reference battles, do not launch
+    the desktop app, and do not open a viewer or window.
