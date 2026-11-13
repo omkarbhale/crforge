@@ -141,6 +141,31 @@ A replay plays only on the tables of the data version it was recorded on. When t
 
 The plays are the replay's own: cards cannot be selected or played in the viewer. More in [Replays](docs/architecture.md#replays).
 
+## Drawing with a downloaded plugin
+
+The arena can be drawn by a presentation plugin instead of the built-in visualizer: a jar file you download, given at launch with `--plugin <jar>`. It works with the debug screen and the replay viewer alike, and is combined with the other arguments in the one `--args`:
+
+```bash
+./gradlew :desktop:run -Pcrforge.assetSource=<source> --args="--plugin <file.jar>"
+./gradlew :desktop:run -Pcrforge.assetSource=<source> --args="--plugin <file.jar> --replay <file>"
+```
+
+crforge checks the jar before loading anything of it. A jar declares, in its manifest, the presentation API version it was built for (`Crforge-Presentation-Api: <major>.<minor>`), and crforge runs one built for its own major version and its own minor version or an older one. A jar built for another major version or a newer minor, one that declares no version, a file that is missing or no jar, and a jar that names no plugin are refused: the launch stops with a message that names the jar and says why and what to update, and exits with code 4. Without `--plugin`, crforge runs as it always has. More in [Presentation plugins](docs/architecture.md#presentation-plugins).
+
+### On Windows, from a plain clone
+
+You need Git and a Java 21 JDK (for example Eclipse Temurin 21), with `JAVA_HOME` set to it. Put the jar you downloaded at a path without spaces, such as `C:\crforge-plugins\renderer.jar`. In Command Prompt:
+
+```bat
+git clone https://github.com/omkarbhale/crforge.git
+cd crforge
+gradlew.bat :desktop:run -Pcrforge.assetSource=cdn --args="--plugin C:\crforge-plugins\renderer.jar"
+```
+
+In PowerShell, run it as `.\gradlew.bat` and quote the property, which PowerShell would otherwise split at its dot: `.\gradlew.bat :desktop:run "-Pcrforge.assetSource=cdn" --args="--plugin C:\crforge-plugins\renderer.jar"`.
+
+The first run downloads Gradle and the game's files (`cdn` is the opt-in to fetch them from the game's asset CDN) and builds the game tables in `%USERPROFILE%\.crforge`, which takes a while; later runs start at once. To watch the example replay with the plugin, add `--replay` and the replay's full path inside the same quotes: `--args="--plugin C:\crforge-plugins\renderer.jar --replay C:\crforge\examples\replays\ladder.json"` for a clone in `C:\crforge`.
+
 ## Modules
 
 | Module        | Description                                                                                 |

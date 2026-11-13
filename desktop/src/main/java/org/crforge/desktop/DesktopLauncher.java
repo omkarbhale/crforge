@@ -28,8 +28,10 @@ import org.crforge.desktop.model.DeckFile;
 import org.crforge.desktop.model.ModelOpponent;
 import org.crforge.desktop.model.ModelPolicy;
 import org.crforge.desktop.model.ModelSettings;
+import org.crforge.desktop.presentation.PluginJar;
 import org.crforge.desktop.replay.ReplayArchive;
 import org.crforge.desktop.replay.ReplayFile;
+import org.crforge.presentation.PresentationApi;
 
 /**
  * Desktop launcher for CRForge. Starts the LibGDX application with debug visualization.
@@ -58,6 +60,12 @@ import org.crforge.desktop.replay.ReplayFile;
  * deck, side, level and sampling arguments, and {@link ModelOpponent}). The launcher reads the
  * model, checks it against the tables (its observation schema and vocabulary) and stops with the
  * reason when it does not fit them.
+ *
+ * <p>{@code --plugin <jar>} draws the arena with a presentation plugin from a jar the user
+ * downloaded, given at run time only. The launcher checks the jar before loading anything of it
+ * ({@link PluginJar}): a jar that is missing, unreadable, built for a presentation API this crforge
+ * cannot run, or names no plugin stops the launch with the reason. Without it, the plugin on the
+ * classpath, if any, or the built-in visualizer draws, as before.
  */
 public class DesktopLauncher {
 
@@ -72,10 +80,22 @@ public class DesktopLauncher {
   /** The exit code when the model given cannot be read or does not fit the tables. */
   static final int NO_MODEL = 3;
 
+  /** The exit code when the presentation plugin given is refused. */
+  static final int NO_PLUGIN = 4;
+
   /** The argument that names a replay file to open. */
   static final String REPLAY_ARGUMENT = "--replay";
 
   public static void main(String[] args) {
+    // A plugin named at launch is checked first, before anything of it is loaded; the screens
+    // find it on the thread's class loader, as they find one on the classpath.
+    ClassLoader plugin =
+        openPlugin(args, DesktopLauncher.class.getClassLoader(), System.out, System.err);
+    if (plugin == null) {
+      System.exit(NO_PLUGIN);
+      return;
+    }
+    Thread.currentThread().setContextClassLoader(plugin);
     DataSelection.Choice choice = DataSelection.ofProcess();
     GameTables tables = loadTables(choice, System.out, System.err);
     if (tables == null) {
@@ -325,6 +345,60 @@ public class DesktopLauncher {
    * @return the file, or empty when none is named
    * @throws IllegalArgumentException when the argument is given without a file
    */
+  /**
+   * The class loader the screens find a presentation plugin on: one on the jar {@code --plugin}
+   * names, checked first, else the launcher's own, unchanged.
+   *
+   * @param args the program arguments
+   * @param parent the launcher's class loader
+   * @param out where the plugin taken is said
+   * @param err where a refusal goes
+   * @return the loader, or null when the plugin named is refused
+   */
+  static ClassLoader openPlugin(
+      String[] args, ClassLoader parent, PrintStream out, PrintStream err) {
+    Optional<Path> jar;
+    try {
+      jar = pluginArgument(args);
+    } catch (IllegalArgumentException e) {
+      err.println(e.getMessage());
+      return null;
+    }
+    if (jar.isEmpty()) {
+      return parent;
+    }
+    try {
+      ClassLoader loader = PluginJar.open(jar.get(), parent);
+      out.println(
+          "Presentation plugin jar: "
+              + jar.get().toAbsolutePath().normalize()
+              + " (presentation API "
+              + PresentationApi.VERSION
+              + ")");
+      return loader;
+    } catch (PluginJar.Refused e) {
+      err.println(e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * The plugin jar named by {@code --plugin}, if any.
+   *
+   * @throws IllegalArgumentException when the argument names no file
+   */
+  static Optional<Path> pluginArgument(String[] args) {
+    for (int i = 0; i < args.length; i++) {
+      if (PluginJar.ARGUMENT.equals(args[i])) {
+        if (i + 1 >= args.length || args[i + 1].isBlank()) {
+          throw new IllegalArgumentException(PluginJar.ARGUMENT + " names no plugin jar");
+        }
+        return Optional.of(Paths.get(args[i + 1]));
+      }
+    }
+    return Optional.empty();
+  }
+
   static Optional<Path> replayArgument(String[] args) {
     for (int i = 0; i < args.length; i++) {
       if (REPLAY_ARGUMENT.equals(args[i])) {
