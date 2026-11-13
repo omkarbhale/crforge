@@ -47,6 +47,7 @@ class PresentationApiTest {
             DeathFrame.class,
             StrikeFrame.class,
             CardPlayFrame.class,
+            TowerSkinFrame.class,
             PresentContext.class,
             ArenaProjection.class,
             CardCommand.Select.class,
@@ -161,6 +162,37 @@ class PresentationApiTest {
             new TickFrame(
                 7, 350, false, -1, List.of(), false, 1, List.of(), 0, 0, 0, 0, 0, deaths, strikes,
                 List.of()));
+  }
+
+  /** That signature is held for crforge-render, whose tests and harness construct starts. */
+  @Test
+  @DisplayName("the start from before tower skins is no replay's and tells no skin")
+  void startWithoutSkins() {
+    BattleStart start = new BattleStart(18_000, 32_000, 5);
+    assertThat(start.towerSkins()).isEmpty();
+    assertThat(start.rndSeed()).isZero();
+    assertThat(start.replay()).isFalse();
+    assertThat(start).isEqualTo(new BattleStart(18_000, 32_000, 5, List.of(), 0, false));
+  }
+
+  @Test
+  @DisplayName("a start keeps its own unmodifiable tower skins, and each its own lists")
+  void towerSkinsAreDetached() {
+    List<Integer> os = new ArrayList<>(List.of(87000001, 94000033));
+    List<Integer> ss = new ArrayList<>(List.of(94000033, 94000033));
+    TowerSkinFrame skin = new TowerSkinFrame(1, os, ss, 94000033, true);
+    List<TowerSkinFrame> skins = new ArrayList<>(List.of(skin));
+    BattleStart start = new BattleStart(18_000, 32_000, 0, skins, 1131, true);
+    os.clear();
+    ss.clear();
+    skins.clear();
+
+    assertThat(start.towerSkins()).containsExactly(skin);
+    assertThat(skin.os()).containsExactly(87000001, 94000033);
+    assertThat(skin.ss()).as("repeats kept").containsExactly(94000033, 94000033);
+    assertThatThrownBy(() -> start.towerSkins().clear())
+        .isInstanceOf(UnsupportedOperationException.class);
+    assertThatThrownBy(() -> skin.os().clear()).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test

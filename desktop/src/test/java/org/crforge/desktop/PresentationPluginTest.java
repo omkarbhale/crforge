@@ -125,7 +125,9 @@ class PresentationPluginTest {
     run(30);
 
     Recording plugin = Recording.last;
-    assertThat(plugin.starts).containsExactly(new BattleStart(tileMapWidth(), tileMapHeight(), 0));
+    // A replay's start: the example gives no tower skin data, and its seed, 1.
+    assertThat(plugin.starts)
+        .containsExactly(new BattleStart(tileMapWidth(), tileMapHeight(), 0, List.of(), 1, true));
     assertThat(session().tick()).as("several ticks a frame at 8x").isGreaterThan(30);
     assertThat(plugin.ticks()).first().isEqualTo(0);
     assertContiguous(plugin.ticks());
