@@ -50,7 +50,8 @@
  *   <li>TODO action meters and roles, which the frames the visualizer draws already hold
  *   <li>TODO value events: attack started and fired, a special projectile launch, action started
  *       and finished
- *   <li>TODO a static battle header: cosmetics, emotes, profiles
+ *   <li>TODO a static battle header: cosmetics beyond a replay's raw tower skin data, emotes,
+ *       profiles
  *   <li>TODO audio output
  * </ul>
  */

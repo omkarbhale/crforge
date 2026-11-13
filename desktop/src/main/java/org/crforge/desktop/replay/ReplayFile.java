@@ -73,6 +73,7 @@ public final class ReplayFile {
   private final Header header;
   private final List<String> refusals;
   private final ScenarioPlan plan;
+  private final ReplaySkins skins;
 
   /**
    * The battle header of a replay, read leniently.
@@ -99,7 +100,8 @@ public final class ReplayFile {
       ReplayCapture capture,
       Header header,
       List<String> refusals,
-      ScenarioPlan plan) {
+      ScenarioPlan plan,
+      ReplaySkins skins) {
     this.path = path;
     this.line = line;
     this.dataVersion = tables.version();
@@ -108,6 +110,7 @@ public final class ReplayFile {
     this.header = header;
     this.refusals = List.copyOf(refusals);
     this.plan = plan;
+    this.skins = skins;
   }
 
   /**
@@ -193,7 +196,14 @@ public final class ReplayFile {
       }
     }
     return new ReplayFile(
-        path, line, tables, ReplayCapture.of(document).orElse(null), header, refusals, plan);
+        path,
+        line,
+        tables,
+        ReplayCapture.of(document).orElse(null),
+        header,
+        refusals,
+        plan,
+        ReplaySkins.of(document));
   }
 
   /** Where the replay came from. */
@@ -267,6 +277,11 @@ public final class ReplayFile {
   /** The replay's battle header. */
   public Header header() {
     return header;
+  }
+
+  /** The replay's raw tower skin data, for a presentation plugin; the battle reads none of it. */
+  public ReplaySkins skins() {
+    return skins;
   }
 
   /** Why the replay cannot be played, one reason a line; empty when it can be. */

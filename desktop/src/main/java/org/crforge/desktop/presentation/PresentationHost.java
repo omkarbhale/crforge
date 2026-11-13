@@ -7,6 +7,8 @@
 package org.crforge.desktop.presentation;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.TreeMap;
@@ -16,11 +18,13 @@ import org.crforge.desktop.battle.BattleAdapter;
 import org.crforge.desktop.battle.BattleFrame;
 import org.crforge.desktop.battle.BattleSession;
 import org.crforge.desktop.render.BattleRenderer;
+import org.crforge.desktop.replay.ReplaySkins;
 import org.crforge.presentation.ArenaProjection;
 import org.crforge.presentation.BattleStart;
 import org.crforge.presentation.CardCommand;
 import org.crforge.presentation.PresentContext;
 import org.crforge.presentation.PresentationPlugin;
+import org.crforge.presentation.TowerSkinFrame;
 
 /**
  * What stands between a screen and whatever draws its arena: the plugin {@link ServiceLoader} finds
@@ -56,6 +60,11 @@ public final class PresentationHost {
 
   /** The rectangle the plugin last drew in, or null while it has drawn none. */
   private PresentContext drawnIn;
+
+  /**
+   * The replay's raw tower skin data each battle start tells, or null for a battle of no replay.
+   */
+  private ReplaySkins replay;
 
   private PresentationHost(BuiltinPresentation builtin, PresentationPlugin active) {
     this.builtin = builtin;
@@ -105,6 +114,17 @@ public final class PresentationHost {
   }
 
   /**
+   * Marks the screen's battles as a replay's, whose tower skin data and seed every battle start
+   * tells from then on: the first, a restart and a step back alike. Read from the replay's file as
+   * it stands; nothing of the battle is read for it.
+   *
+   * @param skins the replay's tower skin data
+   */
+  public void replay(ReplaySkins skins) {
+    this.replay = skins;
+  }
+
+  /**
    * Keeps a plugin on the battle on screen, before the frame's steps run. A battle it has not heard
    * of (the first, a restart, a step back, another version or replay) starts for it at its current
    * tick, and each step of it from then on is told.
@@ -122,8 +142,7 @@ public final class PresentationHost {
     contained(
         () -> {
           TileMap map = session.getBattle().getWorld().getTileMap();
-          active.battleStarted(
-              new BattleStart(map.widthUnits(), map.heightUnits(), session.tick()));
+          active.battleStarted(start(map.widthUnits(), map.heightUnits(), session.tick()));
           tellTick(session);
         });
     if (active != builtin) {
@@ -134,6 +153,20 @@ public final class PresentationHost {
       session.getBattle().getWorld().addObserver(events);
       session.setStepListener(() -> contained(() -> tellTick(session)));
     }
+  }
+
+  /** A battle start, with the replay's tower skin data when the battle is a replay's. */
+  private BattleStart start(int width, int height, int tick) {
+    if (replay == null) {
+      return new BattleStart(width, height, tick);
+    }
+    List<TowerSkinFrame> skins = new ArrayList<>(replay.players().size());
+    for (ReplaySkins.PlayerSkins player : replay.players()) {
+      skins.add(
+          new TowerSkinFrame(
+              player.player(), player.os(), player.ss(), player.ats(), player.rnd()));
+    }
+    return new BattleStart(width, height, tick, skins, replay.rndSeed(), true);
   }
 
   private void tellTick(BattleSession session) {

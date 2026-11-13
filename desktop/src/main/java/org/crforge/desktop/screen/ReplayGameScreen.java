@@ -137,6 +137,7 @@ public class ReplayGameScreen implements Screen {
     this.browser = browser;
     this.renderer = new BattleRenderer();
     this.presentation = PresentationHost.discover(renderer);
+    this.presentation.replay(replay.skins());
 
     this.camera = new OrthographicCamera();
     setupInput();
