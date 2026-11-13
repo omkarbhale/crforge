@@ -413,13 +413,27 @@ class TickEventLogTest {
     List<TickFrame> heard = Recording.last.frames;
 
     ReplayPlayer plain = new ReplayPlayer(replay, tables);
+    // Each side's deploy area is read from the plain battle as the host reads it from its own.
+    DeployAreas areas = new DeployAreas(plain.getSession().getBattle());
     assertThat(heard).hasSizeGreaterThan(1000);
     assertSameBattle(
-        TickFrames.of(BattleAdapter.frame(plain.getSession()), List.of(), List.of()), heard.get(0));
+        TickFrames.of(
+            BattleAdapter.frame(plain.getSession()),
+            List.of(),
+            List.of(),
+            List.of(),
+            areas.sides()),
+        heard.get(0));
     for (TickFrame frame : heard.subList(1, heard.size())) {
       assertThat(plain.step()).as("the plain battle plays on past %s", frame.tick()).isTrue();
       assertSameBattle(
-          TickFrames.of(BattleAdapter.frame(plain.getSession()), List.of(), List.of()), frame);
+          TickFrames.of(
+              BattleAdapter.frame(plain.getSession()),
+              List.of(),
+              List.of(),
+              List.of(),
+              areas.sides()),
+          frame);
     }
     assertThat(plain.step()).as("both end together").isFalse();
 

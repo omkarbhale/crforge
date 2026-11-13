@@ -28,7 +28,11 @@
  *
  * <p>What a plugin hands back is a value too: a {@link org.crforge.presentation.CardCommand} asks
  * the host to select or play a card, and the host checks and carries it out as it does its own hand
- * buttons and arena clicks.
+ * buttons and arena clicks. A plugin that draws a drag from its hand hears the pointer's moves
+ * ({@link org.crforge.presentation.PresentationPlugin#pointerMoved}), and is told each side's
+ * deploy area ({@link org.crforge.presentation.SideFrame#deployArea}), the selected card's tiles
+ * and the host's placement preview under the pointer ({@link
+ * org.crforge.presentation.PresentContext#placement}).
  *
  * <h2>Tick-driven</h2>
  *

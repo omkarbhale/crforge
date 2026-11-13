@@ -52,7 +52,10 @@ class PresentationApiTest {
             ArenaProjection.class,
             CardCommand.Select.class,
             CardCommand.Play.class,
-            CardCommand.Deselect.class);
+            CardCommand.Deselect.class,
+            DeployArea.class,
+            PlacementPreview.class,
+            PlacementPreview.PlacedUnit.class);
   }
 
   @Test
@@ -83,6 +86,76 @@ class PresentationApiTest {
         .as("a press leaves the hand to the host")
         .isNull();
     assertThat(plugin.cardCommandAt(0, 0, true)).as("a release leaves it too").isNull();
+    // A pointer the plugin does not follow is a no-op.
+    plugin.pointerMoved(10, 20, true);
+    plugin.pointerMoved(-5, 2000, false);
+  }
+
+  /** Those signatures are held for crforge-render, whose tests and harness construct contexts. */
+  @Test
+  @DisplayName(
+      "the context constructors from before the deploy tiles tell no tiles and no placement")
+  void contextWithoutDeployTiles() {
+    PresentContext selected = new PresentContext(10, 20, 300, 400, 0, 1, 2);
+    assertThat(selected.selectedArea()).isSameAs(DeployArea.NONE);
+    assertThat(selected.placement()).isSameAs(PlacementPreview.NONE);
+    assertThat(new PresentContext(10, 20, 300, 400, 1).selectedArea()).isSameAs(DeployArea.NONE);
+    assertThat(new PresentContext(10, 20, 300, 400, 0, 1, 2, null, null)).isEqualTo(selected);
+    DeployArea area = new DeployArea(1, 2, 1, List.of(true, false));
+    PlacementPreview placement = new PlacementPreview(0, 0, true, 500, 500, List.of());
+    PresentContext told = new PresentContext(10, 20, 300, 400, 0, 1, 2, area, placement);
+    assertThat(told.selectedArea()).isEqualTo(area);
+    assertThat(told.placement()).isEqualTo(placement);
+    SideFrame side = new SideFrame(0, 0, 0, 0, List.of(), CardFrame.NONE, List.of(), 0);
+    assertThat(side.deployArea()).isSameAs(DeployArea.NONE);
+    assertThat(
+            new SideFrame(0, 0, 0, 0, List.of(), CardFrame.NONE, List.of(), 0, area).deployArea())
+        .isEqualTo(area);
+  }
+
+  @Test
+  @DisplayName(
+      "a deploy area counts its tiles row after row from side 0's end, and refuses a grid its"
+          + " flags do not fill")
+  void deployArea() {
+    // Three columns by two rows: row 0 open but its middle, row 1 closed but its middle.
+    List<Boolean> flags = new ArrayList<>(List.of(true, false, true, false, true, false));
+    DeployArea area = new DeployArea(0, 3, 2, flags);
+    flags.clear();
+    assertThat(area.tiles()).hasSize(6);
+    assertThatThrownBy(() -> area.tiles().set(0, false))
+        .isInstanceOf(UnsupportedOperationException.class);
+    assertThat(area.open(0, 0)).isTrue();
+    assertThat(area.open(1, 0)).isFalse();
+    assertThat(area.open(1, 1)).isTrue();
+    assertThat(area.open(2, 1)).isFalse();
+    assertThat(area.open(-1, 0)).as("off the grid").isFalse();
+    assertThat(area.open(3, 0)).isFalse();
+    assertThat(area.open(0, 2)).isFalse();
+    assertThat(area.openAt(1500, 1999)).as("the tile holding the position").isTrue();
+    assertThat(area.openAt(1500, 999)).isFalse();
+    assertThat(area.openAt(-1, 500)).isFalse();
+    assertThat(area.openAt(Float.NaN, 500)).isFalse();
+    assertThat(DeployArea.NONE.open(0, 0)).isFalse();
+    assertThatThrownBy(() -> new DeployArea(0, 3, 2, List.of(true)))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new DeployArea(0, -1, 0, List.of()))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  @DisplayName("a placement preview keeps its own unmodifiable list of units")
+  void placementPreviewIsDetached() {
+    List<PlacementPreview.PlacedUnit> units =
+        new ArrayList<>(List.of(new PlacementPreview.PlacedUnit("Knight", 4500, 10500)));
+    PlacementPreview preview = new PlacementPreview(4, 10, true, 4500, 10500, units);
+    units.clear();
+    assertThat(preview.units())
+        .containsExactly(new PlacementPreview.PlacedUnit("Knight", 4500, 10500));
+    assertThatThrownBy(() -> preview.units().clear())
+        .isInstanceOf(UnsupportedOperationException.class);
+    assertThat(PlacementPreview.NONE.placed()).isFalse();
+    assertThat(PlacementPreview.NONE.tileX()).isNegative();
   }
 
   /** That signature is held for crforge-render, whose tests construct contexts. */
@@ -289,8 +362,12 @@ class PresentationApiTest {
       return;
     }
     Class<?> value = (Class<?>) type;
-    // A boxed int is as much a value as the int: a list of ids holds them.
-    if (value.isPrimitive() || value == String.class || value == Integer.class) {
+    // A boxed int or boolean is as much a value as the primitive: a list of ids, or of a deploy
+    // area's tile flags, holds them.
+    if (value.isPrimitive()
+        || value == String.class
+        || value == Integer.class
+        || value == Boolean.class) {
       return;
     }
     assertThat(value.getPackageName()).as("%s", value).isEqualTo("org.crforge.presentation");

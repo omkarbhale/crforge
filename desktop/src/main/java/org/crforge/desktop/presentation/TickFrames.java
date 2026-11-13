@@ -22,6 +22,7 @@ import org.crforge.presentation.AttackFrame;
 import org.crforge.presentation.CardFrame;
 import org.crforge.presentation.CardPlayFrame;
 import org.crforge.presentation.DeathFrame;
+import org.crforge.presentation.DeployArea;
 import org.crforge.presentation.EntityFrame;
 import org.crforge.presentation.EntityKind;
 import org.crforge.presentation.EntityState;
@@ -63,13 +64,32 @@ final class TickFrames {
       List<DeathFrame> deaths,
       List<StrikeFrame> strikes,
       List<CardPlayFrame> plays) {
+    return of(frame, deaths, strikes, plays, List.of());
+  }
+
+  /**
+   * A plugin's frame with the tick's events and each side's deploy area.
+   *
+   * @param deaths what died in the tick just run; none on a battle's first frame
+   * @param strikes the attacks' hits that landed in it; none on a battle's first frame
+   * @param plays the card plays that ran in it and put their card down; none on a battle's first
+   *     frame
+   * @param areas each side's deploy area by side; a side with none is told {@link DeployArea#NONE}
+   */
+  static TickFrame of(
+      BattleFrame frame,
+      List<DeathFrame> deaths,
+      List<StrikeFrame> strikes,
+      List<CardPlayFrame> plays,
+      List<DeployArea> areas) {
     List<EntityFrame> entities = new ArrayList<>(frame.entities().size());
     for (EntityView view : frame.entities()) {
       entities.add(entity(view));
     }
     List<SideFrame> sides = new ArrayList<>(frame.sides().size());
     for (SideView view : frame.sides()) {
-      sides.add(side(view));
+      int s = view.side();
+      sides.add(side(view, s >= 0 && s < areas.size() ? areas.get(s) : DeployArea.NONE));
     }
     return new TickFrame(
         frame.tick(),
@@ -90,7 +110,7 @@ final class TickFrames {
         plays);
   }
 
-  private static SideFrame side(SideView view) {
+  private static SideFrame side(SideView view, DeployArea area) {
     List<CardFrame> hand = new ArrayList<>(view.hand().size());
     for (CardView card : view.hand()) {
       hand.add(card(card));
@@ -107,7 +127,8 @@ final class TickFrames {
         hand,
         card(view.next()),
         abilities,
-        view.nextCardCooldownLeftMs());
+        view.nextCardCooldownLeftMs(),
+        area);
   }
 
   private static CardFrame card(CardView card) {

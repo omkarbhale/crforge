@@ -25,6 +25,7 @@ import org.crforge.core.util.GameUnits;
 import org.crforge.desktop.battle.BattleAdapter;
 import org.crforge.desktop.battle.BattleSession;
 import org.crforge.desktop.battle.DataVersions;
+import org.crforge.desktop.presentation.DeployAreas;
 import org.crforge.desktop.presentation.PresentationHost;
 import org.crforge.desktop.render.BattleWorkspace;
 import org.crforge.desktop.render.RenderConstants;
@@ -33,8 +34,11 @@ import org.crforge.desktop.render.WorkspaceViewport;
 import org.crforge.desktop.screen.DebugGameScreen;
 import org.crforge.presentation.BattleStart;
 import org.crforge.presentation.CardCommand;
+import org.crforge.presentation.DeployArea;
+import org.crforge.presentation.PlacementPreview;
 import org.crforge.presentation.PresentContext;
 import org.crforge.presentation.PresentationPlugin;
+import org.crforge.presentation.SideFrame;
 import org.crforge.presentation.TickFrame;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -259,6 +263,90 @@ class PluginCardPlayTest {
     assertThat(host().cardCommandAt(WIDTH / 2f, HEIGHT / 2f, true)).isNull();
   }
 
+  @Test
+  @DisplayName(
+      "a plugin follows the pointer through a drag from its card, and is told each side's deploy"
+          + " area, the selected card's tiles and where a play from the tile under it lands")
+  void pluginFollowsTheDrag() throws Exception {
+    install(Following.class);
+    open();
+    Following plugin = (Following) Commanding.last;
+    PresentContext context = plugin.presents.get(plugin.presents.size() - 1);
+    assertThat(context.selectedArea()).isSameAs(DeployArea.NONE);
+    assertThat(context.placement()).isSameAs(PlacementPreview.NONE);
+    int slot = playableSlot();
+    TickFrame frame = plugin.frames.get(plugin.frames.size() - 1);
+    assertThat(frame.sides()).hasSize(2);
+    for (SideFrame side : frame.sides()) {
+      assertThat(side.deployArea().side()).isEqualTo(side.side());
+    }
+    assertThat(frame.sides().get(0).deployArea().openAt(inside(TILE_X), inside(TILE_Y))).isTrue();
+    assertThat(frame.sides().get(1).deployArea().openAt(inside(TILE_X), inside(TILE_Y))).isFalse();
+
+    // A move with no button held.
+    float pressX = context.viewportX() + 20;
+    float pressY = context.viewportY() + 30;
+    hover(pressX, pressY);
+    assertThat(plugin.moves.get(plugin.moves.size() - 1)).containsExactly(20, 30, 0);
+
+    // A press on its card selects it; each move then comes held, in and out of the rectangle.
+    plugin.onPress = new CardCommand.Select(0, slot);
+    assertThat(press(pressX, pressY)).isTrue();
+    ViewOrientation view = ViewOrientation.of(tileMap(), context.bottomSide());
+    float tileX =
+        context.viewportX()
+            + view.px(inside(TILE_X)) / WorkspaceViewport.WORLD_WIDTH * context.viewportWidth();
+    float tileY =
+        context.viewportY()
+            + (view.py(inside(TILE_Y)) - RenderConstants.BOTTOM_UI_HEIGHT)
+                / WorkspaceViewport.WORLD_HEIGHT
+                * context.viewportHeight();
+    drag(context.viewportX() - 10, pressY);
+    assertThat(plugin.moves.get(plugin.moves.size() - 1))
+        .as("off the rectangle, still held")
+        .containsExactly(-10, 30, 1);
+    drag(tileX, tileY);
+    assertThat(plugin.moves.get(plugin.moves.size() - 1))
+        .containsExactly(
+            Math.round(tileX) - context.viewportX(), Math.round(tileY) - context.viewportY(), 1);
+
+    // The refresh tells the selected card's tiles and its placement from the tile under it.
+    run(1);
+    PresentContext dragging = plugin.presents.get(plugin.presents.size() - 1);
+    assertThat(dragging.selectedSlot()).isEqualTo(slot);
+    assertThat(dragging.selectedArea())
+        .isEqualTo(DeployAreas.of(0, session().landingTiles(0, slot)));
+    assertThat(dragging.selectedArea().open(TILE_X, TILE_Y)).isTrue();
+    PlacementPreview placement = dragging.placement();
+    assertThat(placement)
+        .isEqualTo(
+            DeployAreas.of(
+                TILE_X,
+                TILE_Y,
+                session()
+                    .preview(0, slot, GameUnits.tileCenter(TILE_X), GameUnits.tileCenter(TILE_Y))));
+    assertThat(placement.placed()).isTrue();
+    assertThat(placement.units()).isNotEmpty();
+
+    // The release on the tile plays there and ends the drag.
+    plugin.onRelease = new CardCommand.Play(inside(TILE_X), inside(TILE_Y));
+    assertThat(release(tileX, tileY)).isTrue();
+    assertThat(plugin.moves.get(plugin.moves.size() - 1)[2]).as("released").isZero();
+    assertThat(plays()).isOne();
+    run(1);
+    PresentContext after = plugin.presents.get(plugin.presents.size() - 1);
+    assertThat(after.selectedSlot()).isEqualTo(PresentContext.NO_SELECTION);
+    assertThat(after.selectedArea()).isSameAs(DeployArea.NONE);
+    assertThat(after.placement()).isSameAs(PlacementPreview.NONE);
+
+    // A drag from a press off the rectangle is not held for the plugin.
+    Gdx.input.getInputProcessor().touchDown(0, 0, 0, Input.Buttons.LEFT);
+    drag(tileX, tileY);
+    assertThat(plugin.moves.get(plugin.moves.size() - 1)[2]).isZero();
+    Gdx.input.getInputProcessor().touchUp(0, 0, 0, Input.Buttons.LEFT);
+    assertThat(plugin.closed).isFalse();
+  }
+
   /** Three quarters into a tile, in game units: clear of any edge a rounding could cross. */
   private static float inside(int tile) {
     return tile * GameUnits.UNITS_PER_TILE + 0.75f * GameUnits.UNITS_PER_TILE;
@@ -356,6 +444,14 @@ class PluginCardPlayTest {
     return Gdx.input
         .getInputProcessor()
         .touchUp(Math.round(x), HEIGHT - Math.round(y), 0, Input.Buttons.LEFT);
+  }
+
+  /** The mouse moves to a window point with the left button held. */
+  private static void drag(float x, float y) {
+    int screenX = Math.round(x);
+    int screenY = HEIGHT - Math.round(y);
+    Gdx.input.setCursorPosition(screenX, screenY);
+    Gdx.input.getInputProcessor().touchDragged(screenX, screenY, 0);
   }
 
   private static void key(int key) {
@@ -469,6 +565,25 @@ class PluginCardPlayTest {
     @Override
     public void close() {
       closed = true;
+    }
+  }
+
+  /** Commands as {@link Commanding} does, and remembers each frame and pointer move. */
+  public static class Following extends Commanding {
+
+    final List<TickFrame> frames = new ArrayList<>();
+
+    /** Each move: the pixel column and row, and 1 while held, 0 otherwise. */
+    final List<int[]> moves = new ArrayList<>();
+
+    @Override
+    public void tick(TickFrame frame) {
+      frames.add(frame);
+    }
+
+    @Override
+    public void pointerMoved(float pixelX, float pixelY, boolean held) {
+      moves.add(new int[] {Math.round(pixelX), Math.round(pixelY), held ? 1 : 0});
     }
   }
 

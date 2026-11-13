@@ -32,6 +32,8 @@ import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import org.crforge.desktop.battle.BattleFrame;
 import org.crforge.presentation.ArenaProjection;
+import org.crforge.presentation.DeployArea;
+import org.crforge.presentation.PlacementPreview;
 import org.crforge.presentation.PresentContext;
 import org.crforge.presentation.PresentationPlugin;
 
@@ -544,8 +546,20 @@ public final class BattleWorkspace implements Disposable {
     arenaViewport.setScreenBounds(bounds.x(), bounds.y(), bounds.width(), bounds.height());
   }
 
-  /** The arena's place in the window: where a plugin draws. */
+  /** The arena's place in the window: where a plugin draws, with no deploy tiles or placement. */
   public PresentContext presentContext() {
+    return presentContext(DeployArea.NONE, PlacementPreview.NONE);
+  }
+
+  /**
+   * The arena's place in the window, where a plugin draws, with the selected card's tiles and
+   * placement.
+   *
+   * @param selectedArea the tiles the selected card lands on unmoved, or {@link DeployArea#NONE}
+   * @param placement the selected card's placement from the tile under the pointer, or {@link
+   *     PlacementPreview#NONE}
+   */
+  public PresentContext presentContext(DeployArea selectedArea, PlacementPreview placement) {
     return new PresentContext(
         bounds.x(),
         bounds.y(),
@@ -553,7 +567,9 @@ public final class BattleWorkspace implements Disposable {
         bounds.height(),
         view.getOrientation().bottomSide(),
         selectedSlot < 0 ? PresentContext.NO_SELECTION : selectedSide,
-        selectedSlot < 0 ? PresentContext.NO_SELECTION : selectedSlot);
+        selectedSlot < 0 ? PresentContext.NO_SELECTION : selectedSlot,
+        selectedArea,
+        placement);
   }
 
   public boolean onArena(int screenX, int screenY) {

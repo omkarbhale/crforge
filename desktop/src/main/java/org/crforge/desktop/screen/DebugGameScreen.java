@@ -32,6 +32,7 @@ import org.crforge.desktop.battle.DataVersions;
 import org.crforge.desktop.battle.LandingTiles;
 import org.crforge.desktop.model.ModelOpponent;
 import org.crforge.desktop.model.ModelView;
+import org.crforge.desktop.presentation.DeployAreas;
 import org.crforge.desktop.presentation.PresentationHost;
 import org.crforge.desktop.render.BattleRenderer;
 import org.crforge.desktop.render.BattleWorkspace;
@@ -39,6 +40,8 @@ import org.crforge.desktop.render.ViewOrientation;
 import org.crforge.desktop.render.ViewState;
 import org.crforge.desktop.render.WorkspaceAction;
 import org.crforge.presentation.CardCommand;
+import org.crforge.presentation.DeployArea;
+import org.crforge.presentation.PlacementPreview;
 import org.crforge.presentation.PresentationPlugin;
 
 /**
@@ -123,6 +126,9 @@ public class DebugGameScreen implements Screen {
 
   private int selectedSlot = -1;
   private int selectedSide = -1;
+
+  /** Whether the left button is held from a press on the arena, for a plugin's drag. */
+  private boolean pressHeld;
 
   /**
    * A screen on the current tables of the given versions, starting with the given Ladder battle.
@@ -258,12 +264,14 @@ public class DebugGameScreen implements Screen {
           @Override
           public boolean mouseMoved(int screenX, int screenY) {
             updateHover(screenX, screenY);
+            pointerMoved(screenX, screenY);
             return false;
           }
 
           @Override
           public boolean touchDown(int screenX, int screenY, int pointer, int button) {
             if (button == Input.Buttons.LEFT) {
+              pressHeld = workspace.onArena(screenX, screenY);
               handleLeftClick(screenX, screenY);
             } else if (button == Input.Buttons.RIGHT) {
               deselect();
@@ -272,10 +280,31 @@ public class DebugGameScreen implements Screen {
           }
 
           @Override
+          public boolean touchDragged(int screenX, int screenY, int pointer) {
+            pointerMoved(screenX, screenY);
+            return false;
+          }
+
+          @Override
           public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-            return button == Input.Buttons.LEFT && askedOfHand(screenX, screenY, true);
+            if (button != Input.Buttons.LEFT) {
+              return false;
+            }
+            boolean taken = askedOfHand(screenX, screenY, true);
+            pressHeld = false;
+            pointerMoved(screenX, screenY);
+            return taken;
           }
         };
+  }
+
+  /**
+   * Tells a plugin that draws the hand where the pointer is ({@link
+   * PresentationPlugin#pointerMoved}), and whether the left button is held from a press on the
+   * arena.
+   */
+  private void pointerMoved(int screenX, int screenY) {
+    presentation.pointerMoved(screenX, Gdx.graphics.getHeight() - screenY, pressHeld);
   }
 
   private void updateHover(int screenX, int screenY) {
@@ -583,6 +612,19 @@ public class DebugGameScreen implements Screen {
                   GameUnits.tileCenter(hoverTileX),
                   GameUnits.tileCenter(hoverTileY))
               : null;
+      // Only a plugin is told the selected card's tiles and placement; the built-in visualizer
+      // draws its own deploy overlay and preview from the inputs.
+      DeployArea selectedArea = DeployArea.NONE;
+      PlacementPreview placement = PlacementPreview.NONE;
+      if (presentation.pluginDraws() && !workspace.isInspecting() && selectedSlot >= 0) {
+        selectedArea =
+            DeployAreas.of(
+                selectedSide,
+                landingTiles != null
+                    ? landingTiles
+                    : session.landingTiles(selectedSide, selectedSlot));
+        placement = previewing ? DeployAreas.of(hoverTileX, hoverTileY, preview) : placement;
+      }
       presentation.present(
           frame,
           camera,
@@ -602,7 +644,7 @@ public class DebugGameScreen implements Screen {
               List.of(),
               List.of(versions.statusLine(), F_NOTE),
               view),
-          workspace.presentContext());
+          workspace.presentContext(selectedArea, placement));
       workspace.setDrawnArena(presentation.drawnArena());
       newAreaHits.clear();
       workspace.draw(delta);
