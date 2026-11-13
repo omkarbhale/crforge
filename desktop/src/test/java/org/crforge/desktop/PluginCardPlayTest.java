@@ -347,6 +347,45 @@ class PluginCardPlayTest {
     assertThat(plugin.closed).isFalse();
   }
 
+  @Test
+  @DisplayName(
+      "a plugin is told no selected tiles while the host inspects, and no placement while the"
+          + " pointer is off the arena")
+  void noAreaWhileInspectingNoPlacementOffArena() throws Exception {
+    install(Following.class);
+    open();
+    Following plugin = (Following) Commanding.last;
+    PresentContext context = plugin.presents.get(plugin.presents.size() - 1);
+    int slot = playableSlot();
+    plugin.onPress = new CardCommand.Select(0, slot);
+    float pressY = context.viewportY() + 30;
+
+    // Selected with the pointer on the arena: both are told.
+    assertThat(press(centreX(context), centreY(context))).isTrue();
+    run(1);
+    PresentContext on = plugin.presents.get(plugin.presents.size() - 1);
+    assertThat(on.selectedSlot()).isEqualTo(slot);
+    assertThat(on.selectedArea()).isNotSameAs(DeployArea.NONE);
+    assertThat(on.placement()).isNotSameAs(PlacementPreview.NONE);
+
+    // Off the arena the card stays selected and its tiles are told, but no placement.
+    hover(context.viewportX() - 10, pressY);
+    run(1);
+    PresentContext off = plugin.presents.get(plugin.presents.size() - 1);
+    assertThat(off.selectedSlot()).isEqualTo(slot);
+    assertThat(off.selectedArea()).isNotSameAs(DeployArea.NONE);
+    assertThat(off.placement()).isSameAs(PlacementPreview.NONE);
+
+    // Inspecting deselects the card, so the plugin is told neither tiles nor placement.
+    key(Input.Keys.I);
+    assertThat(workspace().isInspecting()).isTrue();
+    run(1);
+    PresentContext inspecting = plugin.presents.get(plugin.presents.size() - 1);
+    assertThat(inspecting.selectedSlot()).isEqualTo(PresentContext.NO_SELECTION);
+    assertThat(inspecting.selectedArea()).isSameAs(DeployArea.NONE);
+    assertThat(inspecting.placement()).isSameAs(PlacementPreview.NONE);
+  }
+
   /** Three quarters into a tile, in game units: clear of any edge a rounding could cross. */
   private static float inside(int tile) {
     return tile * GameUnits.UNITS_PER_TILE + 0.75f * GameUnits.UNITS_PER_TILE;
