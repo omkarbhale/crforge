@@ -119,6 +119,34 @@ public interface PresentationPlugin {
     return null;
   }
 
+  /**
+   * The viewer's pointer moved, for a plugin that draws the hand and follows a drag from it: where
+   * the pointer is now, and whether the main button is held from a press on the arena's rectangle.
+   * Between a press {@link #cardCommandAt} is asked for and its release, each move of the pointer
+   * comes with {@code held} true, wherever the pointer goes, in or out of the rectangle. The
+   * release itself comes with {@code held} false, after {@link #cardCommandAt} is asked for it when
+   * it lands in the rectangle, and wherever it lands: it ends the drag. Any other move comes with
+   * {@code held} false: with no button held, or with the button held from a press off the
+   * rectangle.
+   *
+   * <p>The host tells it only where a battle's cards can be played, and only after a {@link
+   * #present}. It is told as it happens, between refreshes, and asks nothing: what the plugin draws
+   * of it shows at the next {@link #present}. The host's own hover and placement preview follow the
+   * same pointer ({@link PresentContext#placement}).
+   *
+   * <p>The pixel is in the rectangle the last {@link #present} was given, as {@link #entityAt}
+   * counts it: the column from its left edge, the row from its bottom edge. It may lie outside the
+   * rectangle, below 0 or past its width or height.
+   *
+   * <p>By default, nothing: the plugin follows no pointer.
+   *
+   * @param pixelX the pixel column, from the rectangle's left edge
+   * @param pixelY the pixel row, from the rectangle's bottom edge
+   * @param held true while the main button is held from a press on the rectangle; false for the
+   *     release that ends it, and for any other move
+   */
+  default void pointerMoved(float pixelX, float pixelY, boolean held) {}
+
   /** The plugin will not be called again: its resources can go. */
   default void close() {}
 }

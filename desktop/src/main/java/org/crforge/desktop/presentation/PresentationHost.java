@@ -52,6 +52,9 @@ public final class PresentationHost {
   /** What tells that battle's card plays to a plugin, or null while none is told. */
   private TickPlays plays;
 
+  /** What tells that battle's deploy areas to a plugin, or null while none is told. */
+  private DeployAreas areas;
+
   /**
    * Where the plugin drew the arena at the last refresh, in window pixels from the bottom left, or
    * null while the arena fills its whole rectangle.
@@ -139,6 +142,7 @@ public final class PresentationHost {
     followed = session;
     events = new TickEventLog();
     plays = new TickPlays(session.getBattle());
+    areas = new DeployAreas(session.getBattle());
     contained(
         () -> {
           TileMap map = session.getBattle().getWorld().getTileMap();
@@ -175,7 +179,8 @@ public final class PresentationHost {
             BattleAdapter.frame(session),
             events.drainDeaths(),
             events.drainStrikes(),
-            plays.drain()));
+            plays.drain(),
+            session.match() == null ? List.of() : areas.sides()));
   }
 
   /** Lets go of the battle followed: no more ticks, and its log stops collecting. */
@@ -189,6 +194,7 @@ public final class PresentationHost {
       events = null;
     }
     plays = null;
+    areas = null;
   }
 
   /**
@@ -281,6 +287,33 @@ public final class PresentationHost {
                 active.cardCommandAt(
                     windowX - rectangle.viewportX(), windowY - rectangle.viewportY(), released));
     return asked[0];
+  }
+
+  /**
+   * Tells the plugin the pointer moved to a window point, after the last refresh ({@link
+   * PresentationPlugin#pointerMoved}). A failure of the call is contained like any other.
+   *
+   * @param windowX the window pixel column
+   * @param windowY the window pixel row, counted from the window's bottom
+   * @param held whether the main button is held from a press on the arena's rectangle
+   */
+  public void pointerMoved(float windowX, float windowY, boolean held) {
+    PresentContext rectangle = drawnIn;
+    if (active == builtin || rectangle == null) {
+      return;
+    }
+    contained(
+        () ->
+            active.pointerMoved(
+                windowX - rectangle.viewportX(), windowY - rectangle.viewportY(), held));
+  }
+
+  /**
+   * Whether a plugin draws the arena: what only a plugin is told, such as the selected card's
+   * tiles, need not be worked out for the built-in visualizer.
+   */
+  public boolean pluginDraws() {
+    return active != builtin;
   }
 
   /** A projection of a rectangle moved into the window, or null for none. */
