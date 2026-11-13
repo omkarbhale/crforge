@@ -143,6 +143,9 @@ class PluginLaunchTest {
 
     assertThat(launch("--plugin")).isNull();
     assertThat(err()).contains("--plugin names no plugin jar");
+
+    assertThat(launch("--plugin", "--replay", "x.json")).isNull();
+    assertThat(err()).contains("--plugin names no plugin jar");
   }
 
   @Test

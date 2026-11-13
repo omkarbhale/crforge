@@ -340,12 +340,6 @@ public class DesktopLauncher {
   }
 
   /**
-   * The replay file the arguments name with {@value #REPLAY_ARGUMENT}.
-   *
-   * @return the file, or empty when none is named
-   * @throws IllegalArgumentException when the argument is given without a file
-   */
-  /**
    * The class loader the screens find a presentation plugin on: one on the jar {@code --plugin}
    * names, checked first, else the launcher's own, unchanged.
    *
@@ -390,7 +384,7 @@ public class DesktopLauncher {
   static Optional<Path> pluginArgument(String[] args) {
     for (int i = 0; i < args.length; i++) {
       if (PluginJar.ARGUMENT.equals(args[i])) {
-        if (i + 1 >= args.length || args[i + 1].isBlank()) {
+        if (i + 1 >= args.length || args[i + 1].isBlank() || args[i + 1].startsWith("--")) {
           throw new IllegalArgumentException(PluginJar.ARGUMENT + " names no plugin jar");
         }
         return Optional.of(Paths.get(args[i + 1]));
@@ -399,6 +393,12 @@ public class DesktopLauncher {
     return Optional.empty();
   }
 
+  /**
+   * The replay file the arguments name with {@value #REPLAY_ARGUMENT}.
+   *
+   * @return the file, or empty when none is named
+   * @throws IllegalArgumentException when the argument is given without a file
+   */
   static Optional<Path> replayArgument(String[] args) {
     for (int i = 0; i < args.length; i++) {
       if (REPLAY_ARGUMENT.equals(args[i])) {
