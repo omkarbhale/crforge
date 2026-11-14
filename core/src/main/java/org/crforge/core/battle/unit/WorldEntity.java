@@ -22,6 +22,7 @@ import org.crforge.core.battle.action.ActionHolder;
 import org.crforge.core.battle.action.ActionInstance;
 import org.crforge.core.battle.action.ActionOwner;
 import org.crforge.core.battle.action.AirToGround;
+import org.crforge.core.battle.action.AnimationModifier;
 import org.crforge.core.battle.action.BarbBarrelHeroReRoll;
 import org.crforge.core.battle.action.BattleAction;
 import org.crforge.core.battle.action.Berserk;
@@ -2031,6 +2032,12 @@ public abstract class WorldEntity extends BattleEntity implements ActionOwner, S
   @Override
   public void forcedAnimation(ForcedAnimation action) {
     world.getEvents().forcedAnimation(this, action);
+  }
+
+  /** Tells the battle's observers of an animation modifier's set on the entity. */
+  @Override
+  public void animationModifier(AnimationModifier action) {
+    world.getEvents().animationModifier(this, action);
   }
 
   /**

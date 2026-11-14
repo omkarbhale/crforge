@@ -68,6 +68,12 @@ import java.util.Objects;
  *     go. A rider carries no riders of its own in the battle core, so a carrier carries none.
  *     {@link #NO_CARRIER} for a character that rides on nothing, for anything else and when the
  *     frame was built without one
+ * @param animationParameters the animation parameters the battle set on the entity, one per name,
+ *     such as {@code PropState}, in the order first set: the last value each row of {@code
+ *     ActionSetAnimationModifier} that ran on it set its parameter to, held until the entity
+ *     leaves. The battle sets no other animation parameter and holds no default; a parameter never
+ *     set is absent, and the list is empty for an entity with none set and when the frame was built
+ *     without them
  */
 public record EntityFrame(
     int id,
@@ -101,7 +107,8 @@ public record EntityFrame(
     int chargeProgress,
     boolean charging,
     ForcedAnimationFrame forcedAnimation,
-    int carrierId) {
+    int carrierId,
+    List<AnimationParameterFrame> animationParameters) {
 
   /**
    * The carrier id of an entity that rides on nothing, and of a frame built without one. No entity
@@ -128,12 +135,90 @@ public record EntityFrame(
     Objects.requireNonNull(attack, "attack; AttackFrame.NONE stands for none");
     Objects.requireNonNull(
         forcedAnimation, "forcedAnimation; ForcedAnimationFrame.NONE stands for none");
+    animationParameters =
+        List.copyOf(
+            Objects.requireNonNull(
+                animationParameters, "animationParameters; an empty list stands for none"));
   }
 
   /**
-   * A frame of an entity that rides on nothing ({@link #NO_CARRIER}). Kept on purpose:
-   * crforge-render builds against this module live, and its tests and harness tools construct
-   * frames with this signature, so removing it breaks them.
+   * A frame with no animation parameters. Kept on purpose: crforge-render builds against this
+   * module live, and its tests and harness tools construct frames with this signature, so removing
+   * it breaks them.
+   */
+  public EntityFrame(
+      int id,
+      EntityKind kind,
+      int side,
+      String name,
+      int x,
+      int y,
+      int radius,
+      int hitPoints,
+      int maxHitPoints,
+      int shield,
+      int maxShield,
+      boolean air,
+      boolean king,
+      EntityState state,
+      boolean deploying,
+      boolean hidden,
+      boolean hasTarget,
+      int targetX,
+      int targetY,
+      int headingX,
+      int headingY,
+      int aimX,
+      int aimY,
+      int height,
+      List<StatusFrame> statuses,
+      boolean isClone,
+      int level,
+      AttackFrame attack,
+      int chargeProgress,
+      boolean charging,
+      ForcedAnimationFrame forcedAnimation,
+      int carrierId) {
+    this(
+        id,
+        kind,
+        side,
+        name,
+        x,
+        y,
+        radius,
+        hitPoints,
+        maxHitPoints,
+        shield,
+        maxShield,
+        air,
+        king,
+        state,
+        deploying,
+        hidden,
+        hasTarget,
+        targetX,
+        targetY,
+        headingX,
+        headingY,
+        aimX,
+        aimY,
+        height,
+        statuses,
+        isClone,
+        level,
+        attack,
+        chargeProgress,
+        charging,
+        forcedAnimation,
+        carrierId,
+        List.of());
+  }
+
+  /**
+   * A frame of an entity that rides on nothing ({@link #NO_CARRIER}), with no animation parameters.
+   * Kept on purpose: crforge-render builds against this module live, and its tests and harness
+   * tools construct frames with this signature, so removing it breaks them.
    */
   public EntityFrame(
       int id,
@@ -199,14 +284,15 @@ public record EntityFrame(
         chargeProgress,
         charging,
         forcedAnimation,
-        NO_CARRIER);
+        NO_CARRIER,
+        List.of());
   }
 
   /**
    * A frame with no charge ({@link #NO_CHARGE}, not charging), no forced animation ({@link
-   * ForcedAnimationFrame#NONE}) and no carrier ({@link #NO_CARRIER}). Kept on purpose:
-   * crforge-render builds against this module live, and its tests and harness tools construct
-   * frames with this signature, so removing it breaks them.
+   * ForcedAnimationFrame#NONE}), no carrier ({@link #NO_CARRIER}) and no animation parameters. Kept
+   * on purpose: crforge-render builds against this module live, and its tests and harness tools
+   * construct frames with this signature, so removing it breaks them.
    */
   public EntityFrame(
       int id,
@@ -269,7 +355,8 @@ public record EntityFrame(
         NO_CHARGE,
         false,
         ForcedAnimationFrame.NONE,
-        NO_CARRIER);
+        NO_CARRIER,
+        List.of());
   }
 
   /**
@@ -337,7 +424,8 @@ public record EntityFrame(
         NO_CHARGE,
         false,
         ForcedAnimationFrame.NONE,
-        NO_CARRIER);
+        NO_CARRIER,
+        List.of());
   }
 
   /**
@@ -404,7 +492,8 @@ public record EntityFrame(
         NO_CHARGE,
         false,
         ForcedAnimationFrame.NONE,
-        NO_CARRIER);
+        NO_CARRIER,
+        List.of());
   }
 
   /**
@@ -470,6 +559,7 @@ public record EntityFrame(
         NO_CHARGE,
         false,
         ForcedAnimationFrame.NONE,
-        NO_CARRIER);
+        NO_CARRIER,
+        List.of());
   }
 }

@@ -19,6 +19,7 @@ import org.crforge.desktop.battle.EntityView;
 import org.crforge.desktop.battle.UnitStatus;
 import org.crforge.presentation.AbilityFrame;
 import org.crforge.presentation.AbilityState;
+import org.crforge.presentation.AnimationParameterFrame;
 import org.crforge.presentation.AttackFrame;
 import org.crforge.presentation.CardFrame;
 import org.crforge.presentation.CardPlayFrame;
@@ -107,9 +108,39 @@ final class TickFrames {
       List<DeployArea> areas,
       List<DashFrame> dashes,
       Map<Integer, ForcedAnimationFrame> forced) {
+    return of(frame, deaths, strikes, plays, areas, dashes, forced, Map.of());
+  }
+
+  /**
+   * A plugin's frame with the tick's events, each side's deploy area, the forced animations and the
+   * animation parameters.
+   *
+   * @param deaths what died in the tick just run; none on a battle's first frame
+   * @param strikes the attacks' hits that landed in it; none on a battle's first frame
+   * @param plays the card plays that ran in it and put their card down; none on a battle's first
+   *     frame
+   * @param areas each side's deploy area by side; a side with none is told {@link DeployArea#NONE}
+   * @param dashes the dash moments of the tick just run; none on a battle's first frame
+   * @param forced the forced animation each entity shows, by id; an entity absent shows none
+   * @param parameters the animation parameters each entity holds, by id, each by name in the order
+   *     first set; an entity absent holds none
+   */
+  static TickFrame of(
+      BattleFrame frame,
+      List<DeathFrame> deaths,
+      List<StrikeFrame> strikes,
+      List<CardPlayFrame> plays,
+      List<DeployArea> areas,
+      List<DashFrame> dashes,
+      Map<Integer, ForcedAnimationFrame> forced,
+      Map<Integer, Map<String, Integer>> parameters) {
     List<EntityFrame> entities = new ArrayList<>(frame.entities().size());
     for (EntityView view : frame.entities()) {
-      entities.add(entity(view, forced.getOrDefault(view.id(), ForcedAnimationFrame.NONE)));
+      entities.add(
+          entity(
+              view,
+              forced.getOrDefault(view.id(), ForcedAnimationFrame.NONE),
+              parameters.getOrDefault(view.id(), Map.of())));
     }
     List<SideFrame> sides = new ArrayList<>(frame.sides().size());
     for (SideView view : frame.sides()) {
@@ -208,7 +239,10 @@ final class TickFrames {
     };
   }
 
-  private static EntityFrame entity(EntityView view, ForcedAnimationFrame forced) {
+  private static EntityFrame entity(
+      EntityView view, ForcedAnimationFrame forced, Map<String, Integer> parameters) {
+    List<AnimationParameterFrame> animation = new ArrayList<>(parameters.size());
+    parameters.forEach((name, value) -> animation.add(new AnimationParameterFrame(name, value)));
     return new EntityFrame(
         view.id(),
         kind(view.kind()),
@@ -241,7 +275,8 @@ final class TickFrames {
         view.charge().progress(),
         view.charge().charging(),
         forced,
-        view.carrierId() == EntityView.NO_CARRIER ? EntityFrame.NO_CARRIER : view.carrierId());
+        view.carrierId() == EntityView.NO_CARRIER ? EntityFrame.NO_CARRIER : view.carrierId(),
+        animation);
   }
 
   /**

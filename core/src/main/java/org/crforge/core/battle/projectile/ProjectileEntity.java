@@ -18,6 +18,7 @@ import org.crforge.core.battle.EntityActions;
 import org.crforge.core.battle.action.ActionHolder;
 import org.crforge.core.battle.action.ActionInstance;
 import org.crforge.core.battle.action.ActionOwner;
+import org.crforge.core.battle.action.AnimationModifier;
 import org.crforge.core.battle.action.BattleAction;
 import org.crforge.core.battle.action.CaptureCharacter;
 import org.crforge.core.battle.action.CreateParallelProjectiles;
@@ -1119,6 +1120,12 @@ public class ProjectileEntity extends BattleEntity
   @Override
   public void forcedAnimation(ForcedAnimation action) {
     world.getEvents().forcedAnimation(this, action);
+  }
+
+  /** Tells the battle's observers of an animation modifier's set on the projectile. */
+  @Override
+  public void animationModifier(AnimationModifier action) {
+    world.getEvents().animationModifier(this, action);
   }
 
   /**

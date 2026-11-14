@@ -1516,6 +1516,20 @@ public interface WorldObserver {
   default void forcedAnimationStopped(int tick, BattleEntity entity, String action) {}
 
   /**
+   * An animation modifier's set (ActionSetAnimationModifier) started on an entity: the value its
+   * animator's int parameter is to hold, which a view's state machine selects sub-states by. It
+   * changes nothing the simulation reads.
+   *
+   * @param tick the battle tick
+   * @param entity the entity the row ran on
+   * @param action the row's name
+   * @param parameter the row's Parameter, the parameter's name, such as PropState
+   * @param value the row's Value, 0 when it gives none
+   */
+  default void animationModifierSet(
+      int tick, BattleEntity entity, String action, String parameter, int value) {}
+
+  /**
    * A projectile's impact made the area effect its row names, at the impact point.
    *
    * @param tick the battle tick

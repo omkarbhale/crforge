@@ -27,6 +27,7 @@ import org.crforge.desktop.battle.BattleAdapter;
 import org.crforge.desktop.battle.BattleFrame;
 import org.crforge.desktop.battle.BattleSession;
 import org.crforge.desktop.battle.EntityView;
+import org.crforge.presentation.AnimationParameterFrame;
 import org.crforge.presentation.DashFrame;
 import org.crforge.presentation.DashMoment;
 import org.crforge.presentation.EntityFrame;
@@ -40,7 +41,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The dash moments, charges, forced animations and carriers a plugin's frames tell, from battles.
+ * The dash moments, charges, forced animations, carriers and animation parameters a plugin's frames
+ * tell, from battles.
  */
 class TickMotionTest {
 
@@ -108,7 +110,8 @@ class TickMotionTest {
                     List.of(),
                     List.of(),
                     log.drainDashes(),
-                    log.forcedAnimations(frame.tick(), present)));
+                    log.forcedAnimations(frame.tick(), present),
+                    log.animationParameters(present)));
           });
     }
 
@@ -390,6 +393,69 @@ class TickMotionTest {
     }
     assertThat(rams.get(rams.size() - 1)).as("the Ram fell").isNull();
     assertThat(riders.get(riders.size() - 1)).as("its rider left with it").isNull();
+  }
+
+  @Test
+  @DisplayName(
+      "an evolved Angry Barbarian's PropState is told in its frames: 1 while it holds its"
+          + " projectile, then 0 once thrown, from the frame after each set; a Knight holds none")
+  void angryBarbarianPropState() {
+    Played played = new Played();
+    CharacterEntity barbarian =
+        played.battle.deploy(
+            0,
+            played.battle.getWorld().getRecords().unit("AngryBarbarian_EV1"),
+            LEVEL,
+            0,
+            3500,
+            18000,
+            "AngryBarbarian_EV1");
+    played.play(1, "Knight", 1, 3500, 24000).run(200);
+    List<EntityFrame> frames =
+        played.framesOf(barbarian.getId()).stream().filter(f -> f != null).toList();
+    List<Integer> props =
+        frames.stream()
+            .flatMap(f -> f.animationParameters().stream())
+            .filter(p -> p.name().equals("PropState"))
+            .map(AnimationParameterFrame::value)
+            .toList();
+    assertThat(props).as("told").isNotEmpty();
+    assertThat(props.get(0)).as("with its projectile").isEqualTo(1);
+    assertThat(props.get(props.size() - 1)).as("thrown").isZero();
+    assertThat(frames).allMatch(f -> f.animationParameters().size() <= 1);
+    assertThat(played.framesOf(played.idOf("Knight", 1)))
+        .filteredOn(e -> e != null)
+        .allMatch(e -> e.animationParameters().isEmpty());
+  }
+
+  @Test
+  @DisplayName(
+      "an animation parameter is held at its last value, each parameter on its own, until its"
+          + " entity leaves the frame; a stopped log holds none")
+  void animationParameterLifetime() {
+    Played played = new Played().play(1, "Knight", 0, 4500, 9000).run(25);
+    CharacterEntity knight = played.battle.getPlays().get(0).units().get(0);
+    int id = knight.getId();
+    TickEventLog log = new TickEventLog();
+    assertThat(log.animationParameters(Set.of(id))).isEmpty();
+
+    log.animationModifierSet(30, knight, "a", "PropState", 1);
+    log.animationModifierSet(30, knight, "b", "Other", 3);
+    assertThat(log.animationParameters(Set.of(id)))
+        .containsExactly(Map.entry(id, Map.of("PropState", 1, "Other", 3)));
+    log.animationModifierSet(31, knight, "c", "PropState", 0);
+    assertThat(log.animationParameters(Set.of(id)).get(id))
+        .as("the last value, kept in the order first set")
+        .containsExactly(Map.entry("PropState", 0), Map.entry("Other", 3));
+    assertThat(log.animationParameters(Set.of(id))).as("held").containsKey(id);
+
+    assertThat(log.animationParameters(Set.of())).as("it left").isEmpty();
+    assertThat(log.animationParameters(Set.of(id))).as("not back").isEmpty();
+
+    log.animationModifierSet(40, knight, "a", "PropState", 1);
+    log.stop();
+    log.animationModifierSet(41, knight, "a", "PropState", 1);
+    assertThat(log.animationParameters(Set.of(id))).as("a stopped log holds none").isEmpty();
   }
 
   /**
