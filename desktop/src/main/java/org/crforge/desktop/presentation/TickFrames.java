@@ -240,7 +240,8 @@ final class TickFrames {
         attack(view.attack()),
         view.charge().progress(),
         view.charge().charging(),
-        forced);
+        forced,
+        view.carrierId() == EntityView.NO_CARRIER ? EntityFrame.NO_CARRIER : view.carrierId());
   }
 
   /**

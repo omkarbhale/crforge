@@ -67,6 +67,8 @@ import org.crforge.core.pathfinding.GridUnitState;
  *     {@link Attack#NONE} otherwise
  * @param charge a character's charge as its movement component and tags hold it, copied after the
  *     step; {@link Charge#NONE} otherwise
+ * @param carrierId the id of the character a rider is attached to (its spawner's row attaches its
+ *     children), until that character leaves; {@link #NO_CARRIER} otherwise
  */
 public record EntityView(
     int id,
@@ -109,10 +111,102 @@ public record EntityView(
     UnitRole role,
     Bar bar,
     Attack attack,
-    Charge charge) {
+    Charge charge,
+    int carrierId) {
+
+  /** The carrier id of an entity attached to nothing. */
+  public static final int NO_CARRIER = -1;
 
   public EntityView {
     statuses = List.copyOf(statuses);
+  }
+
+  /** A view of an entity attached to nothing ({@link #NO_CARRIER}). */
+  public EntityView(
+      int id,
+      Kind kind,
+      int side,
+      String name,
+      int level,
+      int x,
+      int y,
+      int radius,
+      int hitPoints,
+      int maxHitPoints,
+      int shield,
+      int maxShield,
+      boolean air,
+      boolean king,
+      int state,
+      boolean deploying,
+      boolean hidden,
+      int range,
+      int minimumRange,
+      int sightRange,
+      boolean hasTarget,
+      int targetX,
+      int targetY,
+      int headingX,
+      int headingY,
+      int lifeMs,
+      int lifetimeMs,
+      int aimX,
+      int aimY,
+      int radiusY,
+      int bodyRadius,
+      int bodyRadiusY,
+      int height,
+      int speed,
+      GridUnitState grid,
+      ActionMeter meter,
+      List<UnitStatus> statuses,
+      UnitRole role,
+      Bar bar,
+      Attack attack,
+      Charge charge) {
+    this(
+        id,
+        kind,
+        side,
+        name,
+        level,
+        x,
+        y,
+        radius,
+        hitPoints,
+        maxHitPoints,
+        shield,
+        maxShield,
+        air,
+        king,
+        state,
+        deploying,
+        hidden,
+        range,
+        minimumRange,
+        sightRange,
+        hasTarget,
+        targetX,
+        targetY,
+        headingX,
+        headingY,
+        lifeMs,
+        lifetimeMs,
+        aimX,
+        aimY,
+        radiusY,
+        bodyRadius,
+        bodyRadiusY,
+        height,
+        speed,
+        grid,
+        meter,
+        statuses,
+        role,
+        bar,
+        attack,
+        charge,
+        NO_CARRIER);
   }
 
   /**
