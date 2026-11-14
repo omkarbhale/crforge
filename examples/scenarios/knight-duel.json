@@ -1,0 +1,11 @@
+{
+  "crforgeScenario": 1,
+  "name": "Knight duel at the bridge",
+  "description": "One Knight a side, dropped at x 3.5 just short of the river on each side; the towers hold their fire.",
+  "endTime": 30,
+  "towers": { "attack": false },
+  "plays": [
+    { "side": 0, "card": "Knight", "at": [3.5, 13.5] },
+    { "side": 1, "card": "Knight", "at": [3.5, 18.5] }
+  ]
+}

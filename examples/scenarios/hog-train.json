@@ -1,0 +1,14 @@
+{
+  "crforgeScenario": 1,
+  "name": "Hog Rider train",
+  "description": "Side 0 sends five Hog Riders down the lane at x 14.5, one every half second, against side 1's level 9 princess towers; side 1 answers with a level 9 Valkyrie a second later.",
+  "endTime": 40,
+  "towers": [
+    { "level": 11 },
+    { "level": 9, "kingLevel": 11 }
+  ],
+  "plays": [
+    { "side": 0, "card": "HogRider", "count": 5, "at": [14.5, 12.5], "every": 0.5 },
+    { "side": 1, "card": "Valkyrie", "level": 9, "at": [14.5, 24.5], "time": 1 }
+  ]
+}

@@ -17,6 +17,7 @@ import org.crforge.core.battle.match.LadderMatch;
 import org.crforge.core.battle.replay.ReplayBattle;
 import org.crforge.core.battle.replay.ScenarioPlan;
 import org.crforge.core.battle.replay.UnsupportedScenarioException;
+import org.crforge.core.battle.scenario.ScenarioScript;
 import org.crforge.core.battle.unit.Standard1v1Battle;
 import org.crforge.desktop.battle.AreaHitLog;
 import org.crforge.desktop.battle.BattleSession;
@@ -32,6 +33,10 @@ import org.crforge.desktop.render.ViewOrientation;
  * each play's item is checked against the item the battle built for it ({@link
  * ReplayBattle#checkItems}), as a conformance run checks it: a play that ran with another item
  * halts the session with the reason, since the battle has left the replay.
+ *
+ * <p>A hand-written scenario ({@link ScenarioScript}) plays the same way, on a battle with no
+ * match: its plays carry no item to check, a play the battle cannot place is noted, and the battle
+ * has no result of its own, so it plays to the scenario's end tick.
  *
  * <p>The replay stops at its end tick, or when the battle ends by its own rule, whichever is first;
  * a replay that gives no end tick plays until the battle ends. A refused replay has no session.
@@ -90,6 +95,11 @@ public final class ReplayPlayer {
     areaHits.clear();
     if (!replay.playable()) {
       session = null;
+      return;
+    }
+    if (replay.script() != null) {
+      ScenarioScript script = replay.script();
+      session = BattleSession.of(script.build(tables), script.playCards());
       return;
     }
     ScenarioPlan plan = replay.plan();
@@ -231,11 +241,7 @@ public final class ReplayPlayer {
     }
     int endTick = replay.header().endTick();
     lines.add("tick " + session.tick() + (endTick < 0 ? "" : " / " + endTick));
-    lines.add(
-        "commands run "
-            + (playsRead + abilitiesRead)
-            + " / "
-            + (replay.plan().plays().size() + replay.plan().abilities().size()));
+    lines.add("commands run " + (playsRead + abilitiesRead) + " / " + commandCount());
     lines.add("speed " + speed + "x" + (paused ? ", paused" : ""));
     String stop = stopReason();
     if (stop != null) {
@@ -246,6 +252,14 @@ public final class ReplayPlayer {
       lines.add("recorded result: " + replay.recordedResult());
     }
     return lines;
+  }
+
+  /** How many commands the replay or scenario gives. */
+  private int commandCount() {
+    if (replay.script() != null) {
+      return replay.script().plays().size();
+    }
+    return replay.plan().plays().size() + replay.plan().abilities().size();
   }
 
   /** Why the replay stopped, or null while it plays. */
@@ -273,6 +287,9 @@ public final class ReplayPlayer {
    */
   public String battleResult(ViewOrientation view) {
     LadderMatch match = session.match();
+    if (match == null) {
+      return "none, a scenario has no match (tick " + session.tick() + ")";
+    }
     List<Integer> order = view.sidesBottomFirst();
     String crowns = "crowns " + match.crowns(order.get(0)) + " - " + match.crowns(order.get(1));
     if (!match.isEnded()) {
@@ -301,13 +318,31 @@ public final class ReplayPlayer {
         session.note(
             play.side(),
             " plays " + card(play.name()) + " on tick " + play.tick() + " (" + play.name() + ")");
+      } else if (replay.script() != null) {
+        session.note(
+            play.side(),
+            " cannot place "
+                + card(play.name())
+                + " at ("
+                + play.x()
+                + ", "
+                + play.y()
+                + ") on tick "
+                + play.tick()
+                + " ("
+                + play.name()
+                + ")");
       }
     }
-    try {
-      playsRead = ReplayBattle.checkItems(battle, replay.plan(), playsRead);
-    } catch (UnsupportedScenarioException e) {
+    if (replay.script() != null) {
       playsRead = plays.size();
-      session.halt("the battle left the replay, " + e.getMessage());
+    } else {
+      try {
+        playsRead = ReplayBattle.checkItems(battle, replay.plan(), playsRead);
+      } catch (UnsupportedScenarioException e) {
+        playsRead = plays.size();
+        session.halt("the battle left the replay, " + e.getMessage());
+      }
     }
     List<Standard1v1Battle.AbilityUse> uses = battle.getAbilityUses();
     for (; abilitiesRead < uses.size(); abilitiesRead++) {
@@ -333,6 +368,9 @@ public final class ReplayPlayer {
 
   /** The card a play was given for, by the play's name. */
   private String card(String playName) {
+    if (replay.script() != null) {
+      return replay.script().playCards().getOrDefault(playName, playName);
+    }
     return replay.plan().plays().stream()
         .filter(play -> name(play.index()).equals(playName))
         .map(ScenarioPlan.Play::card)

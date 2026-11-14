@@ -1,5 +1,9 @@
 # Examples
 
+## Scenarios
+
+[scenarios/](scenarios/) holds hand-written scenarios: named cards played by either side at named points and ticks, in a battle with no match. The viewer opens them with `--replay`, like a replay. [scenarios/README.md](scenarios/README.md) documents the format and how to run them, also on Windows with the crforge-render plugin.
+
 ## Replays
 
 [replays/ladder.json](replays/ladder.json) is a replay file the replay viewer opens. Run from the repository root:

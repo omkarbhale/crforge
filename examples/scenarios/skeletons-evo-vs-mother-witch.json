@@ -1,0 +1,24 @@
+{
+  "crforgeScenario": 1,
+  "name": "20 evolved Skeletons vs 20 Mother Witches",
+  "description": "Side 0 drops 20 evolved Skeletons and side 1 20 Mother Witches on the same tick, each card in its own column across the arena's width.",
+  "seed": 1,
+  "endTime": 90,
+  "plays": [
+    {
+      "side": 0,
+      "card": "Skeletons",
+      "form": "evolved",
+      "count": 20,
+      "line": { "from": [0.5, 11.5], "to": [17.5, 11.5] },
+      "time": 0
+    },
+    {
+      "side": 1,
+      "card": "WitchMother",
+      "count": 20,
+      "line": { "from": [0.5, 20.5], "to": [17.5, 20.5] },
+      "time": 0
+    }
+  ]
+}

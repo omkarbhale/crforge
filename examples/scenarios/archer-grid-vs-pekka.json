@@ -1,0 +1,16 @@
+{
+  "crforgeScenario": 1,
+  "name": "Archer grid vs P.E.K.K.A",
+  "description": "A 4 by 3 grid of Archers (two to a card, so 24 archers) holds the middle while a P.E.K.K.A and an evolved Knight walk in; side 1 drops a Fireball on the grid at 6 seconds.",
+  "endTime": 60,
+  "plays": [
+    {
+      "side": 0,
+      "card": "Archer",
+      "grid": { "from": [5.5, 7.5], "to": [12.5, 11.5], "columns": 4, "rows": 3 }
+    },
+    { "side": 1, "card": "Pekka", "at": [9, 24.5], "time": 0 },
+    { "side": 1, "card": "Knight", "form": "evolved", "at": [9, 26.5], "time": 0.5 },
+    { "side": 1, "card": "Fireball", "at": [9, 9.5], "time": 6, "comment": "a spell may be cast on the other half" }
+  ]
+}

@@ -142,4 +142,8 @@ tasks.test {
     systemProperty("crforge.exampleReplay", exampleReplay.absolutePath)
     // an input, so an edit of the file runs the tests again
     inputs.file(exampleReplay).withPropertyName("exampleReplay")
+    // the example scenarios, each of which ExampleScenariosTest reads and plays
+    val exampleScenarios = rootProject.file("examples/scenarios")
+    systemProperty("crforge.exampleScenarios", exampleScenarios.absolutePath)
+    inputs.dir(exampleScenarios).withPropertyName("exampleScenarios")
 }

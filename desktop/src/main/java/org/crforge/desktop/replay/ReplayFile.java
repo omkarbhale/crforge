@@ -23,6 +23,8 @@ import org.crforge.core.battle.replay.ReplayBattle;
 import org.crforge.core.battle.replay.ReplayCapture;
 import org.crforge.core.battle.replay.ReplayScenario;
 import org.crforge.core.battle.replay.ScenarioPlan;
+import org.crforge.core.battle.scenario.ScenarioScript;
+import org.crforge.core.battle.scenario.ScenarioScriptException;
 import org.crforge.core.battle.unit.Standard1v1Battle;
 import org.crforge.desktop.render.ViewOrientation;
 import org.crforge.desktop.render.ViewState;
@@ -51,6 +53,11 @@ import org.crforge.desktop.render.ViewState;
  * names them, and whether the tables' data version is the one the block names, or only assumed for
  * a replay without a block. A block that names other data than the tables' is one of the mapping's
  * refusals; whoever chose the tables may list why it could not find the replay's own first.
+ *
+ * <p>A file with a top-level {@code crforgeScenario} field is a hand-written scenario instead
+ * ({@link ScenarioScript}): named card rows played at named points and ticks in a battle with no
+ * match. It is read by its own format, its problems are its refusals, and it plays as a replay
+ * does.
  */
 public final class ReplayFile {
 
@@ -73,6 +80,7 @@ public final class ReplayFile {
   private final Header header;
   private final List<String> refusals;
   private final ScenarioPlan plan;
+  private final ScenarioScript script;
   private final ReplaySkins skins;
 
   /**
@@ -101,6 +109,7 @@ public final class ReplayFile {
       Header header,
       List<String> refusals,
       ScenarioPlan plan,
+      ScenarioScript script,
       ReplaySkins skins) {
     this.path = path;
     this.line = line;
@@ -110,6 +119,7 @@ public final class ReplayFile {
     this.header = header;
     this.refusals = List.copyOf(refusals);
     this.plan = plan;
+    this.script = script;
     this.skins = skins;
   }
 
@@ -166,6 +176,9 @@ public final class ReplayFile {
    */
   public static ReplayFile parse(
       Path path, int line, JsonNode document, GameTables tables, String tablesRefusal) {
+    if (ScenarioScript.isScenario(document)) {
+      return parseScenario(path, line, document, tables);
+    }
     ReplayScenario mapping = new ReplayScenario(tables);
     Header header = header(document, mapping);
     List<String> refusals = new ArrayList<>();
@@ -203,7 +216,48 @@ public final class ReplayFile {
         header,
         refusals,
         plan,
+        null,
         ReplaySkins.of(document));
+  }
+
+  /** Reads a scenario file ({@link ScenarioScript}): its problems are its refusals. */
+  private static ReplayFile parseScenario(
+      Path path, int line, JsonNode document, GameTables tables) {
+    List<String> refusals = new ArrayList<>();
+    ScenarioScript script = null;
+    try {
+      script = ScenarioScript.read(document, tables);
+      // The battle is built once here, so a refusal to set it up is listed before any window.
+      script.build(tables);
+    } catch (ScenarioScriptException e) {
+      refusals.addAll(e.problems());
+      script = null;
+    } catch (RuntimeException e) {
+      refusals.add("the battle core refuses to set up the scenario's battle: " + reason(e));
+      script = null;
+    }
+    Header header;
+    if (script != null) {
+      header =
+          new Header(
+              "scenario, no match" + (script.name().isEmpty() ? "" : ": " + script.name()),
+              "standard arena",
+              script.cardsBySide(),
+              script.endTick(),
+              script.plays().size(),
+              Map.of());
+    } else {
+      header =
+          new Header(
+              "scenario, no match",
+              "standard arena",
+              List.of(List.of(), List.of()),
+              document.path("endTick").asInt(-1),
+              document.path("plays").size(),
+              Map.of());
+    }
+    return new ReplayFile(
+        path, line, tables, null, header, refusals, null, script, ReplaySkins.of(document));
   }
 
   /** Where the replay came from. */
@@ -262,6 +316,9 @@ public final class ReplayFile {
    * with the client version and capture time, or the data version is assumed.
    */
   public String dataLine() {
+    if (isScenario()) {
+      return "Scenario: hand-written, no match, played on data version " + dataVersion;
+    }
     if (capture == null) {
       return "Replay: data version assumed, the replay does not name the data it was recorded on";
     }
@@ -291,10 +348,20 @@ public final class ReplayFile {
 
   /** Whether the replay can be played: nothing refused it. */
   public boolean playable() {
-    return plan != null;
+    return plan != null || script != null;
   }
 
-  /** The replay translated into the battle's inputs, or null for a refused replay. */
+  /** The hand-written scenario, or null for a replay ({@link ScenarioScript}). */
+  public ScenarioScript script() {
+    return script;
+  }
+
+  /** Whether the file is a hand-written scenario rather than a replay. */
+  public boolean isScenario() {
+    return script != null || header.gameMode().startsWith("scenario");
+  }
+
+  /** The replay translated into the battle's inputs, or null for a refused replay or a scenario. */
   public ScenarioPlan plan() {
     return plan;
   }
@@ -318,6 +385,9 @@ public final class ReplayFile {
    * @param view the orientation whose colours and places label the decks
    */
   public List<String> describe(ViewOrientation view) {
+    if (isScenario()) {
+      return describeScenario(view);
+    }
     List<String> lines = new ArrayList<>();
     lines.add("replay: " + path.toAbsolutePath().normalize() + (line > 0 ? ", line " + line : ""));
     lines.add("  recorded on: " + recordedOn());
@@ -351,6 +421,42 @@ public final class ReplayFile {
     } else {
       lines.add(
           "  refused, " + refusals.size() + (refusals.size() == 1 ? " reason:" : " reasons:"));
+      for (String refusal : refusals) {
+        lines.add("    - " + refusal);
+      }
+    }
+    return lines;
+  }
+
+  /** The lines a scenario file is described by. */
+  private List<String> describeScenario(ViewOrientation view) {
+    List<String> lines = new ArrayList<>();
+    lines.add(
+        "scenario: " + path.toAbsolutePath().normalize() + (line > 0 ? ", line " + line : ""));
+    lines.add("  data version: " + dataVersion + " (content sha " + contentSha + ")");
+    lines.add("  " + header.gameMode());
+    if (script != null && !script.description().isEmpty()) {
+      lines.add("  description: " + script.description());
+    }
+    for (int side = 0; side < header.decks().size(); side++) {
+      lines.add(
+          "  side "
+              + side
+              + " ("
+              + view.sideName(side)
+              + ", "
+              + (view.atTop(side) ? "top" : "bottom")
+              + ") plays: "
+              + (header.decks().get(side).isEmpty()
+                  ? "nothing"
+                  : String.join(", ", header.decks().get(side))));
+    }
+    lines.add("  end tick: " + header.endTick());
+    if (refusals.isEmpty()) {
+      lines.add("  plays: " + script.plays().size());
+    } else {
+      lines.add(
+          "  refused, " + refusals.size() + (refusals.size() == 1 ? " problem:" : " problems:"));
       for (String refusal : refusals) {
         lines.add("    - " + refusal);
       }
