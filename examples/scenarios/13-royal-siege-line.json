@@ -1,0 +1,22 @@
+{
+  "crforgeScenario": 1,
+  "name": "Royal Siege Line",
+  "description": "18 Royal Giants (side 0), one per column, march on side 1's towers.",
+  "plays": [
+    {
+      "side": 0,
+      "card": "RoyalGiant",
+      "count": 18,
+      "line": {
+        "from": [
+          0.5,
+          13.5
+        ],
+        "to": [
+          17.5,
+          13.5
+        ]
+      }
+    }
+  ]
+}

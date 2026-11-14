@@ -1,0 +1,33 @@
+{
+  "crforgeScenario": 1,
+  "name": "Champion Showdown",
+  "description": "One Boss Bandit (side 1) against 20 Skeleton Armies (side 0).",
+  "plays": [
+    {
+      "side": 1,
+      "card": "BossBandit",
+      "at": [
+        9,
+        19.5
+      ]
+    },
+    {
+      "side": 0,
+      "card": "SkeletonArmy",
+      "count": 20,
+      "grid": {
+        "from": [
+          1.5,
+          11.5
+        ],
+        "to": [
+          16.5,
+          13.5
+        ],
+        "columns": 10,
+        "rows": 2
+      },
+      "time": 1
+    }
+  ]
+}

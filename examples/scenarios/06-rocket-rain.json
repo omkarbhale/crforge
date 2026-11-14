@@ -1,0 +1,16 @@
+{
+  "crforgeScenario": 1,
+  "name": "Rocket Rain",
+  "description": "15 Rockets on the enemy king at once (side 0). Over in seconds.",
+  "plays": [
+    {
+      "side": 0,
+      "card": "Rocket",
+      "count": 15,
+      "at": [
+        9,
+        29
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "crforgeScenario": 1,
+  "name": "Mega Knight Party",
+  "description": "15 Mega Knights (side 0) jump into 20 Goblin Gangs (side 1).",
+  "plays": [
+    {
+      "side": 1,
+      "card": "GoblinGang",
+      "count": 20,
+      "grid": {
+        "from": [
+          1.5,
+          18.5
+        ],
+        "to": [
+          16.5,
+          21.5
+        ],
+        "columns": 10,
+        "rows": 2
+      }
+    },
+    {
+      "side": 0,
+      "card": "MegaKnight",
+      "count": 15,
+      "line": {
+        "from": [
+          1.5,
+          13.5
+        ],
+        "to": [
+          16.5,
+          13.5
+        ]
+      },
+      "time": 2
+    }
+  ]
+}

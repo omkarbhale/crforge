@@ -1,0 +1,24 @@
+{
+  "crforgeScenario": 1,
+  "name": "Graveyard Everywhere",
+  "description": "10 Graveyards cover side 1's half (cast by side 0); side 1's towers fight back.",
+  "plays": [
+    {
+      "side": 0,
+      "card": "Graveyard",
+      "count": 10,
+      "grid": {
+        "from": [
+          3.5,
+          20.5
+        ],
+        "to": [
+          14.5,
+          28.5
+        ],
+        "columns": 5,
+        "rows": 2
+      }
+    }
+  ]
+}

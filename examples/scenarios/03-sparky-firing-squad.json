@@ -1,0 +1,40 @@
+{
+  "crforgeScenario": 1,
+  "name": "Sparky Firing Squad",
+  "description": "10 Sparkys in a line (side 1) hold the bridge against 30 Barbarians charging across (side 0).",
+  "plays": [
+    {
+      "side": 1,
+      "card": "ZapMachine",
+      "count": 10,
+      "line": {
+        "from": [
+          1.5,
+          21.5
+        ],
+        "to": [
+          16.5,
+          21.5
+        ]
+      }
+    },
+    {
+      "side": 0,
+      "card": "Barbarians",
+      "count": 30,
+      "grid": {
+        "from": [
+          1.5,
+          12.5
+        ],
+        "to": [
+          16.5,
+          14.5
+        ],
+        "columns": 10,
+        "rows": 3
+      },
+      "time": 1
+    }
+  ]
+}

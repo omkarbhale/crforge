@@ -1,0 +1,37 @@
+{
+  "crforgeScenario": 1,
+  "name": "Horde vs Horde",
+  "description": "20 Minion Hordes a side, one row each, on the same tick.",
+  "plays": [
+    {
+      "side": 0,
+      "card": "MinionHorde",
+      "count": 20,
+      "line": {
+        "from": [
+          0.5,
+          13.5
+        ],
+        "to": [
+          17.5,
+          13.5
+        ]
+      }
+    },
+    {
+      "side": 1,
+      "card": "MinionHorde",
+      "count": 20,
+      "line": {
+        "from": [
+          0.5,
+          18.5
+        ],
+        "to": [
+          17.5,
+          18.5
+        ]
+      }
+    }
+  ]
+}

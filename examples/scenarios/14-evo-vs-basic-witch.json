@@ -1,0 +1,38 @@
+{
+  "crforgeScenario": 1,
+  "name": "Evo vs Basic",
+  "description": "10 evolved Witches (side 0) against 10 plain Witches (side 1): the evolution, side by side.",
+  "plays": [
+    {
+      "side": 0,
+      "card": "Witch",
+      "form": "evolved",
+      "count": 10,
+      "line": {
+        "from": [
+          1.5,
+          13.5
+        ],
+        "to": [
+          16.5,
+          13.5
+        ]
+      }
+    },
+    {
+      "side": 1,
+      "card": "Witch",
+      "count": 10,
+      "line": {
+        "from": [
+          1.5,
+          18.5
+        ],
+        "to": [
+          16.5,
+          18.5
+        ]
+      }
+    }
+  ]
+}

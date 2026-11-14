@@ -1,0 +1,39 @@
+{
+  "crforgeScenario": 1,
+  "name": "Barrel Barrage",
+  "description": "18 Princesses in a line (side 0); side 1 throws 18 Goblin Barrels into them, one every quarter second.",
+  "plays": [
+    {
+      "side": 0,
+      "card": "Princess",
+      "count": 18,
+      "line": {
+        "from": [
+          0.5,
+          12.5
+        ],
+        "to": [
+          17.5,
+          12.5
+        ]
+      }
+    },
+    {
+      "side": 1,
+      "card": "GoblinBarrel",
+      "count": 18,
+      "line": {
+        "from": [
+          0.5,
+          12.5
+        ],
+        "to": [
+          17.5,
+          12.5
+        ]
+      },
+      "time": 3,
+      "every": 0.25
+    }
+  ]
+}

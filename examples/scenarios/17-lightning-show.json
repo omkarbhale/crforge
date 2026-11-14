@@ -1,0 +1,40 @@
+{
+  "crforgeScenario": 1,
+  "name": "Lightning Show",
+  "description": "A 10 by 4 grid of Archers (side 0); side 1 drops 10 Lightnings on them, one every 0.3 seconds.",
+  "plays": [
+    {
+      "side": 0,
+      "card": "Archer",
+      "grid": {
+        "from": [
+          1.5,
+          9.5
+        ],
+        "to": [
+          16.5,
+          13.5
+        ],
+        "columns": 10,
+        "rows": 4
+      }
+    },
+    {
+      "side": 1,
+      "card": "Lightning",
+      "count": 10,
+      "line": {
+        "from": [
+          2.5,
+          11.5
+        ],
+        "to": [
+          15.5,
+          11.5
+        ]
+      },
+      "time": 3,
+      "every": 0.3
+    }
+  ]
+}

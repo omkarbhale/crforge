@@ -71,7 +71,7 @@ class ExampleScenariosTest {
   void skeletonsAndMotherWitchesAllDeployTogether() throws IOException {
     Path file =
         Paths.get(System.getProperty("crforge.exampleScenarios"))
-            .resolve("skeletons-evo-vs-mother-witch.json");
+            .resolve("01-skeletons-evo-vs-mother-witch.json");
     ReplayPlayer player =
         new ReplayPlayer(ReplayFile.read(file, Replays.tables()), Replays.tables());
 

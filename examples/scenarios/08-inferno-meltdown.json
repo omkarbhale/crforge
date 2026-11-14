@@ -1,0 +1,38 @@
+{
+  "crforgeScenario": 1,
+  "name": "Inferno Meltdown",
+  "description": "10 Inferno Dragons (side 1) melt 10 Golems (side 0).",
+  "plays": [
+    {
+      "side": 0,
+      "card": "Golem",
+      "count": 10,
+      "line": {
+        "from": [
+          1,
+          11
+        ],
+        "to": [
+          17,
+          11
+        ]
+      }
+    },
+    {
+      "side": 1,
+      "card": "InfernoDragon",
+      "count": 10,
+      "line": {
+        "from": [
+          1.5,
+          21.5
+        ],
+        "to": [
+          16.5,
+          21.5
+        ]
+      },
+      "time": 4
+    }
+  ]
+}

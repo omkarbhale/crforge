@@ -1,0 +1,41 @@
+{
+  "crforgeScenario": 1,
+  "name": "Balloon Storm",
+  "description": "20 Balloons in one lane (side 0) against 20 Musketeers waiting for them (side 1).",
+  "plays": [
+    {
+      "side": 0,
+      "card": "Balloon",
+      "count": 20,
+      "grid": {
+        "from": [
+          12.5,
+          11.5
+        ],
+        "to": [
+          16.5,
+          14.5
+        ],
+        "columns": 5,
+        "rows": 4
+      }
+    },
+    {
+      "side": 1,
+      "card": "Musketeer",
+      "count": 20,
+      "grid": {
+        "from": [
+          10.5,
+          20.5
+        ],
+        "to": [
+          16.5,
+          23.5
+        ],
+        "columns": 5,
+        "rows": 4
+      }
+    }
+  ]
+}

@@ -15,13 +15,13 @@ A scenario file opens like a replay, with `--replay` (or by dropping it on the v
 On Linux or WSL, from the repository root:
 
 ```bash
-./gradlew :desktop:run -Pcrforge.assetSource=cdn --args="--replay $PWD/examples/scenarios/skeletons-evo-vs-mother-witch.json"
+./gradlew :desktop:run -Pcrforge.assetSource=cdn --args="--replay $PWD/examples/scenarios/01-skeletons-evo-vs-mother-witch.json"
 ```
 
 With the crforge-render plugin drawing it, add `--plugin <jar>` inside the same quotes:
 
 ```bash
-./gradlew :desktop:run -Pcrforge.assetSource=cdn --args="--plugin /path/to/crforge-render-plugin-0.1.0.jar --replay $PWD/examples/scenarios/skeletons-evo-vs-mother-witch.json"
+./gradlew :desktop:run -Pcrforge.assetSource=cdn --args="--plugin /path/to/crforge-render-plugin-0.1.0.jar --replay $PWD/examples/scenarios/01-skeletons-evo-vs-mother-witch.json"
 ```
 
 ### On Windows
@@ -35,7 +35,7 @@ You need Git for Windows and a Java 21 JDK (for example `winget install Microsof
 cd C:\
 git clone --branch scenario-mode https://github.com/omkarbhale/crforge.git
 cd crforge
-gradlew.bat :desktop:run -Pcrforge.assetSource=cdn --args="--plugin C:\crforge-plugins\crforge-render-plugin-0.1.0.jar --replay C:\crforge\examples\scenarios\skeletons-evo-vs-mother-witch.json"
+gradlew.bat :desktop:run -Pcrforge.assetSource=cdn --args="--plugin C:\crforge-plugins\crforge-render-plugin-0.1.0.jar --replay C:\crforge\examples\scenarios\01-skeletons-evo-vs-mother-witch.json"
 ```
 
 If you already have a clone, run `git fetch origin` and then `git checkout scenario-mode` instead of cloning.
@@ -125,16 +125,42 @@ The three layouts:
 
 Plays run in the order they are dropped. Plays dropped on the same tick run in the file's order. A scenario expands to at most 2000 plays. When it gives an end, every play must deploy by then.
 
-## The examples
+## The twenty
+
+Numbered scenarios made to be watched (and recorded). None gives an end time: each plays until the match ends.
+
+| File | Scenario |
+|---|---|
+| [01-skeletons-evo-vs-mother-witch.json](01-skeletons-evo-vs-mother-witch.json) | **20 evolved Skeletons vs 20 Mother Witches.** Side 0 drops 20 evolved Skeletons and side 1 20 Mother Witches on the same tick, each card in its own column across the arena's width. |
+| [02-golem-wall.json](02-golem-wall.json) | **Golem Wall.** 10 Golems shoulder to shoulder (side 0) walk into 20 Skeleton Armies (side 1). |
+| [03-sparky-firing-squad.json](03-sparky-firing-squad.json) | **Sparky Firing Squad.** 10 Sparkys in a line (side 1) hold the bridge against 30 Barbarians charging across (side 0). |
+| [04-balloon-storm.json](04-balloon-storm.json) | **Balloon Storm.** 20 Balloons in one lane (side 0) against 20 Musketeers waiting for them (side 1). |
+| [05-hog-train.json](05-hog-train.json) | **Hog Train.** 40 Hog Riders, one every tenth of a second, down one lane (side 0) at level 16 towers (side 1). |
+| [06-rocket-rain.json](06-rocket-rain.json) | **Rocket Rain.** 15 Rockets on the enemy king at once (side 0). Over in seconds. |
+| [07-mega-knight-party.json](07-mega-knight-party.json) | **Mega Knight Party.** 15 Mega Knights (side 0) jump into 20 Goblin Gangs (side 1). |
+| [08-inferno-meltdown.json](08-inferno-meltdown.json) | **Inferno Meltdown.** 10 Inferno Dragons (side 1) melt 10 Golems (side 0). |
+| [09-stun-lock.json](09-stun-lock.json) | **Stun Lock.** 12 Electro Wizards (side 1) against 12 P.E.K.K.As (side 0). |
+| [10-graveyard-everywhere.json](10-graveyard-everywhere.json) | **Graveyard Everywhere.** 10 Graveyards cover side 1's half (cast by side 0); side 1's towers fight back. |
+| [11-hound-pop.json](11-hound-pop.json) | **Hound Pop.** 10 Lava Hounds (side 0) fly into 20 Baby Dragons (side 1), then the pups. |
+| [12-horde-vs-horde.json](12-horde-vs-horde.json) | **Horde vs Horde.** 20 Minion Hordes a side, one row each, on the same tick. |
+| [13-royal-siege-line.json](13-royal-siege-line.json) | **Royal Siege Line.** 18 Royal Giants (side 0), one per column, march on side 1's towers. |
+| [14-evo-vs-basic-witch.json](14-evo-vs-basic-witch.json) | **Evo vs Basic.** 10 evolved Witches (side 0) against 10 plain Witches (side 1): the evolution, side by side. |
+| [15-level-1-army-vs-level-16-pekka.json](15-level-1-army-vs-level-16-pekka.json) | **Level 1 Army vs Level 16 P.E.K.K.A.** 30 level 1 Knights (side 0) against one level 16 P.E.K.K.A (side 1). |
+| [16-barrel-barrage.json](16-barrel-barrage.json) | **Barrel Barrage.** 18 Princesses in a line (side 0); side 1 throws 18 Goblin Barrels into them, one every quarter second. |
+| [17-lightning-show.json](17-lightning-show.json) | **Lightning Show.** A 10 by 4 grid of Archers (side 0); side 1 drops 10 Lightnings on them, one every 0.3 seconds. |
+| [18-elite-rush-vs-ice.json](18-elite-rush-vs-ice.json) | **Elite Rush vs Ice.** 10 Elite Barbarians (side 0) charge into 20 Ice Spirits (side 1). |
+| [19-bandit-dash-chain.json](19-bandit-dash-chain.json) | **Bandit Dash Chain.** 15 Bandits (side 0) dash into 15 Valkyries (side 1). |
+| [20-champion-showdown.json](20-champion-showdown.json) | **Champion Showdown.** One Boss Bandit (side 1) against 20 Skeleton Armies (side 0). |
+
+## The format examples
 
 | File | What it shows |
 |---|---|
-| [skeletons-evo-vs-mother-witch.json](skeletons-evo-vs-mother-witch.json) | 20 evolved Skeletons against 20 Mother Witches, all 40 cards on one tick, each in its own column (`line` and `count`, `form`). |
 | [knight-duel.json](knight-duel.json) | One Knight a side, with the towers holding their fire (`at`, `towers.attack`). |
 | [hog-train.json](hog-train.json) | Five Hog Riders half a second apart, against weaker towers on the other side, and a later answer (`every`, per-side `towers`, `level`, `time`). |
 | [archer-grid-vs-pekka.json](archer-grid-vs-pekka.json) | A grid of Archers against a P.E.K.K.A and an evolved Knight, then a Fireball (`grid`, a spell). |
 
-`ExampleScenariosTest` (desktop) opens each file here, as the viewer does, and plays its first 30 seconds, checking that every play is placed. A new file in this folder is tested the same way.
+`ExampleScenariosTest` (desktop) opens each file in this folder, as the viewer does, and plays its first 30 seconds, checking that every play is placed. A new file in this folder is tested the same way.
 
 ## Limits
 

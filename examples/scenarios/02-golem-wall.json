@@ -1,0 +1,39 @@
+{
+  "crforgeScenario": 1,
+  "name": "Golem Wall",
+  "description": "10 Golems shoulder to shoulder (side 0) walk into 20 Skeleton Armies (side 1).",
+  "plays": [
+    {
+      "side": 0,
+      "card": "Golem",
+      "count": 10,
+      "line": {
+        "from": [
+          1,
+          11
+        ],
+        "to": [
+          17,
+          11
+        ]
+      }
+    },
+    {
+      "side": 1,
+      "card": "SkeletonArmy",
+      "count": 20,
+      "grid": {
+        "from": [
+          1.5,
+          19.5
+        ],
+        "to": [
+          16.5,
+          22.5
+        ],
+        "columns": 10,
+        "rows": 2
+      }
+    }
+  ]
+}

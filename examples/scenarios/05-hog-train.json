@@ -1,0 +1,25 @@
+{
+  "crforgeScenario": 1,
+  "name": "Hog Train",
+  "description": "40 Hog Riders, one every tenth of a second, down one lane (side 0) at level 16 towers (side 1).",
+  "towers": [
+    {
+      "level": 11
+    },
+    {
+      "level": 16
+    }
+  ],
+  "plays": [
+    {
+      "side": 0,
+      "card": "HogRider",
+      "count": 40,
+      "at": [
+        14.5,
+        14.5
+      ],
+      "every": 0.1
+    }
+  ]
+}

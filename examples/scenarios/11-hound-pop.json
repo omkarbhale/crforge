@@ -1,0 +1,40 @@
+{
+  "crforgeScenario": 1,
+  "name": "Hound Pop",
+  "description": "10 Lava Hounds (side 0) fly into 20 Baby Dragons (side 1), then the pups.",
+  "plays": [
+    {
+      "side": 0,
+      "card": "LavaHound",
+      "count": 10,
+      "line": {
+        "from": [
+          1.5,
+          11.5
+        ],
+        "to": [
+          16.5,
+          11.5
+        ]
+      }
+    },
+    {
+      "side": 1,
+      "card": "BabyDragon",
+      "count": 20,
+      "grid": {
+        "from": [
+          1.5,
+          20.5
+        ],
+        "to": [
+          16.5,
+          22.5
+        ],
+        "columns": 10,
+        "rows": 2
+      },
+      "time": 3
+    }
+  ]
+}

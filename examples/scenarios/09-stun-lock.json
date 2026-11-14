@@ -1,0 +1,42 @@
+{
+  "crforgeScenario": 1,
+  "name": "Stun Lock",
+  "description": "12 Electro Wizards (side 1) against 12 P.E.K.K.As (side 0).",
+  "plays": [
+    {
+      "side": 0,
+      "card": "Pekka",
+      "count": 12,
+      "grid": {
+        "from": [
+          2.5,
+          11.5
+        ],
+        "to": [
+          15.5,
+          13.5
+        ],
+        "columns": 6,
+        "rows": 2
+      }
+    },
+    {
+      "side": 1,
+      "card": "ElectroWizard",
+      "count": 12,
+      "grid": {
+        "from": [
+          2.5,
+          20.5
+        ],
+        "to": [
+          15.5,
+          22.5
+        ],
+        "columns": 6,
+        "rows": 2
+      },
+      "time": 3
+    }
+  ]
+}

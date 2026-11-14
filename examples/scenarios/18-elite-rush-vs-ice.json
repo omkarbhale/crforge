@@ -1,0 +1,40 @@
+{
+  "crforgeScenario": 1,
+  "name": "Elite Rush vs Ice",
+  "description": "10 Elite Barbarians (side 0) charge into 20 Ice Spirits (side 1).",
+  "plays": [
+    {
+      "side": 0,
+      "card": "AngryBarbarians",
+      "count": 10,
+      "line": {
+        "from": [
+          1.5,
+          13.5
+        ],
+        "to": [
+          16.5,
+          13.5
+        ]
+      }
+    },
+    {
+      "side": 1,
+      "card": "IceSpirits",
+      "count": 20,
+      "grid": {
+        "from": [
+          1.5,
+          18.5
+        ],
+        "to": [
+          16.5,
+          20.5
+        ],
+        "columns": 10,
+        "rows": 2
+      },
+      "time": 1.5
+    }
+  ]
+}
