@@ -65,6 +65,8 @@ import org.crforge.core.pathfinding.GridUnitState;
  * @param bar what a character's bar shows: its health, a timer, or nothing (see {@link Bar})
  * @param attack a character's attack timing as its targeting holds it, copied after the step;
  *     {@link Attack#NONE} otherwise
+ * @param charge a character's charge as its movement component and tags hold it, copied after the
+ *     step; {@link Charge#NONE} otherwise
  */
 public record EntityView(
     int id,
@@ -106,7 +108,8 @@ public record EntityView(
     List<UnitStatus> statuses,
     UnitRole role,
     Bar bar,
-    Attack attack) {
+    Attack attack,
+    Charge charge) {
 
   public EntityView {
     statuses = List.copyOf(statuses);
@@ -134,6 +137,19 @@ public record EntityView(
 
     /** No attack timing: a projectile's or area effect's. */
     public static final Attack NONE = new Attack(0, 0, 0, 0, 0, -1);
+  }
+
+  /**
+   * A character's charge.
+   *
+   * @param progress the movement component's charge progress: -1 while no charge is in progress or
+   *     its movement component is off, else 0 rising toward 10000, complete at 10000 or more
+   * @param charging whether its CHARGING tag bit is set
+   */
+  public record Charge(int progress, boolean charging) {
+
+    /** No charge: anything but a character, or a character with none in progress. */
+    public static final Charge NONE = new Charge(-1, false);
   }
 
   public boolean hasStatus(UnitStatus.Kind kind) {

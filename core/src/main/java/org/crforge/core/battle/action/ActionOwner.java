@@ -205,6 +205,15 @@ public interface ActionOwner {
   }
 
   /**
+   * A forced animation's run or stop started on the owner. It changes nothing the simulation reads;
+   * an owner in a battle tells the battle's observers, so that a view can show it. By default
+   * nothing.
+   *
+   * @param action the row
+   */
+  default void forcedAnimation(ForcedAnimation action) {}
+
+  /**
    * An ActionAbilityDelivered ran on the owner: a character takes the cost of its ability's last
    * use off itself, so its leaving gives nothing back; any other owner is left alone, as the row
    * asks whether its owner is a character before it writes.

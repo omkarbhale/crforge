@@ -38,6 +38,7 @@ import org.crforge.core.pathfinding.GridEntity;
 import org.crforge.core.pathfinding.GridEntityState;
 import org.crforge.core.pathfinding.combat.HitPoints;
 import org.crforge.core.pathfinding.combat.PackedLevel;
+import org.crforge.core.pathfinding.move.MovementState;
 import org.crforge.core.pathfinding.target.TargetView;
 import org.crforge.core.pathfinding.target.TargetingConfig;
 import org.crforge.core.pathfinding.target.TargetingState;
@@ -235,10 +236,28 @@ public final class BattleAdapter {
         statuses(entity),
         kind == EntityView.Kind.TOWER ? UnitRole.NONE : UnitRole.of(data),
         bar,
-        attack(entity));
+        attack(entity),
+        charge(entity));
   }
 
   /** A character's attack timing, read from its targeting component and columns. */
+  /**
+   * A character's charge: its movement component's charge progress while that component is on, and
+   * its CHARGING tag bit.
+   */
+  private static EntityView.Charge charge(WorldEntity entity) {
+    GridEntity view = entity.getView();
+    boolean charging = (view.getFlags() & view.getFlagBits().charging()) != 0;
+    int progress =
+        entity instanceof CharacterEntity character
+                && character.isActive(CharacterEntity.MOVEMENT_SLOT)
+            ? character.getUnit().movement().getChargeProgress()
+            : MovementState.CHARGE_INACTIVE;
+    return progress == MovementState.CHARGE_INACTIVE && !charging
+        ? EntityView.Charge.NONE
+        : new EntityView.Charge(progress, charging);
+  }
+
   private static EntityView.Attack attack(WorldEntity entity) {
     TargetingState targeting = entity.getTargeting();
     TargetingConfig config = targeting.getConfig();
@@ -410,7 +429,8 @@ public final class BattleAdapter {
         List.of(),
         UnitRole.NONE,
         EntityView.Bar.HEALTH,
-        EntityView.Attack.NONE);
+        EntityView.Attack.NONE,
+        EntityView.Charge.NONE);
   }
 
   private static EntityView areaEffect(AreaEffectEntity area) {
@@ -458,7 +478,8 @@ public final class BattleAdapter {
         List.of(),
         UnitRole.NONE,
         EntityView.Bar.HEALTH,
-        EntityView.Attack.NONE);
+        EntityView.Attack.NONE,
+        EntityView.Charge.NONE);
   }
 
   private static BattleFrame.SideView side(BattleSession session, LadderMatch match, int side) {

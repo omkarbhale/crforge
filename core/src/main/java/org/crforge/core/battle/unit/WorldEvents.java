@@ -16,6 +16,7 @@ import org.crforge.core.battle.action.ActionOwner;
 import org.crforge.core.battle.action.BattleAction;
 import org.crforge.core.battle.action.Berserk;
 import org.crforge.core.battle.action.BossBanditAbility;
+import org.crforge.core.battle.action.ForcedAnimation;
 import org.crforge.core.battle.action.GoblinHutLifeState;
 import org.crforge.core.battle.action.ShapeSelector;
 import org.crforge.core.battle.action.SpawnGuard;
@@ -384,6 +385,41 @@ public final class WorldEvents {
   void dashLanded(CharacterEntity unit, WorldEntity hit, int damage, boolean area) {
     for (WorldObserver observer : observers) {
       observer.dashLanded(tick(), unit, hit, damage, area);
+    }
+  }
+
+  /**
+   * Tells every observer that a unit's targeting visit loaded its dash wind-up timer from a timer
+   * at or under 0.
+   *
+   * @param unit the unit
+   * @param windupMs the wind-up the timer was loaded with, in milliseconds
+   */
+  void dashWindupStarted(CharacterEntity unit, int windupMs) {
+    for (WorldObserver observer : observers) {
+      observer.dashWindupStarted(tick(), unit, windupMs);
+    }
+  }
+
+  /**
+   * Tells every observer that a forced animation's run or stop started on an entity.
+   *
+   * @param entity the entity the row ran on
+   * @param action the row
+   */
+  public void forcedAnimation(BattleEntity entity, ForcedAnimation action) {
+    for (WorldObserver observer : observers) {
+      if (action.isStop()) {
+        observer.forcedAnimationStopped(tick(), entity, action.name());
+      } else {
+        observer.forcedAnimationRun(
+            tick(),
+            entity,
+            action.name(),
+            action.getCustomState(),
+            action.getPlaybackDurationMs(),
+            action.getForcedDurationMs());
+      }
     }
   }
 

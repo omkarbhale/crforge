@@ -589,6 +589,11 @@ public class CharacterEntity extends WorldEntity {
               setter);
           world.getEvents().dashStarted(CharacterEntity.this, reference, fromX, fromY, x, y);
         }
+
+        @Override
+        public void windupStarted(int windupMs) {
+          world.getEvents().dashWindupStarted(CharacterEntity.this, windupMs);
+        }
       };
 
   /**

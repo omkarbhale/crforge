@@ -8,15 +8,18 @@ package org.crforge.desktop.presentation;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.TreeMap;
 import lombok.extern.slf4j.Slf4j;
 import org.crforge.core.pathfinding.grid.TileMap;
 import org.crforge.desktop.battle.BattleAdapter;
 import org.crforge.desktop.battle.BattleFrame;
 import org.crforge.desktop.battle.BattleSession;
+import org.crforge.desktop.battle.EntityView;
 import org.crforge.desktop.render.BattleRenderer;
 import org.crforge.desktop.replay.ReplaySkins;
 import org.crforge.presentation.ArenaProjection;
@@ -174,13 +177,20 @@ public final class PresentationHost {
   }
 
   private void tellTick(BattleSession session) {
+    BattleFrame frame = BattleAdapter.frame(session);
+    Set<Integer> present = new HashSet<>();
+    for (EntityView view : frame.entities()) {
+      present.add(view.id());
+    }
     active.tick(
         TickFrames.of(
-            BattleAdapter.frame(session),
+            frame,
             events.drainDeaths(),
             events.drainStrikes(),
             plays.drain(),
-            session.match() == null ? List.of() : areas.sides()));
+            session.match() == null ? List.of() : areas.sides(),
+            events.drainDashes(),
+            events.forcedAnimations(frame.tick(), present)));
   }
 
   /** Lets go of the battle followed: no more ticks, and its log stops collecting. */

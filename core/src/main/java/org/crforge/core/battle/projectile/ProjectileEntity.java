@@ -23,6 +23,7 @@ import org.crforge.core.battle.action.CaptureCharacter;
 import org.crforge.core.battle.action.CreateParallelProjectiles;
 import org.crforge.core.battle.action.DamageType;
 import org.crforge.core.battle.action.ExecutionerEvoProjectile;
+import org.crforge.core.battle.action.ForcedAnimation;
 import org.crforge.core.battle.action.GiantBufferBuff;
 import org.crforge.core.battle.action.MirroredExtraSpell;
 import org.crforge.core.battle.action.OverrideAbilityButtonState;
@@ -1112,6 +1113,12 @@ public class ProjectileEntity extends BattleEntity
     BattleAction reached =
         world.getActions().build(data.onTargetReachedAction(), new ProjectileBinding(world, this));
     actionHolder().schedule(reached, ActionHolder.OWN_DELAY, false, actionHolder());
+  }
+
+  /** Tells the battle's observers of a forced animation's run or stop on the projectile. */
+  @Override
+  public void forcedAnimation(ForcedAnimation action) {
+    world.getEvents().forcedAnimation(this, action);
   }
 
   /**

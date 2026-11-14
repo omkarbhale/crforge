@@ -143,6 +143,16 @@ public interface TargetingQueries {
     // No dash by default.
   }
 
+  /**
+   * Tells that the visit just loaded the dash wind-up timer from a timer at or under 0: a wind-up
+   * starts. It changes nothing the visit reads. Nothing by default.
+   *
+   * @param windupMs the wind-up the timer was loaded with, in milliseconds
+   */
+  default void dashWindupStarted(int windupMs) {
+    // Nothing to tell by default.
+  }
+
   /** How many hits a dash of this unit applies; the slot picks which of the unit's dashes. */
   default int dashDamageIndex(int slot) {
     return 0;

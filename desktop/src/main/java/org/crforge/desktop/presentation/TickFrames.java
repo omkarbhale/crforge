@@ -8,6 +8,7 @@ package org.crforge.desktop.presentation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.crforge.core.battle.unit.ChampionController;
 import org.crforge.core.pathfinding.GridEntityState;
 import org.crforge.desktop.battle.BattleFrame;
@@ -21,11 +22,13 @@ import org.crforge.presentation.AbilityState;
 import org.crforge.presentation.AttackFrame;
 import org.crforge.presentation.CardFrame;
 import org.crforge.presentation.CardPlayFrame;
+import org.crforge.presentation.DashFrame;
 import org.crforge.presentation.DeathFrame;
 import org.crforge.presentation.DeployArea;
 import org.crforge.presentation.EntityFrame;
 import org.crforge.presentation.EntityKind;
 import org.crforge.presentation.EntityState;
+import org.crforge.presentation.ForcedAnimationFrame;
 import org.crforge.presentation.SideFrame;
 import org.crforge.presentation.StatusFrame;
 import org.crforge.presentation.StrikeFrame;
@@ -82,9 +85,31 @@ final class TickFrames {
       List<StrikeFrame> strikes,
       List<CardPlayFrame> plays,
       List<DeployArea> areas) {
+    return of(frame, deaths, strikes, plays, areas, List.of(), Map.of());
+  }
+
+  /**
+   * A plugin's frame with the tick's events, each side's deploy area and the forced animations.
+   *
+   * @param deaths what died in the tick just run; none on a battle's first frame
+   * @param strikes the attacks' hits that landed in it; none on a battle's first frame
+   * @param plays the card plays that ran in it and put their card down; none on a battle's first
+   *     frame
+   * @param areas each side's deploy area by side; a side with none is told {@link DeployArea#NONE}
+   * @param dashes the dash moments of the tick just run; none on a battle's first frame
+   * @param forced the forced animation each entity shows, by id; an entity absent shows none
+   */
+  static TickFrame of(
+      BattleFrame frame,
+      List<DeathFrame> deaths,
+      List<StrikeFrame> strikes,
+      List<CardPlayFrame> plays,
+      List<DeployArea> areas,
+      List<DashFrame> dashes,
+      Map<Integer, ForcedAnimationFrame> forced) {
     List<EntityFrame> entities = new ArrayList<>(frame.entities().size());
     for (EntityView view : frame.entities()) {
-      entities.add(entity(view));
+      entities.add(entity(view, forced.getOrDefault(view.id(), ForcedAnimationFrame.NONE)));
     }
     List<SideFrame> sides = new ArrayList<>(frame.sides().size());
     for (SideView view : frame.sides()) {
@@ -107,7 +132,8 @@ final class TickFrames {
         frame.nextCardCooldownMs(),
         deaths,
         strikes,
-        plays);
+        plays,
+        dashes);
   }
 
   private static SideFrame side(SideView view, DeployArea area) {
@@ -182,7 +208,7 @@ final class TickFrames {
     };
   }
 
-  private static EntityFrame entity(EntityView view) {
+  private static EntityFrame entity(EntityView view, ForcedAnimationFrame forced) {
     return new EntityFrame(
         view.id(),
         kind(view.kind()),
@@ -211,7 +237,10 @@ final class TickFrames {
         statuses(view),
         view.hasStatus(UnitStatus.Kind.CLONE),
         view.level(),
-        attack(view.attack()));
+        attack(view.attack()),
+        view.charge().progress(),
+        view.charge().charging(),
+        forced);
   }
 
   /**

@@ -59,6 +59,7 @@ import org.crforge.core.battle.action.ExecutionerEvoProjectile;
 import org.crforge.core.battle.action.Filter;
 import org.crforge.core.battle.action.FilterByEnemy;
 import org.crforge.core.battle.action.FlipFlop;
+import org.crforge.core.battle.action.ForcedAnimation;
 import org.crforge.core.battle.action.GhostEvo;
 import org.crforge.core.battle.action.GiantBufferBuff;
 import org.crforge.core.battle.action.GoblinDrillEvoRelocate;
@@ -1789,8 +1790,13 @@ public final class ActionRows {
             case "ActionChefTower" -> chefCooking(shared, f);
             case "ActionGiantBufferBuff" -> giantBufferBuff(shared, f);
             case "ActionPlayEffect" -> new InertAction(shared, lasting(name, f.get("EffectFlags")));
-            case "ActionRunForcedAnimationOnce", "ActionStopForcedAnimation" ->
-                new InertAction(shared);
+            case "ActionRunForcedAnimationOnce" ->
+                new ForcedAnimation(
+                    shared,
+                    integer(f, "CustomStateNumber"),
+                    integer(f, "PlaybackDuration"),
+                    integer(f, "ForcedDuration"));
+            case "ActionStopForcedAnimation" -> ForcedAnimation.stop(shared);
             case "ActionAttackChain" -> attackChain(name, shared, f);
             case "ActionDashingAttackChain" -> dashingAttackChain(name, shared, f);
             case "ActionRunActionOnCallbackWithThreshold" -> {
@@ -1800,7 +1806,10 @@ public final class ActionRows {
               }
               BattleAction run = action(f.get("ActionToRun"));
               // Only an action with no run of its own, which shows something and is done.
-              if (run != null && (!(run instanceof InertAction inert) || inert.isLasting())) {
+              boolean shows =
+                  run instanceof ForcedAnimation
+                      || run instanceof InertAction inert && !inert.isLasting();
+              if (run != null && !shows) {
                 throw new UnsupportedOperationException(
                     name
                         + " sets ActionToRun to "
