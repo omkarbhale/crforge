@@ -418,11 +418,14 @@ final class UnitRecords extends RowReader {
    * The fields of an attack sequence entry that only show something: its effects, the stats its
    * card's info shows, the hit speed its animation shows, carried unread as before, classified by
    * what they name, and DisableAttackAnimationFrameMatching, whose only reader is the unit's
-   * animation.
+   * animation. CustomOnKillDeathEffectOverride names an effect (the tables' schema types it
+   * LogicEffectData, as DamageEffect), by its name the death effect a kill by the entry's hit shows
+   * in place of the victim's own, as a buff's DeathEffectOverride does.
    */
   private static final Set<String> PRESENTATION_SEQUENCE_ENTRY_FIELDS =
       Set.of(
           "AttackStartEffect",
+          "CustomOnKillDeathEffectOverride",
           "DamageEffect",
           "DisableAttackAnimationFrameMatching",
           "FlameEffect",

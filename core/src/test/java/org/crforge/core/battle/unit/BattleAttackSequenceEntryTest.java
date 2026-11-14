@@ -373,6 +373,36 @@ class BattleAttackSequenceEntryTest {
     assertThat(delayed - plain).isEqualTo(10);
   }
 
+  @Test
+  @DisplayName(
+      "an entry's on-kill death effect override only shows something: a row whose entries set it"
+          + " is made and hits as one without")
+  void anEntryOnKillDeathEffectOverrideOnlyShows(@TempDir Path folder) throws IOException {
+    Path plainFolder = Files.createDirectories(folder.resolve("plain"));
+    Path overriddenFolder = Files.createDirectories(folder.resolve("overridden"));
+    List<Integer> plain = hitTicks(wizard(plainFolder, entry -> {}, entry -> {}));
+    // A named effect on one entry and the evolved Giant's empty one on the other.
+    List<Integer> overridden =
+        hitTicks(
+            wizard(
+                overriddenFolder,
+                entry ->
+                    entry.put("CustomOnKillDeathEffectOverride", "vfx_giant_evo_rage_explosion"),
+                entry -> entry.put("CustomOnKillDeathEffectOverride", "")));
+
+    assertThat(plain).isNotEmpty();
+    assertThat(overridden).isEqualTo(plain);
+  }
+
+  /** The ticks of the Electro Wizard's hits on the Knights through tick 300, one per target hit. */
+  private static List<Integer> hitTicks(GameTables tables) {
+    Standard1v1Battle battle = new Standard1v1Battle(tables, LEVEL, true);
+    battle.deploy(0, unit(battle, "ElectroWizard"), LEVEL, 0, 3500, 12000, "w");
+    List<Hit> hit = hits(battle, knights(battle));
+    stepThrough(battle, 300);
+    return hit.stream().map(Hit::tick).toList();
+  }
+
   private static int firstHitTick(GameTables tables) {
     Standard1v1Battle battle = new Standard1v1Battle(tables, LEVEL, true);
     battle.deploy(0, unit(battle, "ElectroWizard"), LEVEL, 0, 3500, 12000, "w");
