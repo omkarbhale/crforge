@@ -18,7 +18,8 @@
         ],
         "columns": 6,
         "rows": 2
-      }
+      },
+      "time": 2
     },
     {
       "side": 1,
@@ -36,7 +37,7 @@
         "columns": 6,
         "rows": 2
       },
-      "time": 3
+      "time": 5
     }
   ]
 }

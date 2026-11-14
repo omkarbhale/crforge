@@ -9,15 +9,33 @@
       "card": "Skeletons",
       "form": "evolved",
       "count": 20,
-      "line": { "from": [0.5, 11.5], "to": [17.5, 11.5] },
-      "time": 0
+      "line": {
+        "from": [
+          0.5,
+          11.5
+        ],
+        "to": [
+          17.5,
+          11.5
+        ]
+      },
+      "time": 2
     },
     {
       "side": 1,
       "card": "WitchMother",
       "count": 20,
-      "line": { "from": [0.5, 20.5], "to": [17.5, 20.5] },
-      "time": 0
+      "line": {
+        "from": [
+          0.5,
+          20.5
+        ],
+        "to": [
+          17.5,
+          20.5
+        ]
+      },
+      "time": 2
     }
   ]
 }

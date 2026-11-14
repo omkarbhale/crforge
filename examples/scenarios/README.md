@@ -127,7 +127,7 @@ Plays run in the order they are dropped. Plays dropped on the same tick run in t
 
 ## The twenty
 
-Numbered scenarios made to be watched (and recorded). None gives an end time: each plays until the match ends.
+Numbered scenarios made to be watched (and recorded). None gives an end time: each plays until the match ends. Each drops its first cards at 2 seconds, so a video opens on the empty arena before the troops land.
 
 | File | Scenario |
 |---|---|
