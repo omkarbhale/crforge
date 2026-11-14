@@ -62,6 +62,12 @@ import java.util.Objects;
  * @param forcedAnimation the last forced animation the battle ran on the entity, held until its
  *     stop runs, a later run replaces it or the entity leaves; {@link ForcedAnimationFrame#NONE}
  *     for none and when the frame was built without one
+ * @param carrierId the id of the character this one rides on, as a spawner whose row attaches its
+ *     children ({@code SpawnAttach}) makes its riders: the Spear Goblins on a Goblin Giant, the
+ *     rider on a Ram. Held from the spawn's attach until the carrier leaves, which lets the rider
+ *     go. A rider carries no riders of its own in the battle core, so a carrier carries none.
+ *     {@link #NO_CARRIER} for a character that rides on nothing, for anything else and when the
+ *     frame was built without one
  */
 public record EntityFrame(
     int id,
@@ -94,7 +100,14 @@ public record EntityFrame(
     AttackFrame attack,
     int chargeProgress,
     boolean charging,
-    ForcedAnimationFrame forcedAnimation) {
+    ForcedAnimationFrame forcedAnimation,
+    int carrierId) {
+
+  /**
+   * The carrier id of an entity that rides on nothing, and of a frame built without one. No entity
+   * of a battle has this id.
+   */
+  public static final int NO_CARRIER = -1;
 
   /**
    * The charge progress of an entity with no charge in progress, and of a frame built without one.
@@ -118,10 +131,82 @@ public record EntityFrame(
   }
 
   /**
-   * A frame with no charge ({@link #NO_CHARGE}, not charging) and no forced animation ({@link
-   * ForcedAnimationFrame#NONE}). Kept on purpose: crforge-render builds against this module live,
-   * and its tests and harness tools construct frames with this signature, so removing it breaks
-   * them.
+   * A frame of an entity that rides on nothing ({@link #NO_CARRIER}). Kept on purpose:
+   * crforge-render builds against this module live, and its tests and harness tools construct
+   * frames with this signature, so removing it breaks them.
+   */
+  public EntityFrame(
+      int id,
+      EntityKind kind,
+      int side,
+      String name,
+      int x,
+      int y,
+      int radius,
+      int hitPoints,
+      int maxHitPoints,
+      int shield,
+      int maxShield,
+      boolean air,
+      boolean king,
+      EntityState state,
+      boolean deploying,
+      boolean hidden,
+      boolean hasTarget,
+      int targetX,
+      int targetY,
+      int headingX,
+      int headingY,
+      int aimX,
+      int aimY,
+      int height,
+      List<StatusFrame> statuses,
+      boolean isClone,
+      int level,
+      AttackFrame attack,
+      int chargeProgress,
+      boolean charging,
+      ForcedAnimationFrame forcedAnimation) {
+    this(
+        id,
+        kind,
+        side,
+        name,
+        x,
+        y,
+        radius,
+        hitPoints,
+        maxHitPoints,
+        shield,
+        maxShield,
+        air,
+        king,
+        state,
+        deploying,
+        hidden,
+        hasTarget,
+        targetX,
+        targetY,
+        headingX,
+        headingY,
+        aimX,
+        aimY,
+        height,
+        statuses,
+        isClone,
+        level,
+        attack,
+        chargeProgress,
+        charging,
+        forcedAnimation,
+        NO_CARRIER);
+  }
+
+  /**
+   * A frame with no charge ({@link #NO_CHARGE}, not charging), no forced animation ({@link
+   * ForcedAnimationFrame#NONE}) and no carrier ({@link #NO_CARRIER}). Kept on purpose:
+   * crforge-render builds against this module live, and its tests and harness tools construct
+   * frames with this signature, so removing it breaks them.
    */
   public EntityFrame(
       int id,
@@ -183,7 +268,8 @@ public record EntityFrame(
         attack,
         NO_CHARGE,
         false,
-        ForcedAnimationFrame.NONE);
+        ForcedAnimationFrame.NONE,
+        NO_CARRIER);
   }
 
   /**
@@ -250,7 +336,8 @@ public record EntityFrame(
         AttackFrame.NONE,
         NO_CHARGE,
         false,
-        ForcedAnimationFrame.NONE);
+        ForcedAnimationFrame.NONE,
+        NO_CARRIER);
   }
 
   /**
@@ -316,7 +403,8 @@ public record EntityFrame(
         AttackFrame.NONE,
         NO_CHARGE,
         false,
-        ForcedAnimationFrame.NONE);
+        ForcedAnimationFrame.NONE,
+        NO_CARRIER);
   }
 
   /**
@@ -381,6 +469,7 @@ public record EntityFrame(
         AttackFrame.NONE,
         NO_CHARGE,
         false,
-        ForcedAnimationFrame.NONE);
+        ForcedAnimationFrame.NONE,
+        NO_CARRIER);
   }
 }

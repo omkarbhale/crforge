@@ -39,7 +39,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The dash moments, charges and forced animations a plugin's frames tell, from battles. */
+/**
+ * The dash moments, charges, forced animations and carriers a plugin's frames tell, from battles.
+ */
 class TickMotionTest {
 
   private static final int LEVEL = 11;
@@ -332,6 +334,62 @@ class TickMotionTest {
     log.stop();
     log.forcedAnimationRun(41, knight, "fifth", 1, 0, 0);
     assertThat(log.forcedAnimations(42, Set.of(id))).as("a stopped log holds none").isEmpty();
+  }
+
+  @Test
+  @DisplayName(
+      "a Goblin Giant's Spear Goblins tell it as their carrier while it stands; the Giant itself"
+          + " and a Knight tell none")
+  void goblinGiantCarriesItsSpearGoblins() {
+    Played played =
+        new Played()
+            .play(1, "GoblinGiant", 0, 4500, 9000)
+            .play(1, "Knight", 1, 13_500, 22_000)
+            .run(200);
+    int giant = played.idOf("GoblinGiant", 0);
+    List<EntityFrame> riders =
+        played.frames.stream()
+            .flatMap(frame -> frame.entities().stream())
+            .filter(e -> e.name().equals("SpearGoblinGiant"))
+            .toList();
+    assertThat(riders.stream().map(EntityFrame::id).distinct().count())
+        .as("its two riders")
+        .isEqualTo(2);
+    assertThat(riders).as("each rides on the Giant").allMatch(e -> e.carrierId() == giant);
+    assertThat(played.framesOf(giant))
+        .filteredOn(e -> e != null)
+        .allMatch(e -> e.carrierId() == EntityFrame.NO_CARRIER);
+    assertThat(played.framesOf(played.idOf("Knight", 1)))
+        .filteredOn(e -> e != null)
+        .allMatch(e -> e.carrierId() == EntityFrame.NO_CARRIER);
+  }
+
+  @Test
+  @DisplayName(
+      "a Ram Rider's rider tells the Ram as its carrier in every frame it stands in, the Ram in"
+          + " the same frame, and leaves with it")
+  void ramCarriesItsRider() {
+    Played played =
+        new Played()
+            .play(1, "RamRider", 0, 4500, 9000)
+            .play(1, "MiniPekka", 1, 4500, 14_000)
+            .play(1, "MiniPekka", 1, 5000, 14_500)
+            .play(1, "Knight", 1, 4000, 14_500)
+            .run(600);
+    int ram = played.idOf("Ram", 0);
+    int rider = played.idOf("RamRider", 0);
+    List<EntityFrame> rams = played.framesOf(ram);
+    List<EntityFrame> riders = played.framesOf(rider);
+    assertThat(riders).filteredOn(e -> e != null).isNotEmpty();
+    for (int i = 0; i < played.frames.size(); i++) {
+      if (riders.get(i) != null) {
+        assertThat(riders.get(i).carrierId()).as("frame %d", i).isEqualTo(ram);
+        assertThat(rams.get(i)).as("its carrier stands in frame %d", i).isNotNull();
+        assertThat(rams.get(i).carrierId()).isEqualTo(EntityFrame.NO_CARRIER);
+      }
+    }
+    assertThat(rams.get(rams.size() - 1)).as("the Ram fell").isNull();
+    assertThat(riders.get(riders.size() - 1)).as("its rider left with it").isNull();
   }
 
   /**

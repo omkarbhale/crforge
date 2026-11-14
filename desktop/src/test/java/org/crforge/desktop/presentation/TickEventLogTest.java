@@ -499,7 +499,8 @@ class TickEventLogTest {
                     e.attack(),
                     e.chargeProgress(),
                     e.charging(),
-                    ForcedAnimationFrame.NONE))
+                    ForcedAnimationFrame.NONE,
+                    e.carrierId()))
         .toList();
   }
 

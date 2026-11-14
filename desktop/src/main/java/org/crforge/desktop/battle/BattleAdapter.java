@@ -237,7 +237,10 @@ public final class BattleAdapter {
         kind == EntityView.Kind.TOWER ? UnitRole.NONE : UnitRole.of(data),
         bar,
         attack(entity),
-        charge(entity));
+        charge(entity),
+        character == null || character.getParent() == null
+            ? EntityView.NO_CARRIER
+            : character.getParent().getId());
   }
 
   /** A character's attack timing, read from its targeting component and columns. */

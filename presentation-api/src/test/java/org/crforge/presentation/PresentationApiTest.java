@@ -241,6 +241,27 @@ class PresentationApiTest {
     assertThat(frame(List.of(), List.of()).dashes()).isEmpty();
   }
 
+  /** Those signatures are held for crforge-render, whose tests and tools construct frames. */
+  @Test
+  @DisplayName(
+      "the constructors from before the carrier tell none; the carrier is the id of the character"
+          + " ridden on")
+  void carrier() {
+    ForcedAnimationFrame forced =
+        new ForcedAnimationFrame("ronin_play_deflect_animation", 1, 40, 500, 500);
+    EntityFrame moving = withMotion(entity(1), 10_080, true, forced);
+    EntityFrame attacking = withAttack(entity(1), AttackFrame.NONE);
+    for (EntityFrame old : List.of(entity(1), withLevel(entity(1), 11), attacking, moving)) {
+      assertThat(old.carrierId()).isEqualTo(EntityFrame.NO_CARRIER);
+    }
+    EntityFrame rider = withCarrier(moving, 7);
+    assertThat(rider.carrierId()).isEqualTo(7);
+    assertThat(rider.forcedAnimation()).isEqualTo(forced);
+    assertThat(rider.chargeProgress()).isEqualTo(10_080);
+    assertThat(withCarrier(moving, EntityFrame.NO_CARRIER)).isEqualTo(moving);
+    assertThat(rider).isNotEqualTo(moving);
+  }
+
   @Test
   @DisplayName(
       "an entity tells its charge and forced animation, a frame its dash moments, copied and"
@@ -569,6 +590,42 @@ class PresentationApiTest {
         old.isClone(),
         old.level(),
         attack);
+  }
+
+  private static EntityFrame withCarrier(EntityFrame old, int carrierId) {
+    return new EntityFrame(
+        old.id(),
+        old.kind(),
+        old.side(),
+        old.name(),
+        old.x(),
+        old.y(),
+        old.radius(),
+        old.hitPoints(),
+        old.maxHitPoints(),
+        old.shield(),
+        old.maxShield(),
+        old.air(),
+        old.king(),
+        old.state(),
+        old.deploying(),
+        old.hidden(),
+        old.hasTarget(),
+        old.targetX(),
+        old.targetY(),
+        old.headingX(),
+        old.headingY(),
+        old.aimX(),
+        old.aimY(),
+        old.height(),
+        old.statuses(),
+        old.isClone(),
+        old.level(),
+        old.attack(),
+        old.chargeProgress(),
+        old.charging(),
+        old.forcedAnimation(),
+        carrierId);
   }
 
   private static EntityFrame withMotion(
