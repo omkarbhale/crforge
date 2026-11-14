@@ -30,6 +30,7 @@ import org.crforge.core.battle.action.BlowdartDamage;
 import org.crforge.core.battle.action.BurstAttack;
 import org.crforge.core.battle.action.DamageHeard;
 import org.crforge.core.battle.action.DamageType;
+import org.crforge.core.battle.action.ForcedAnimation;
 import org.crforge.core.battle.action.GhostEvo;
 import org.crforge.core.battle.action.GiantBufferBuff;
 import org.crforge.core.battle.action.GroundToAir;
@@ -2024,6 +2025,12 @@ public abstract class WorldEntity extends BattleEntity implements ActionOwner, S
           action.name() + " resets the path of " + name() + ", which is not modelled");
     }
     unit.resetRoute();
+  }
+
+  /** Tells the battle's observers of a forced animation's run or stop on the entity. */
+  @Override
+  public void forcedAnimation(ForcedAnimation action) {
+    world.getEvents().forcedAnimation(this, action);
   }
 
   /**

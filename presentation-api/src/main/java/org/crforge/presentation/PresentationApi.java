@@ -15,7 +15,7 @@ package org.crforge.presentation;
  *
  * <pre>{@code
  * tasks.jar {
- *     manifest { attributes("Crforge-Presentation-Api" to "1.1") }
+ *     manifest { attributes("Crforge-Presentation-Api" to "1.2") }
  * }
  * }</pre>
  *
@@ -30,7 +30,7 @@ public final class PresentationApi {
   public static final int MAJOR = 1;
 
   /** The minor version: raised by each addition, which plugins built before it do not see. */
-  public static final int MINOR = 1;
+  public static final int MINOR = 2;
 
   /** This API's version, {@code <major>.<minor>}. */
   public static final String VERSION = MAJOR + "." + MINOR;

@@ -22,6 +22,7 @@ import org.crforge.core.battle.action.AliveTimer;
 import org.crforge.core.battle.action.BattleAction;
 import org.crforge.core.battle.action.CannonProjectileSpawn;
 import org.crforge.core.battle.action.DamageType;
+import org.crforge.core.battle.action.ForcedAnimation;
 import org.crforge.core.battle.action.GhostEvo;
 import org.crforge.core.battle.action.GoblinsteinAbility;
 import org.crforge.core.battle.action.LaserBall;
@@ -1027,6 +1028,12 @@ public final class AreaEffectEntity extends BattleEntity implements ActionOwner,
   @Override
   public void aliveTimerFired(String action) {
     world.getEvents().aliveTimerFired(this, action);
+  }
+
+  /** Tells the battle's observers of a forced animation's run or stop on the area effect. */
+  @Override
+  public void forcedAnimation(ForcedAnimation action) {
+    world.getEvents().forcedAnimation(this, action);
   }
 
   /**

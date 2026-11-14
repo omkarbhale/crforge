@@ -8,27 +8,43 @@ package org.crforge.desktop.presentation;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.crforge.core.battle.BattleEntity;
 import org.crforge.core.battle.unit.CharacterEntity;
 import org.crforge.core.battle.unit.WorldEntity;
 import org.crforge.core.battle.unit.WorldObserver;
+import org.crforge.core.pathfinding.target.TargetView;
+import org.crforge.presentation.DashFrame;
+import org.crforge.presentation.DashMoment;
 import org.crforge.presentation.DeathCause;
 import org.crforge.presentation.DeathFrame;
+import org.crforge.presentation.ForcedAnimationFrame;
 import org.crforge.presentation.StrikeFrame;
 
 /**
- * Collects a tick's deaths and strikes for a plugin, as values copied while the battle tells them.
- * It only reads what it is handed and only listens; the host drains it after each step. An entity
- * is reported dead once, under the first cause told. A morph, a plain removal and a spawner leaving
- * at its limit tell none of the hooks here, so they are no deaths.
+ * Collects a tick's deaths, strikes and dash moments for a plugin, and the forced animation each
+ * entity was last told to show, as values copied while the battle tells them. It only reads what it
+ * is handed and only listens; the host drains it after each step. An entity is reported dead once,
+ * under the first cause told. A morph, a plain removal and a spawner leaving at its limit tell none
+ * of the hooks here, so they are no deaths. A forced animation run before the log was attached was
+ * not heard, so it is not known.
  */
 final class TickEventLog implements WorldObserver {
 
   private final List<DeathFrame> deaths = new ArrayList<>();
 
   private final List<StrikeFrame> strikes = new ArrayList<>();
+
+  private final List<DashFrame> dashes = new ArrayList<>();
+
+  /**
+   * The forced animation each entity was last told to run, by id, in the order first told; one not
+   * yet drained holds a start tick of -1.
+   */
+  private final Map<Integer, ForcedAnimationFrame> forced = new LinkedHashMap<>();
 
   /** Who has been reported dead. */
   private final Set<Integer> dead = new HashSet<>();
@@ -40,6 +56,37 @@ final class TickEventLog implements WorldObserver {
     stopped = true;
     deaths.clear();
     strikes.clear();
+    dashes.clear();
+    forced.clear();
+  }
+
+  /** The dash moments told since the last drain. */
+  List<DashFrame> drainDashes() {
+    List<DashFrame> drained = List.copyOf(dashes);
+    dashes.clear();
+    return drained;
+  }
+
+  /**
+   * The forced animation each entity of the frame shows, by id: a run told since the last drain
+   * takes the frame's tick as its start, and an entity no longer in the frame is let go.
+   *
+   * @param tick the tick of the frame they are told in
+   * @param present the ids of the entities in that frame
+   */
+  Map<Integer, ForcedAnimationFrame> forcedAnimations(int tick, Set<Integer> present) {
+    forced.keySet().retainAll(present);
+    forced.replaceAll(
+        (id, run) ->
+            run.startTick() >= 0
+                ? run
+                : new ForcedAnimationFrame(
+                    run.action(),
+                    run.customState(),
+                    tick,
+                    run.playbackDurationMs(),
+                    run.forcedDurationMs()));
+    return Map.copyOf(forced);
   }
 
   /** The deaths told since the last drain. */
@@ -80,6 +127,59 @@ final class TickEventLog implements WorldObserver {
   public void attackHitLanded(int tick, WorldEntity attacker, WorldEntity victim, boolean special) {
     if (!stopped) {
       strikes.add(new StrikeFrame(attacker.getId(), victim.getId(), special));
+    }
+  }
+
+  @Override
+  public void dashWindupStarted(int tick, CharacterEntity unit, int windupMs) {
+    dash(unit, DashMoment.WINDUP_STARTED);
+  }
+
+  @Override
+  public void dashStarted(
+      int tick,
+      CharacterEntity unit,
+      TargetView reference,
+      int fromX,
+      int fromY,
+      int aimX,
+      int aimY) {
+    dash(unit, DashMoment.STARTED);
+  }
+
+  @Override
+  public void dashLanded(
+      int tick, CharacterEntity unit, WorldEntity hit, int damage, boolean area) {
+    dash(unit, DashMoment.LANDED);
+  }
+
+  @Override
+  public void forcedAnimationRun(
+      int tick,
+      BattleEntity entity,
+      String action,
+      int customState,
+      int playbackDurationMs,
+      int forcedDurationMs) {
+    if (!stopped) {
+      // Removed first, so a later run is listed in the order it was told.
+      forced.remove(entity.getId());
+      forced.put(
+          entity.getId(),
+          new ForcedAnimationFrame(action, customState, -1, playbackDurationMs, forcedDurationMs));
+    }
+  }
+
+  @Override
+  public void forcedAnimationStopped(int tick, BattleEntity entity, String action) {
+    if (!stopped) {
+      forced.remove(entity.getId());
+    }
+  }
+
+  private void dash(CharacterEntity unit, DashMoment moment) {
+    if (!stopped) {
+      dashes.add(new DashFrame(unit.getId(), moment));
     }
   }
 

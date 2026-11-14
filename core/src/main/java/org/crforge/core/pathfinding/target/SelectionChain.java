@@ -299,6 +299,16 @@ public class SelectionChain implements MultiTargetLookup.Queries, TargetingQueri
      * @param radius the radius the dash stops short of the point by, beyond the owner's own
      */
     void startDash(int x, int y, int radius);
+
+    /**
+     * Tells that the owner's dash wind-up timer was just loaded from a timer at or under 0. Nothing
+     * by default.
+     *
+     * @param windupMs the wind-up the timer was loaded with, in milliseconds
+     */
+    default void windupStarted(int windupMs) {
+      // Nothing to tell by default.
+    }
   }
 
   /** The owner's dash, or null for an owner that does not dash. */
@@ -313,6 +323,13 @@ public class SelectionChain implements MultiTargetLookup.Queries, TargetingQueri
   public void startDash(TargetView target, int x, int y, int radius) {
     if (dasher != null) {
       dasher.startDash(x, y, radius);
+    }
+  }
+
+  @Override
+  public void dashWindupStarted(int windupMs) {
+    if (dasher != null) {
+      dasher.windupStarted(windupMs);
     }
   }
 

@@ -25,7 +25,8 @@ import org.crforge.core.fidelity.FidelityStatus;
         "Settled for the four classes that override none of the three (the animator layer, the"
             + " health bar part, the visual action group and the champion button animator), for"
             + " the effect-playing row, which lasts when its flags loop it or link its life to the"
-            + " run's, and for the forced animation.")
+            + " run's. The forced animation, inert as well, is its own row (ForcedAnimation), so"
+            + " that a view can be told of it.")
 public final class InertAction extends RowAction {
 
   /** True for a row that keeps a run, which never finishes by itself. */

@@ -1475,6 +1475,47 @@ public interface WorldObserver {
       int tick, CharacterEntity unit, WorldEntity hit, int damage, boolean area) {}
 
   /**
+   * A unit's targeting visit, with its reference in dash range, loaded its dash wind-up timer from
+   * a timer at or under 0: a wind-up starts. A wind-up that runs from a timer the dash's start
+   * reloaded (a row with no dash landing time) tells none.
+   *
+   * @param tick the battle tick
+   * @param unit the unit
+   * @param windupMs the wind-up the timer was loaded with, in milliseconds (the row's dash
+   *     cooldown)
+   */
+  default void dashWindupStarted(int tick, CharacterEntity unit, int windupMs) {}
+
+  /**
+   * A forced animation's run (ActionRunForcedAnimationOnce) started on an entity. It changes
+   * nothing the simulation reads.
+   *
+   * @param tick the battle tick
+   * @param entity the entity the row ran on
+   * @param action the row's name
+   * @param customState the row's CustomStateNumber, 0 when the row gives none
+   * @param playbackDurationMs the row's PlaybackDuration in milliseconds, 0 when it gives none
+   * @param forcedDurationMs the row's ForcedDuration in milliseconds, 0 when it gives none
+   */
+  default void forcedAnimationRun(
+      int tick,
+      BattleEntity entity,
+      String action,
+      int customState,
+      int playbackDurationMs,
+      int forcedDurationMs) {}
+
+  /**
+   * A forced animation's stop (ActionStopForcedAnimation) started on an entity. It changes nothing
+   * the simulation reads.
+   *
+   * @param tick the battle tick
+   * @param entity the entity the row ran on
+   * @param action the row's name
+   */
+  default void forcedAnimationStopped(int tick, BattleEntity entity, String action) {}
+
+  /**
    * A projectile's impact made the area effect its row names, at the impact point.
    *
    * @param tick the battle tick

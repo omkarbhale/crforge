@@ -533,6 +533,7 @@ public final class TargetingVisit {
       if (!mayNotAttack && inDashRange && !timingReady) {
         if (t.getDashWindupMs() <= 0) {
           t.setDashWindupMs(cfg.dashCooldown());
+          queries.dashWindupStarted(cfg.dashCooldown());
         }
         t.setDashWindupMs(Math.max(t.getDashWindupMs() - queries.timeStepMs(), 0));
         queries.turnToward(reference);

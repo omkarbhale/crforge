@@ -34,6 +34,13 @@
  * and the host's placement preview under the pointer ({@link
  * org.crforge.presentation.PresentContext#placement}).
  *
+ * <p>Beyond what the battle draws, a frame tells the moments of characters' dashes ({@link
+ * org.crforge.presentation.TickFrame#dashes}), a character's charge ({@link
+ * org.crforge.presentation.EntityFrame#chargeProgress}, {@link
+ * org.crforge.presentation.EntityFrame#charging}) and the forced animation the battle last ran on
+ * an entity ({@link org.crforge.presentation.EntityFrame#forcedAnimation}), each as the battle
+ * holds it; how a view shows them is the plugin's.
+ *
  * <h2>Tick-driven</h2>
  *
  * <p>A plugin hears one {@link org.crforge.presentation.TickFrame} for each tick the battle runs,

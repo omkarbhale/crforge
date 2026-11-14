@@ -46,6 +46,7 @@ import org.crforge.core.battle.action.DamageType;
 import org.crforge.core.battle.action.DamagingPushBack;
 import org.crforge.core.battle.action.DoPushbackFromInstigator;
 import org.crforge.core.battle.action.ExecutionerEvoProjectile;
+import org.crforge.core.battle.action.ForcedAnimation;
 import org.crforge.core.battle.action.GhostEvo;
 import org.crforge.core.battle.action.Group;
 import org.crforge.core.battle.action.Hide;
@@ -1327,6 +1328,68 @@ class ActionRowsTest {
     assertThat(ChampionController.stateNamed("ChampionPending"))
         .isEqualTo(ChampionController.PENDING);
     assertThat(ChampionController.stateNamed("championpending")).isZero();
+  }
+
+  @Test
+  @DisplayName(
+      "a forced animation's run reads its custom state and durations, 0 for an empty column, and a"
+          + " stop reads none; each keeps no run and only tells its owner as it starts")
+  void aForcedAnimationTellsItsOwner() {
+    ForcedAnimation deflect =
+        (ForcedAnimation) GameData.actions().build("ronin_play_deflect_animation", INERT_BINDING);
+    assertThat(deflect.isStop()).isFalse();
+    assertThat(deflect.getCustomState()).isEqualTo(1);
+    assertThat(deflect.getPlaybackDurationMs()).isEqualTo(500);
+    assertThat(deflect.getForcedDurationMs()).isEqualTo(500);
+    ForcedAnimation tomb =
+        (ForcedAnimation)
+            GameData.actions().build("Tombstone_hero_play_break_animation", INERT_BINDING);
+    assertThat(tomb.getCustomState()).isEqualTo(1);
+    assertThat(tomb.getPlaybackDurationMs()).as("an empty column").isZero();
+    assertThat(tomb.getForcedDurationMs()).isZero();
+    ForcedAnimation mount =
+        (ForcedAnimation)
+            GameData.actions()
+                .build("DarkPrinceHero_Mount_ForceCustomAnimationState", INERT_BINDING);
+    assertThat(mount.getPlaybackDurationMs()).as("as the row gives it").isEqualTo(-1);
+    ForcedAnimation stop =
+        (ForcedAnimation)
+            GameData.actions().build("ValkyrieHero_Stop_Whirlwind_Animation", INERT_BINDING);
+    assertThat(stop.isStop()).isTrue();
+
+    List<ForcedAnimation> told = new ArrayList<>();
+    ActionOwner owner =
+        new ActionOwner() {
+          @Override
+          public HitPoints actionHitPoints() {
+            return null;
+          }
+
+          @Override
+          public int variable(int key) {
+            return 0;
+          }
+
+          @Override
+          public void setVariable(int key, int value) {}
+
+          @Override
+          public void killBy(ActionOwner killer) {}
+
+          @Override
+          public void queueTypedHit(ActionOwner source, int amount, DamageType type) {}
+
+          @Override
+          public void forcedAnimation(ForcedAnimation action) {
+            told.add(action);
+          }
+        };
+    ActionHolder holder = new ActionHolder(owner);
+    holder.start(deflect);
+    holder.start(stop);
+    assertThat(told).containsExactly(deflect, stop);
+    assertThat(holder.running()).as("no run kept").isEmpty();
+    new ActionHolder().start(deflect);
   }
 
   @Test

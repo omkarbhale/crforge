@@ -33,6 +33,7 @@ import org.crforge.presentation.DeathCause;
 import org.crforge.presentation.DeathFrame;
 import org.crforge.presentation.EntityFrame;
 import org.crforge.presentation.EntityState;
+import org.crforge.presentation.ForcedAnimationFrame;
 import org.crforge.presentation.PresentContext;
 import org.crforge.presentation.PresentationPlugin;
 import org.crforge.presentation.StatusFrame;
@@ -441,6 +442,11 @@ class TickEventLogTest {
     assertThat(heard.stream().flatMap(frame -> frame.strikes().stream())).isNotEmpty();
     assertThat(heard.stream().flatMap(frame -> frame.entities().stream()))
         .anyMatch(entity -> !entity.statuses().isEmpty());
+    assertThat(heard.stream().flatMap(frame -> frame.entities().stream()))
+        .as("the hero Tombstone's forced animation, told")
+        .anyMatch(
+            entity ->
+                entity.forcedAnimation().action().equals("Tombstone_hero_play_break_animation"));
   }
 
   /** Two frames of the same tick say the same of the battle, whatever events each carries. */
@@ -449,8 +455,52 @@ class TickEventLogTest {
     assertThat(followed.timeMs()).isEqualTo(alone.timeMs());
     assertThat(followed.ended()).isEqualTo(alone.ended());
     assertThat(followed.winner()).isEqualTo(alone.winner());
-    assertThat(followed.entities()).as("tick %s", alone.tick()).isEqualTo(alone.entities());
+    // A forced animation is told from the log's hooks, which the battle alone does not have; the
+    // battle's own values must match.
+    assertThat(withoutForcedAnimations(followed.entities()))
+        .as("tick %s", alone.tick())
+        .isEqualTo(alone.entities());
     assertThat(followed.sides()).as("tick %s", alone.tick()).isEqualTo(alone.sides());
+  }
+
+  /** The entities with their forced animations set aside, as a frame without the log tells them. */
+  private static List<EntityFrame> withoutForcedAnimations(List<EntityFrame> entities) {
+    return entities.stream()
+        .map(
+            e ->
+                new EntityFrame(
+                    e.id(),
+                    e.kind(),
+                    e.side(),
+                    e.name(),
+                    e.x(),
+                    e.y(),
+                    e.radius(),
+                    e.hitPoints(),
+                    e.maxHitPoints(),
+                    e.shield(),
+                    e.maxShield(),
+                    e.air(),
+                    e.king(),
+                    e.state(),
+                    e.deploying(),
+                    e.hidden(),
+                    e.hasTarget(),
+                    e.targetX(),
+                    e.targetY(),
+                    e.headingX(),
+                    e.headingY(),
+                    e.aimX(),
+                    e.aimY(),
+                    e.height(),
+                    e.statuses(),
+                    e.isClone(),
+                    e.level(),
+                    e.attack(),
+                    e.chargeProgress(),
+                    e.charging(),
+                    ForcedAnimationFrame.NONE))
+        .toList();
   }
 
   /** A class loader with {@link Recording}'s service file on it, as a plugin's jar would have. */

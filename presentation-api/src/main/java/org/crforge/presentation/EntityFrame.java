@@ -50,6 +50,18 @@ import java.util.Objects;
  *     and start delay timers, the hit speed and load time they are counted against, and the index
  *     of the active attack sequence step; {@link AttackFrame#NONE} for a projectile or area effect
  *     and when the frame was built without one
+ * @param chargeProgress a character's charge progress as its movement component holds it after the
+ *     tick: {@link #NO_CHARGE} (-1) while no charge is in progress (and for anything else), else 0
+ *     rising toward {@link #CHARGE_COMPLETE} (10000) as it walks, the charge complete at 10000 or
+ *     more
+ * @param charging whether the battle's CHARGING tag bit is set on a character after the tick. A
+ *     step that leaves the charge progress at {@link #CHARGE_COMPLETE} or more raises it, folded in
+ *     from the step's pending tags, so it trails the progress by a tick: it shows from the tick
+ *     after the charge completes and stays the tick after the charge resets. False for anything
+ *     else
+ * @param forcedAnimation the last forced animation the battle ran on the entity, held until its
+ *     stop runs, a later run replaces it or the entity leaves; {@link ForcedAnimationFrame#NONE}
+ *     for none and when the frame was built without one
  */
 public record EntityFrame(
     int id,
@@ -79,7 +91,18 @@ public record EntityFrame(
     List<StatusFrame> statuses,
     boolean isClone,
     int level,
-    AttackFrame attack) {
+    AttackFrame attack,
+    int chargeProgress,
+    boolean charging,
+    ForcedAnimationFrame forcedAnimation) {
+
+  /**
+   * The charge progress of an entity with no charge in progress, and of a frame built without one.
+   */
+  public static final int NO_CHARGE = -1;
+
+  /** The charge progress at which a charge is complete. */
+  public static final int CHARGE_COMPLETE = 10000;
 
   /**
    * The level of a frame built without one: by the constructors from before the level. Every entity
@@ -90,6 +113,77 @@ public record EntityFrame(
   public EntityFrame {
     statuses = List.copyOf(statuses);
     Objects.requireNonNull(attack, "attack; AttackFrame.NONE stands for none");
+    Objects.requireNonNull(
+        forcedAnimation, "forcedAnimation; ForcedAnimationFrame.NONE stands for none");
+  }
+
+  /**
+   * A frame with no charge ({@link #NO_CHARGE}, not charging) and no forced animation ({@link
+   * ForcedAnimationFrame#NONE}). Kept on purpose: crforge-render builds against this module live,
+   * and its tests and harness tools construct frames with this signature, so removing it breaks
+   * them.
+   */
+  public EntityFrame(
+      int id,
+      EntityKind kind,
+      int side,
+      String name,
+      int x,
+      int y,
+      int radius,
+      int hitPoints,
+      int maxHitPoints,
+      int shield,
+      int maxShield,
+      boolean air,
+      boolean king,
+      EntityState state,
+      boolean deploying,
+      boolean hidden,
+      boolean hasTarget,
+      int targetX,
+      int targetY,
+      int headingX,
+      int headingY,
+      int aimX,
+      int aimY,
+      int height,
+      List<StatusFrame> statuses,
+      boolean isClone,
+      int level,
+      AttackFrame attack) {
+    this(
+        id,
+        kind,
+        side,
+        name,
+        x,
+        y,
+        radius,
+        hitPoints,
+        maxHitPoints,
+        shield,
+        maxShield,
+        air,
+        king,
+        state,
+        deploying,
+        hidden,
+        hasTarget,
+        targetX,
+        targetY,
+        headingX,
+        headingY,
+        aimX,
+        aimY,
+        height,
+        statuses,
+        isClone,
+        level,
+        attack,
+        NO_CHARGE,
+        false,
+        ForcedAnimationFrame.NONE);
   }
 
   /**
@@ -153,7 +247,10 @@ public record EntityFrame(
         statuses,
         isClone,
         level,
-        AttackFrame.NONE);
+        AttackFrame.NONE,
+        NO_CHARGE,
+        false,
+        ForcedAnimationFrame.NONE);
   }
 
   /**
@@ -216,7 +313,10 @@ public record EntityFrame(
         statuses,
         isClone,
         NO_LEVEL,
-        AttackFrame.NONE);
+        AttackFrame.NONE,
+        NO_CHARGE,
+        false,
+        ForcedAnimationFrame.NONE);
   }
 
   /**
@@ -278,6 +378,9 @@ public record EntityFrame(
         List.of(),
         false,
         NO_LEVEL,
-        AttackFrame.NONE);
+        AttackFrame.NONE,
+        NO_CHARGE,
+        false,
+        ForcedAnimationFrame.NONE);
   }
 }

@@ -218,6 +218,83 @@ class PresentationApiTest {
     assertThat(frame.plays()).isEmpty();
   }
 
+  /** Those signatures are held for crforge-render, whose tests and tools construct frames. */
+  @Test
+  @DisplayName(
+      "the constructors from before the charge and forced animation tell no charge and none, and"
+          + " the frame from before dash moments tells none")
+  void olderConstructorsTellNoMotion() {
+    EntityFrame attacking = withAttack(entity(1), AttackFrame.NONE);
+    for (EntityFrame old : List.of(entity(1), withLevel(entity(1), 11), attacking)) {
+      assertThat(old.chargeProgress()).isEqualTo(EntityFrame.NO_CHARGE);
+      assertThat(old.charging()).isFalse();
+      assertThat(old.forcedAnimation()).isEqualTo(ForcedAnimationFrame.NONE);
+    }
+    List<CardPlayFrame> plays =
+        List.of(new CardPlayFrame(0, "Fireball", CardForm.BASIC, 9000, 25000, List.of()));
+    TickFrame frame =
+        new TickFrame(
+            7, 350, false, -1, List.of(), false, 1, List.of(), 0, 0, 0, 0, 0, List.of(), List.of(),
+            plays);
+    assertThat(frame.plays()).isEqualTo(plays);
+    assertThat(frame.dashes()).isEmpty();
+    assertThat(frame(List.of(), List.of()).dashes()).isEmpty();
+  }
+
+  @Test
+  @DisplayName(
+      "an entity tells its charge and forced animation, a frame its dash moments, copied and"
+          + " unmodifiable; none is null")
+  void chargeForcedAnimationAndDashes() {
+    ForcedAnimationFrame forced =
+        new ForcedAnimationFrame("ronin_play_deflect_animation", 1, 40, 500, 500);
+    EntityFrame old = entity(1);
+    EntityFrame charging = withMotion(old, 10_080, true, forced);
+    assertThat(charging.chargeProgress()).isEqualTo(10_080);
+    assertThat(charging.charging()).isTrue();
+    assertThat(charging.forcedAnimation()).isEqualTo(forced);
+    assertThat(withMotion(old, 10_080, true, forced)).isEqualTo(charging);
+    assertThatThrownBy(() -> withMotion(old, 0, false, null))
+        .isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> new ForcedAnimationFrame(null, 0, 0, 0, 0))
+        .isInstanceOf(NullPointerException.class);
+    assertThat(ForcedAnimationFrame.NONE.startTick()).isEqualTo(-1);
+    assertThat(ForcedAnimationFrame.NONE.action()).isEmpty();
+
+    List<DashFrame> dashes =
+        new ArrayList<>(
+            List.of(
+                new DashFrame(1, DashMoment.WINDUP_STARTED),
+                new DashFrame(1, DashMoment.STARTED),
+                new DashFrame(1, DashMoment.LANDED)));
+    TickFrame frame =
+        new TickFrame(
+            7,
+            350,
+            false,
+            -1,
+            List.of(charging),
+            false,
+            1,
+            List.of(),
+            0,
+            0,
+            0,
+            0,
+            0,
+            List.of(),
+            List.of(),
+            List.of(),
+            dashes);
+    dashes.clear();
+    assertThat(frame.dashes())
+        .extracting(DashFrame::moment)
+        .containsExactly(DashMoment.WINDUP_STARTED, DashMoment.STARTED, DashMoment.LANDED);
+    assertThatThrownBy(() -> frame.dashes().clear())
+        .isInstanceOf(UnsupportedOperationException.class);
+    assertThatThrownBy(() -> new DashFrame(1, null)).isInstanceOf(NullPointerException.class);
+  }
+
   /** That signature is held for crforge-render, whose tests construct frames with events. */
   @Test
   @DisplayName("the constructor from before card plays tells its events and no play")
@@ -492,6 +569,42 @@ class PresentationApiTest {
         old.isClone(),
         old.level(),
         attack);
+  }
+
+  private static EntityFrame withMotion(
+      EntityFrame old, int chargeProgress, boolean charging, ForcedAnimationFrame forced) {
+    return new EntityFrame(
+        old.id(),
+        old.kind(),
+        old.side(),
+        old.name(),
+        old.x(),
+        old.y(),
+        old.radius(),
+        old.hitPoints(),
+        old.maxHitPoints(),
+        old.shield(),
+        old.maxShield(),
+        old.air(),
+        old.king(),
+        old.state(),
+        old.deploying(),
+        old.hidden(),
+        old.hasTarget(),
+        old.targetX(),
+        old.targetY(),
+        old.headingX(),
+        old.headingY(),
+        old.aimX(),
+        old.aimY(),
+        old.height(),
+        old.statuses(),
+        old.isClone(),
+        old.level(),
+        old.attack(),
+        chargeProgress,
+        charging,
+        forced);
   }
 
   private static TickFrame frame(List<EntityFrame> entities, List<SideFrame> sides) {
