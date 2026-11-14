@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.crforge.core.battle.BattleEntity;
 import org.crforge.core.battle.action.ActionOwner;
+import org.crforge.core.battle.action.AnimationModifier;
 import org.crforge.core.battle.action.BattleAction;
 import org.crforge.core.battle.action.Berserk;
 import org.crforge.core.battle.action.BossBanditAbility;
@@ -420,6 +421,19 @@ public final class WorldEvents {
             action.getPlaybackDurationMs(),
             action.getForcedDurationMs());
       }
+    }
+  }
+
+  /**
+   * Tells every observer that an animation modifier's set started on an entity.
+   *
+   * @param entity the entity the row ran on
+   * @param action the row
+   */
+  public void animationModifier(BattleEntity entity, AnimationModifier action) {
+    for (WorldObserver observer : observers) {
+      observer.animationModifierSet(
+          tick(), entity, action.name(), action.getParameter(), action.getValue());
     }
   }
 

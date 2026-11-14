@@ -39,8 +39,10 @@
  * org.crforge.presentation.EntityFrame#chargeProgress}, {@link
  * org.crforge.presentation.EntityFrame#charging}) and the forced animation the battle last ran on
  * an entity ({@link org.crforge.presentation.EntityFrame#forcedAnimation}), and the character a
- * rider is attached to ({@link org.crforge.presentation.EntityFrame#carrierId}), each as the battle
- * holds it; how a view shows them is the plugin's.
+ * rider is attached to ({@link org.crforge.presentation.EntityFrame#carrierId}) and the animation
+ * parameters the battle set on an entity ({@link
+ * org.crforge.presentation.EntityFrame#animationParameters}), each as the battle holds it; how a
+ * view shows them is the plugin's.
  *
  * <h2>Tick-driven</h2>
  *

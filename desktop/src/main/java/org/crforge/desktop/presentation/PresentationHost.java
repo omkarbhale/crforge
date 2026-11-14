@@ -190,7 +190,8 @@ public final class PresentationHost {
             plays.drain(),
             session.match() == null ? List.of() : areas.sides(),
             events.drainDashes(),
-            events.forcedAnimations(frame.tick(), present)));
+            events.forcedAnimations(frame.tick(), present),
+            events.animationParameters(present)));
   }
 
   /** Lets go of the battle followed: no more ticks, and its log stops collecting. */

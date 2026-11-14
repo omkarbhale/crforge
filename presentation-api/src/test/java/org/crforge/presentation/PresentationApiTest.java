@@ -244,6 +244,40 @@ class PresentationApiTest {
   /** Those signatures are held for crforge-render, whose tests and tools construct frames. */
   @Test
   @DisplayName(
+      "the constructors from before animation parameters tell none; the parameters are copied and"
+          + " unmodifiable; none is null")
+  void animationParameters() {
+    EntityFrame rider = withCarrier(entity(1), 7);
+    for (EntityFrame old :
+        List.of(
+            entity(1), withLevel(entity(1), 11), withAttack(entity(1), AttackFrame.NONE), rider)) {
+      assertThat(old.animationParameters()).isEmpty();
+    }
+    List<AnimationParameterFrame> set =
+        new ArrayList<>(
+            List.of(
+                new AnimationParameterFrame("PropState", 1),
+                new AnimationParameterFrame("Other", 0)));
+    EntityFrame prop = withParameters(rider, set);
+    set.clear();
+    assertThat(prop.animationParameters())
+        .containsExactly(
+            new AnimationParameterFrame("PropState", 1), new AnimationParameterFrame("Other", 0));
+    assertThat(prop.carrierId()).isEqualTo(7);
+    assertThatThrownBy(() -> prop.animationParameters().clear())
+        .isInstanceOf(UnsupportedOperationException.class);
+    assertThat(withParameters(rider, List.of())).isEqualTo(rider);
+    assertThat(withParameters(rider, List.of(new AnimationParameterFrame("PropState", 1))))
+        .isEqualTo(withParameters(rider, List.of(new AnimationParameterFrame("PropState", 1))))
+        .isNotEqualTo(rider);
+    assertThatThrownBy(() -> withParameters(rider, null)).isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> new AnimationParameterFrame(null, 0))
+        .isInstanceOf(NullPointerException.class);
+  }
+
+  /** Those signatures are held for crforge-render, whose tests and tools construct frames. */
+  @Test
+  @DisplayName(
       "the constructors from before the carrier tell none; the carrier is the id of the character"
           + " ridden on")
   void carrier() {
@@ -590,6 +624,44 @@ class PresentationApiTest {
         old.isClone(),
         old.level(),
         attack);
+  }
+
+  private static EntityFrame withParameters(
+      EntityFrame old, List<AnimationParameterFrame> parameters) {
+    return new EntityFrame(
+        old.id(),
+        old.kind(),
+        old.side(),
+        old.name(),
+        old.x(),
+        old.y(),
+        old.radius(),
+        old.hitPoints(),
+        old.maxHitPoints(),
+        old.shield(),
+        old.maxShield(),
+        old.air(),
+        old.king(),
+        old.state(),
+        old.deploying(),
+        old.hidden(),
+        old.hasTarget(),
+        old.targetX(),
+        old.targetY(),
+        old.headingX(),
+        old.headingY(),
+        old.aimX(),
+        old.aimY(),
+        old.height(),
+        old.statuses(),
+        old.isClone(),
+        old.level(),
+        old.attack(),
+        old.chargeProgress(),
+        old.charging(),
+        old.forcedAnimation(),
+        old.carrierId(),
+        parameters);
   }
 
   private static EntityFrame withCarrier(EntityFrame old, int carrierId) {

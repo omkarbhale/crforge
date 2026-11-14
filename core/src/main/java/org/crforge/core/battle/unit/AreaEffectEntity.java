@@ -19,6 +19,7 @@ import org.crforge.core.battle.action.ActionHolder;
 import org.crforge.core.battle.action.ActionInstance;
 import org.crforge.core.battle.action.ActionOwner;
 import org.crforge.core.battle.action.AliveTimer;
+import org.crforge.core.battle.action.AnimationModifier;
 import org.crforge.core.battle.action.BattleAction;
 import org.crforge.core.battle.action.CannonProjectileSpawn;
 import org.crforge.core.battle.action.DamageType;
@@ -1034,6 +1035,12 @@ public final class AreaEffectEntity extends BattleEntity implements ActionOwner,
   @Override
   public void forcedAnimation(ForcedAnimation action) {
     world.getEvents().forcedAnimation(this, action);
+  }
+
+  /** Tells the battle's observers of an animation modifier's set on the area effect. */
+  @Override
+  public void animationModifier(AnimationModifier action) {
+    world.getEvents().animationModifier(this, action);
   }
 
   /**

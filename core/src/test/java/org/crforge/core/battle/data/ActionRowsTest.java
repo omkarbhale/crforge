@@ -32,6 +32,7 @@ import org.crforge.core.battle.Shipped;
 import org.crforge.core.battle.action.ActionHolder;
 import org.crforge.core.battle.action.ActionOwner;
 import org.crforge.core.battle.action.AirToGround;
+import org.crforge.core.battle.action.AnimationModifier;
 import org.crforge.core.battle.action.BarbBarrelHeroReRoll;
 import org.crforge.core.battle.action.BattleAction;
 import org.crforge.core.battle.action.Berserk;
@@ -1332,6 +1333,61 @@ class ActionRowsTest {
 
   @Test
   @DisplayName(
+      "an animation modifier reads its parameter and value, keeps no run and only tells its owner"
+          + " as it starts")
+  void anAnimationModifierTellsItsOwner() {
+    for (String[] row :
+        new String[][] {
+          {"ElectroWizardHero_Enable_Prop_Animations", "1"},
+          {"ElectroWizardHero_Enable_Default_Animations", "0"},
+          {"AngryBarbarian_EV1_set_prop_state", "1"},
+          {"AngryBarbarian_EV1_set_normal_state", "0"},
+          {"BarbLog_hero_set_pro_modifier", "1"},
+          {"BarbLog_hero_set_origin_modifier", "0"}
+        }) {
+      AnimationModifier built = (AnimationModifier) GameData.actions().build(row[0], INERT_BINDING);
+      assertThat(built.getParameter()).as(row[0]).isEqualTo("PropState");
+      assertThat(built.getValue()).as(row[0]).isEqualTo(Integer.parseInt(row[1]));
+    }
+    AnimationModifier prop =
+        (AnimationModifier)
+            GameData.actions().build("AngryBarbarian_EV1_set_prop_state", INERT_BINDING);
+    List<AnimationModifier> told = new ArrayList<>();
+    ActionOwner owner =
+        new ActionOwner() {
+          @Override
+          public HitPoints actionHitPoints() {
+            return null;
+          }
+
+          @Override
+          public int variable(int key) {
+            return 0;
+          }
+
+          @Override
+          public void setVariable(int key, int value) {}
+
+          @Override
+          public void killBy(ActionOwner killer) {}
+
+          @Override
+          public void queueTypedHit(ActionOwner source, int amount, DamageType type) {}
+
+          @Override
+          public void animationModifier(AnimationModifier action) {
+            told.add(action);
+          }
+        };
+    ActionHolder holder = new ActionHolder(owner);
+    holder.start(prop);
+    assertThat(told).containsExactly(prop);
+    assertThat(holder.running()).as("no run kept").isEmpty();
+    new ActionHolder().start(prop);
+  }
+
+  @Test
+  @DisplayName(
       "a forced animation's run reads its custom state and durations, 0 for an empty column, and a"
           + " stop reads none; each keeps no run and only tells its owner as it starts")
   void aForcedAnimationTellsItsOwner() {
@@ -1394,13 +1450,13 @@ class ActionRowsTest {
 
   @Test
   @DisplayName(
-      "an animation modifier, which reaches only a character's presentation, is built inert, and"
-          + " the hero barbarian's starting actions that lead to it are built")
+      "an animation modifier, which reaches only a character's presentation, is built as one that"
+          + " only tells, and the hero barbarian's starting actions that lead to it are built")
   void anAnimationModifierIsInert() {
     assertThat(GameData.actions().build("BarbLog_hero_set_origin_modifier", INERT_BINDING))
-        .isInstanceOf(InertAction.class);
+        .isInstanceOf(AnimationModifier.class);
     assertThat(GameData.actions().build("BarbLog_hero_set_pro_modifier", INERT_BINDING))
-        .isInstanceOf(InertAction.class);
+        .isInstanceOf(AnimationModifier.class);
     assertThat(GameData.actions().build("BarbLog_hero_starting_actions", INERT_BINDING))
         .isNotNull();
   }

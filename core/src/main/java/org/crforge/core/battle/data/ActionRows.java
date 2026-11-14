@@ -26,6 +26,7 @@ import org.crforge.core.battle.action.ActionContext;
 import org.crforge.core.battle.action.ActionRow;
 import org.crforge.core.battle.action.AirToGround;
 import org.crforge.core.battle.action.AliveTimer;
+import org.crforge.core.battle.action.AnimationModifier;
 import org.crforge.core.battle.action.AttackChain;
 import org.crforge.core.battle.action.BarbBarrelHeroReRoll;
 import org.crforge.core.battle.action.BattleAction;
@@ -1808,6 +1809,7 @@ public final class ActionRows {
               // Only an action with no run of its own, which shows something and is done.
               boolean shows =
                   run instanceof ForcedAnimation
+                      || run instanceof AnimationModifier
                       || run instanceof InertAction inert && !inert.isLasting();
               if (run != null && !shows) {
                 throw new UnsupportedOperationException(
@@ -1819,8 +1821,10 @@ public final class ActionRows {
               yield new InertAction(shared, true);
             }
             // Its perform reaches only a character's presentation object and the animator behind
-            // it, handing it the parameter's value; no logic state of the battle.
-            case "ActionSetAnimationModifier" -> new InertAction(shared);
+            // it, handing it the parameter's value; no logic state of the battle. It only tells its
+            // owner, which tells the observers.
+            case "ActionSetAnimationModifier" ->
+                new AnimationModifier(shared, text(f, "Parameter", ""), integer(f, "Value"));
             case "ActionPlayAnimationIfHasTarget" -> {
               // Its run is listed for as long as its owner lives and changes nothing; the columns
               // that would give such a run something to do are held by no reference.
