@@ -1114,6 +1114,35 @@ public final class LadderMatch implements BattleMode {
   }
 
   /**
+   * The gates a scenario match's play passes ({@link
+   * org.crforge.core.battle.unit.Standard1v1Battle#startScenarioMatch}): only the match's own
+   * rules, that it is not decided and that the side's king stands. The hand, the start cooldown and
+   * the elixir gate nothing.
+   *
+   * @param side the playing side
+   * @return 0 when the play may run, else the code a refused play is given
+   */
+  public int freeGate(int side) {
+    if (decided()) {
+      return OVER;
+    }
+    if (!kingAlive(side)) {
+      return KING_DEAD;
+    }
+    return 0;
+  }
+
+  /**
+   * A scenario match's play that was placed or cast: counted, with nothing spent or cycled.
+   *
+   * @param side the playing side
+   * @param index the card's deck index
+   */
+  public void freePlay(int side, int index) {
+    sides.get(side).freePlay(index);
+  }
+
+  /**
    * A play that passed the gates and was placed or cast: its cost taken and its card cycled.
    *
    * @param side the playing side

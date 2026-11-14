@@ -1,6 +1,10 @@
 # Scenarios
 
-A scenario is a hand-written battle: you name the cards each side plays, where, and when, and the replay viewer plays it. There is no match behind it: no hand, no elixir, no deck, no evolution count and no crowns. A card is played as the card row you name, as often as you list it, all on one tick if you like. This is a tool for watching units against each other. It is not a battle the game could have recorded, and nothing checks it against one.
+A scenario is a hand-written battle: you name the cards each side plays, where, and when, and the replay viewer plays it.
+
+It is a Ladder match, and every rule of the match holds: the 3-minute clock, overtime, crowns, the king tower waking when a princess tower falls, and the end when a king tower falls or the time runs out. Placement follows the game's rules too. Only what limits *which card may be played when* is lifted: the hand, the elixir, the start cooldown and the evolution count gate no play. A card is played as the card row you name, as often as you list it, all on one tick if you like.
+
+This is a tool for watching units against each other. It is not a battle the game could have recorded, and nothing checks it against one.
 
 Scenario mode lives on the `scenario-mode` branch of the fork only.
 
@@ -44,9 +48,9 @@ The first run downloads Gradle and the game's files, and builds the game tables 
 
 These are the replay viewer's own keys: SPACE pauses, `.` and `,` step one tick forward or back, `+` and `-` change the speed, R restarts from tick 0, and F flips the view.
 
-The viewer opens with **side 1 at the bottom, drawn blue, and side 0 at the top, drawn red**, as it shows a replay. F flips it. The hand panels and the elixir bars stay empty, since there is no match. The status line says `NO MATCH`. The scenario plays until its end tick.
+The viewer opens with **side 1 at the bottom, drawn blue, and side 0 at the top, drawn red**, as it shows a replay. F flips it. The hand panels show each side's cards and the elixir bars fill as in a match, but neither limits the plays. The scenario plays until the match ends, or until its `endTime` if it gives one.
 
-The recent events list each play the battle placed. A play that could not be placed is listed as `cannot place <card> at (x, y)`: a troop on the other side's half, on a tower, or on the river, for example.
+The recent events list each play the battle placed. A play the battle refuses is listed with the reason: one that could not be placed (a troop on a tower or the river, for example), or one that came after the match was decided or after its side's king fell. Once a king has fallen and the end screen's delay has passed, the battle stops and no later play runs.
 
 If a file has problems, the viewer shows `REPLAY NOT PLAYED` with every problem, and the launch prints them too. Each problem starts with the field it is in, for example:
 
@@ -80,7 +84,7 @@ A scenario is a JSON object. Its `crforgeScenario` field marks it as a scenario 
 | `crforgeScenario` | The format version. Must be `1`. | required |
 | `name`, `description` | Text the viewer prints. | none |
 | `seed` | The battle's random seed, a whole number. | `0` |
-| `endTime` or `endTick` | When the scenario stops, in seconds or in ticks (20 ticks a second). Give one or neither. | 180 s (tick 3600) |
+| `endTime` or `endTick` | Stops the scenario early, in seconds or in ticks (20 ticks a second). Give one or neither. | none: the match ends it |
 | `towers` | The towers. See below. | level 11, fighting |
 | `plays` | The list of plays. See below. | required |
 
@@ -119,7 +123,7 @@ The three layouts:
 - `"line": { "from": [x, y], "to": [x, y] }` with `count` places `count` copies evenly from `from` to `to`, both ends included. A horizontal line makes a row of columns, and a vertical one makes a file.
 - `"grid": { "from": [x, y], "to": [x, y], "columns": c, "rows": r }` places a copy on each point of a `c` by `r` grid with corners `from` and `to`. It fills row by row from `from`. A `count` below `c × r` takes only the first points.
 
-Plays run in the order they are dropped. Plays dropped on the same tick run in the file's order. A scenario expands to at most 2000 plays, and every play must deploy by the end tick.
+Plays run in the order they are dropped. Plays dropped on the same tick run in the file's order. A scenario expands to at most 2000 plays. When it gives an end, every play must deploy by then.
 
 ## The examples
 
@@ -130,12 +134,13 @@ Plays run in the order they are dropped. Plays dropped on the same tick run in t
 | [hog-train.json](hog-train.json) | Five Hog Riders half a second apart, against weaker towers on the other side, and a later answer (`every`, per-side `towers`, `level`, `time`). |
 | [archer-grid-vs-pekka.json](archer-grid-vs-pekka.json) | A grid of Archers against a P.E.K.K.A and an evolved Knight, then a Fireball (`grid`, a spell). |
 
-`ExampleScenariosTest` (desktop) opens each file here, as the viewer does, and plays it to its end with every play placed. A new file in this folder is tested the same way.
+`ExampleScenariosTest` (desktop) opens each file here, as the viewer does, and plays its first 30 seconds, checking that every play is placed. A new file in this folder is tested the same way.
 
 ## Limits
 
 - Only the standard arena and its towers. No other game mode, arena, or tower troop.
-- No ability taps. The Mirror, and a card played as an option picked from the elixir, need a match and are refused when the file is read. Name the option's own card row instead.
+- No ability taps. The Mirror (which repeats the last card) and a card played as an option picked from the elixir are refused when the file is read. Name the option's own card row instead.
+- A side may play at most two champion cards, as a Ladder deck may hold.
 - The battle core still refuses what it does not model. A card it cannot play is reported when the file is read. A unit behaviour it does not model halts the battle in the viewer, with the reason.
 - The rows and their art are those of the data version the build makes (the fork's lock). The crforge-render plugin's art is for the version its release names.
 

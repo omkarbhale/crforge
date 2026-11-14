@@ -34,9 +34,8 @@ import org.crforge.desktop.render.ViewOrientation;
  * ReplayBattle#checkItems}), as a conformance run checks it: a play that ran with another item
  * halts the session with the reason, since the battle has left the replay.
  *
- * <p>A hand-written scenario ({@link ScenarioScript}) plays the same way, on a battle with no
- * match: its plays carry no item to check, a play the battle cannot place is noted, and the battle
- * has no result of its own, so it plays to the scenario's end tick.
+ * <p>A hand-written scenario ({@link ScenarioScript}) plays the same way, in its scenario match:
+ * its plays carry no item to check.
  *
  * <p>The replay stops at its end tick, or when the battle ends by its own rule, whichever is first;
  * a replay that gives no end tick plays until the battle ends. A refused replay has no session.
@@ -287,9 +286,6 @@ public final class ReplayPlayer {
    */
   public String battleResult(ViewOrientation view) {
     LadderMatch match = session.match();
-    if (match == null) {
-      return "none, a scenario has no match (tick " + session.tick() + ")";
-    }
     List<Integer> order = view.sidesBottomFirst();
     String crowns = "crowns " + match.crowns(order.get(0)) + " - " + match.crowns(order.get(1));
     if (!match.isEnded()) {
@@ -318,20 +314,6 @@ public final class ReplayPlayer {
         session.note(
             play.side(),
             " plays " + card(play.name()) + " on tick " + play.tick() + " (" + play.name() + ")");
-      } else if (replay.script() != null) {
-        session.note(
-            play.side(),
-            " cannot place "
-                + card(play.name())
-                + " at ("
-                + play.x()
-                + ", "
-                + play.y()
-                + ") on tick "
-                + play.tick()
-                + " ("
-                + play.name()
-                + ")");
       }
     }
     if (replay.script() != null) {

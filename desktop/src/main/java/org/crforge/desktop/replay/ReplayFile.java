@@ -55,9 +55,9 @@ import org.crforge.desktop.render.ViewState;
  * refusals; whoever chose the tables may list why it could not find the replay's own first.
  *
  * <p>A file with a top-level {@code crforgeScenario} field is a hand-written scenario instead
- * ({@link ScenarioScript}): named card rows played at named points and ticks in a battle with no
- * match. It is read by its own format, its problems are its refusals, and it plays as a replay
- * does.
+ * ({@link ScenarioScript}): named card rows played at named points and ticks in a Ladder match
+ * whose hand and elixir gate no play. It is read by its own format, its problems are its refusals,
+ * and it plays as a replay does.
  */
 public final class ReplayFile {
 
@@ -240,7 +240,8 @@ public final class ReplayFile {
     if (script != null) {
       header =
           new Header(
-              "scenario, no match" + (script.name().isEmpty() ? "" : ": " + script.name()),
+              "scenario, Ladder rules, free plays"
+                  + (script.name().isEmpty() ? "" : ": " + script.name()),
               "standard arena",
               script.cardsBySide(),
               script.endTick(),
@@ -249,7 +250,7 @@ public final class ReplayFile {
     } else {
       header =
           new Header(
-              "scenario, no match",
+              "scenario, Ladder rules, free plays",
               "standard arena",
               List.of(List.of(), List.of()),
               document.path("endTick").asInt(-1),
@@ -317,7 +318,7 @@ public final class ReplayFile {
    */
   public String dataLine() {
     if (isScenario()) {
-      return "Scenario: hand-written, no match, played on data version " + dataVersion;
+      return "Scenario: hand-written, played on data version " + dataVersion;
     }
     if (capture == null) {
       return "Replay: data version assumed, the replay does not name the data it was recorded on";
@@ -451,7 +452,11 @@ public final class ReplayFile {
                   ? "nothing"
                   : String.join(", ", header.decks().get(side))));
     }
-    lines.add("  end tick: " + header.endTick());
+    lines.add(
+        "  end tick: "
+            + (header.endTick() < 0
+                ? "none given, played until the match ends"
+                : String.valueOf(header.endTick())));
     if (refusals.isEmpty()) {
       lines.add("  plays: " + script.plays().size());
     } else {

@@ -321,6 +321,19 @@ public final class MatchSide {
   }
 
   /**
+   * A play of a scenario match, which no hand, elixir or count gates: nothing is spent or cycled,
+   * but the play is counted in the deploy counter and kept as the last played, as any placed play.
+   *
+   * @param index the card's deck index
+   */
+  void freePlay(int index) {
+    deployCounter++;
+    lastPlayed = deck.get(index);
+    lastPlayedField = 0;
+    lastPlayedOption = -1;
+  }
+
+  /**
    * A play of a deck card the match's gates refused at its run: nothing is spent or cycled, but the
    * count of an evolution slot's card moves as a placed play's does. The count is the player's
    * client's, which builds the items from it, and the client counts every play it gave: it gave

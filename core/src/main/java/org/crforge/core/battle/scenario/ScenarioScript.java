@@ -24,11 +24,14 @@ import org.crforge.core.pathfinding.grid.TileMap;
 import org.crforge.core.util.GameUnits;
 
 /**
- * A hand-written scenario: a battle set up outside any match, in which named card rows are played
- * by either side at named points and ticks. There is no hand, no elixir, no deck and no evolution
- * count: a card is played as the row it names, as often as the file lists it, and an evolved or
- * hero form is named by its own row (or by {@code "form"}). The battle has the standard arena and
- * both sides' towers, and runs until the scenario's end tick, as no match ends it.
+ * A hand-written scenario: a Ladder battle in which named card rows are played by either side at
+ * named points and ticks. Every rule of the match holds - its clock, overtime, crowns, the king's
+ * activation and the end when a king falls or the time is up - except what limits which card may be
+ * played when: the hand, the start cooldown and the elixir gate no play ({@link
+ * Standard1v1Battle#startScenarioMatch}). A card is played as the row it names, as often as the
+ * file lists it, and an evolved or hero form is named by its own row (or by {@code "form"}).
+ * Placement follows the game's rules. The battle runs until the match ends, or until the scenario's
+ * end tick when it gives one.
  *
  * <p>The file is JSON and is told apart from a replay by its top-level {@code "crforgeScenario"}
  * field, the format's version. The format is documented in {@code examples/scenarios/README.md}.
@@ -62,8 +65,8 @@ public record ScenarioScript(
   /** Battle steps a second. */
   public static final int TICKS_PER_SECOND = 1000 / Battle.STEP_MS;
 
-  /** The end tick when the file names none: three minutes. */
-  public static final int DEFAULT_END_TICK = 180 * TICKS_PER_SECOND;
+  /** The end tick when the file names none: none, the match ends the battle. */
+  public static final int NO_END_TICK = -1;
 
   /** Ticks between a play's drop and its deploy, as the game runs every play. */
   public static final int DROP_DELAY = Standard1v1Battle.PLAY_DELAY_TICKS;
@@ -144,7 +147,7 @@ public record ScenarioScript(
 
   /**
    * Builds the scenario's battle before its first step, every play queued: the towers at their
-   * levels, the seed, and no match.
+   * levels, the seed, and the scenario match between the cards each side plays.
    *
    * @param tables the game tables the scenario was read against
    * @return the battle, not yet stepped
@@ -152,6 +155,8 @@ public record ScenarioScript(
   public Standard1v1Battle build(GameTables tables) {
     Standard1v1Battle battle = new Standard1v1Battle(tables, towers, towersAttack);
     battle.getWorld().seed(seed);
+    List<List<String>> decks = cardsBySide();
+    battle.startScenarioMatch(decks.get(0), decks.get(1));
     for (Play play : plays) {
       battle.play(
           play.dropTick(),
@@ -230,7 +235,7 @@ public record ScenarioScript(
                 + " a scenario may hold");
       }
       for (Pending play : pending) {
-        if (play.dropTick() + DROP_DELAY > endTick) {
+        if (endTick != NO_END_TICK && play.dropTick() + DROP_DELAY > endTick) {
           errors.add(
               "plays["
                   + play.entry()
@@ -315,15 +320,15 @@ public record ScenarioScript(
     private int endTick(JsonNode root) {
       if (root.has("endTick") && root.has("endTime")) {
         errors.add("endTick, endTime: give one of them, not both");
-        return DEFAULT_END_TICK;
+        return NO_END_TICK;
       }
       if (root.has("endTick")) {
-        return ticks(root.get("endTick"), "endTick", 1, DEFAULT_END_TICK);
+        return ticks(root.get("endTick"), "endTick", 1, NO_END_TICK);
       }
       if (root.has("endTime")) {
-        return seconds(root.get("endTime"), "endTime", 1, DEFAULT_END_TICK);
+        return seconds(root.get("endTime"), "endTime", 1, NO_END_TICK);
       }
-      return DEFAULT_END_TICK;
+      return NO_END_TICK;
     }
 
     private void play(JsonNode node, int i, List<Pending> out) {

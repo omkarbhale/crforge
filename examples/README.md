@@ -2,7 +2,7 @@
 
 ## Scenarios
 
-[scenarios/](scenarios/) holds hand-written scenarios: named cards played by either side at named points and ticks, in a battle with no match. The viewer opens them with `--replay`, like a replay. [scenarios/README.md](scenarios/README.md) documents the format and how to run them, also on Windows with the crforge-render plugin.
+[scenarios/](scenarios/) holds hand-written scenarios: named cards played by either side at named points and ticks, in a Ladder match whose hand and elixir limit no play. The viewer opens them with `--replay`, like a replay. [scenarios/README.md](scenarios/README.md) documents the format and how to run them, also on Windows with the crforge-render plugin.
 
 ## Replays
 

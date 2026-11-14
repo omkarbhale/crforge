@@ -56,11 +56,11 @@ class ScenarioScriptTest {
   }
 
   @Test
-  void theDefaultsAreLevelElevenTowersThatFightAndThreeMinutes() {
+  void theDefaultsAreLevelElevenTowersThatFightAndNoEndTick() {
     ScenarioScript script =
         read("{'crforgeScenario': 1, 'plays': [{'side': 0, 'card': 'Knight', 'at': [3.5, 10]}]}");
 
-    assertThat(script.endTick()).isEqualTo(3600);
+    assertThat(script.endTick()).isEqualTo(ScenarioScript.NO_END_TICK);
     assertThat(script.towersAttack()).isTrue();
     assertThat(script.towers())
         .extracting(Standard1v1Battle.Towers::level, Standard1v1Battle.Towers::kingLevel)
@@ -233,7 +233,7 @@ class ScenarioScriptTest {
   }
 
   @Test
-  void theBattleHasNoMatchAndPlaysEveryCopyOfACardOnTheSameTick() {
+  void aScenarioMatchPlaysEveryCopyOfACardOnTheSameTickWithNoElixirOrHand() {
     ScenarioScript script =
         read(
             "{'crforgeScenario': 1, 'endTime': 5, 'plays': ["
@@ -243,7 +243,8 @@ class ScenarioScriptTest {
                 + " 20.5], 'to': [17.5, 20.5]}}]}");
     Standard1v1Battle battle = script.build(tables);
 
-    assertThat(battle.getMatch()).isNull();
+    assertThat(battle.getMatch()).isNotNull();
+    assertThat(battle.isFreePlays()).isTrue();
     for (int tick = 0; tick < 25; tick++) {
       battle.getBattle().step();
     }
@@ -261,5 +262,33 @@ class ScenarioScriptTest {
             p -> assertThat(p.units()).allMatch(u -> u.getData().name().contains("Skeleton")));
     assertThat(battle.getPlays().stream().filter(p -> p.side() == 1))
         .allSatisfy(p -> assertThat(p.units()).allMatch(u -> u.getData().name().contains("Witch")));
+    // Nothing was spent and no card left the deck's order: the hand and elixir gate nothing.
+    assertThat(battle.getMatch().side(0).getDeployCounter()).isEqualTo(20);
+    assertThat(battle.getMatch().side(1).getDeployCounter()).isEqualTo(20);
+  }
+
+  @Test
+  void theMatchEndsWhenAKingFallsAndNothingRunsAfter() {
+    ScenarioScript script =
+        read(
+            "{'crforgeScenario': 1, 'towers': [{'level': 11}, {'level': 1}], 'plays': ["
+                + "{'side': 0, 'card': 'Rocket', 'level': 16, 'count': 12, 'at': [9, 29],"
+                + " 'everyTicks': 10},"
+                + "{'side': 0, 'card': 'Knight', 'at': [9, 10], 'time': 30}]}");
+    Standard1v1Battle battle = script.build(tables);
+
+    int tick = 0;
+    while (!battle.getBattle().getMode().isOver() && tick < 1200) {
+      battle.getBattle().step();
+      tick++;
+    }
+
+    assertThat(battle.getMatch().isEnded()).isTrue();
+    assertThat(battle.getMatch().getWinner()).isZero();
+    assertThat(battle.getMatch().crowns(0)).isEqualTo(3);
+    assertThat(battle.getBattle().getMode().isOver()).as("the battle stopped").isTrue();
+    // The Knight, dropped at 30 s, never ran: the battle had stopped by then.
+    assertThat(battle.getBattle().getTick()).isLessThan(620);
+    assertThat(battle.getPlays()).hasSize(12).allMatch(play -> play.matchCode() == 0);
   }
 }

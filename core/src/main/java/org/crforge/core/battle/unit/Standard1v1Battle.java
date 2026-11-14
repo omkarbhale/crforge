@@ -497,6 +497,9 @@ public class Standard1v1Battle {
   /** The match the battle is played as, or null for a battle without players. */
   @Getter private LadderMatch match;
 
+  /** Whether the match is a scenario match, whose plays the hand and elixir do not gate. */
+  @Getter private boolean freePlays;
+
   /**
    * The next cast id a placement or a play outside a match takes (see {@link SpawnHost#castId()}).
    * The game makes every unit through a card play, whose cast id is its king's count of card plays;
@@ -598,6 +601,23 @@ public class Standard1v1Battle {
     for (int side = 0; side < 2; side++) {
       world.kingTower(side).championDeckPass(deckChampions(side, ladder.side(side).deck()));
     }
+    return ladder;
+  }
+
+  /**
+   * Starts a scenario match: a Ladder match between two decks, with its clock, overtime, crowns,
+   * king activation and end, whose plays pass only the match's own gates ({@link
+   * LadderMatch#freeGate}): any card of a side's deck may be played at any tick, as often as given,
+   * as the row it names, with nothing spent or cycled. The decks list each card once; the players'
+   * words are 0.
+   *
+   * @param deck0 side 0's cards, by card row name
+   * @param deck1 side 1's cards
+   * @return the match
+   */
+  public LadderMatch startScenarioMatch(List<String> deck0, List<String> deck1) {
+    LadderMatch ladder = startLadderMatch(deck0, deck1, 0, 0);
+    freePlays = true;
     return ladder;
   }
 
@@ -1585,6 +1605,30 @@ public class Standard1v1Battle {
 
   private void runPlay(
       Battle target, int given, DeployCard card, int level, int side, int x, int y, String name) {
+    // In a scenario match the play passes only the match's own gates and is placed as the row it
+    // names, with no item: nothing is spent or cycled.
+    if (match != null && freePlays) {
+      int deckIndex = match.deckIndex(side, card.name());
+      int code = match.freeGate(side);
+      if (code != 0) {
+        plays.add(
+            new Play(name, side, x, y, target.getTick(), null, List.of(), code, null, null, null));
+        return;
+      }
+      place(
+          target,
+          card,
+          level,
+          side,
+          x,
+          y,
+          name,
+          () -> match.freePlay(side, deckIndex),
+          null,
+          null,
+          null);
+      return;
+    }
     // In a match the play carries its deck card's item, and first passes the match's gates on the
     // item's cost; a refused play changes nothing.
     Runnable pay = null;

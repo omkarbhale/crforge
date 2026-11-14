@@ -802,9 +802,7 @@ public final class BattleWorkspace implements Disposable {
                 ? (result == null ? "Finished" : result)
                     + (stopReason == null ? "" : " - " + stopReason)
                 : frame.sides().isEmpty()
-                    ? (replay
-                        ? "NO MATCH: a scenario, played to its end tick. R restarts it."
-                        : "NO MATCH: R starts a Ladder battle.")
+                    ? "NO MATCH: R starts a Ladder battle."
                     : inspecting
                         ? "INSPECT: click a unit to pin its details."
                         : "DEPLOY: select a card [1-8], then click the arena. Right click"

@@ -18,7 +18,6 @@ import java.util.stream.Stream;
 import org.crforge.core.battle.unit.Standard1v1Battle;
 import org.crforge.desktop.battle.BattleAdapter;
 import org.crforge.desktop.battle.EntityView;
-import org.crforge.desktop.render.ViewState;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -40,27 +39,31 @@ class ExampleScenariosTest {
     }
   }
 
+  /** The most ticks a check plays an example: past every example's last play. */
+  private static final int TICKS = 600;
+
   @ParameterizedTest
   @MethodSource("files")
-  void theViewerPlaysEachExampleToItsEndWithEveryPlayPlaced(Path file) throws IOException {
+  void theViewerPlaysEachExampleInAScenarioMatchWithEveryPlayPlaced(Path file) throws IOException {
     ReplayFile scenario = ReplayFile.read(file, Replays.tables());
     assertThat(scenario.refusals()).isEmpty();
     assertThat(scenario.isScenario()).isTrue();
     ReplayPlayer player = new ReplayPlayer(scenario, Replays.tables());
 
-    while (player.step()) {
-      // to the end tick
+    while (player.getSession().tick() < TICKS && player.step()) {
+      // past every play
     }
 
-    assertThat(player.stopReason())
-        .isEqualTo("the replay's end tick " + scenario.script().endTick());
-    assertThat(player.getSession().match()).isNull();
+    assertThat(player.getSession().getHalted()).isNull();
+    assertThat(player.getSession().match()).isNotNull();
     List<Standard1v1Battle.Play> plays = player.getSession().getBattle().getPlays();
     assertThat(plays).hasSize(scenario.script().plays().size());
     assertThat(plays)
-        .allSatisfy(play -> assertThat(play.result().placed()).as(play.name()).isTrue());
-    assertThat(player.battleResult(ViewState.replay().getOrientation()))
-        .startsWith("none, a scenario");
+        .allSatisfy(
+            play -> {
+              assertThat(play.matchCode()).as(play.name()).isZero();
+              assertThat(play.result().placed()).as(play.name()).isTrue();
+            });
   }
 
   @Test
